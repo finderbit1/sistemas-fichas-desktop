@@ -19,14 +19,18 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
             {expanded && <span className="ms-2">Início</span>}
           </Link>
         </Nav.Item>
-               <Nav.Item>
+        <Nav.Item>
           <Link to="/orders" className="sidebar-item nav-link">
             <i className="bi bi-speedometer2"></i>
             {expanded && <span className="ms-2">Pedidos</span>}
           </Link>
         </Nav.Item>
-
-
+        <Nav.Item>
+          <Link to="/treelo-designer" className="sidebar-item nav-link">
+            <i className="bi bi-speedometer2"></i>
+            {expanded && <span className="ms-2">Treelo Designer</span>}
+          </Link>
+        </Nav.Item>
         <Nav.Item>
           <Link to="/clientes" className="sidebar-item nav-link">
             <i className="bi bi-speedometer2"></i>

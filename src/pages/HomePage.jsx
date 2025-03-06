@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Row, Col, Table, Container, Form } from 'react-bootstrap';
+import { Card, Button, Row, Col, Table, Container, Form, Accordion, AccordionItem } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
@@ -7,11 +7,10 @@ const Home = () => {
 
     // Dados simulados
     const pedidos = [
-        { numero: 'ORD-10001', cliente: 'João Silva', data: '2025-06-01', status: 'pendente', prioridade: false },
-        { numero: 'ORD-10002', cliente: 'Maria Oliveira', data: '2025-06-02', status: 'concluído', prioridade: true },
-        { numero: 'ORD-10003', cliente: 'Pedro Santos', data: '2025-06-03', status: 'pendente', prioridade: true },
-        { numero: 'ORD-10004', cliente: 'Ana Lima', data: '2025-06-04', status: 'pendente', prioridade: false },
-        { numero: 'ORD-10004', cliente: 'Ana Lima', data: '2025-06-04', status: 'pendente', prioridade: false },
+        { numero: '1', cliente: 'João Silva', data: '2025-06-01', status: 'pendente', prioridade: false },
+        { numero: '2', cliente: 'Maria Oliveira', data: '2025-06-02', status: 'concluído', prioridade: true },
+        { numero: '3', cliente: 'Pedro Santos', data: '2025-06-03', status: 'pendente', prioridade: true },
+        { numero: '4', cliente: 'Ana Lima', data: '2025-06-04', status: 'pendente', prioridade: false },
     ];
 
     const totalPedidos = pedidos.length;
@@ -28,28 +27,21 @@ const Home = () => {
 
     return (
         <Container className="mt-4">
-            <h2 className="mb-4">Dashboard</h2>
-
             <Row className="mb-3">
-                <Col md={3}>
+                <Col md={4}>
                     <Card className="p-3 text-center shadow-sm">
                         <h6>Total de Pedidos</h6>
                         <h3>{totalPedidos}</h3>
                     </Card>
                 </Col>
-                <Col md={3}>
-                    <Card className="p-3 text-center shadow-sm">
-                        <h6>Total de Clientes</h6>
-                        <h3>{totalClientes}</h3>
-                    </Card>
-                </Col>
-                <Col md={3}>
+
+                <Col md={4}>
                     <Card className="p-3 text-center shadow-sm bg-warning-subtle">
                         <h6>Pedidos Pendentes</h6>
                         <h3>{pendentes}</h3>
                     </Card>
                 </Col>
-                <Col md={3}>
+                <Col md={4}>
                     <Card className="p-3 text-center shadow-sm bg-danger-subtle">
                         <h6>Pedidos Prioritários</h6>
                         <h3>{prioridades}</h3>
@@ -58,13 +50,18 @@ const Home = () => {
             </Row>
 
             <Row className="mb-3">
-                <Col md={6}>
+                <Col md={9}>
                     <Form.Control
                         type="text"
                         placeholder="Buscar por número ou cliente..."
                         value={filtro}
                         onChange={(e) => setFiltro(e.target.value)}
                     />
+                </Col>
+                <Col md={3}>
+                    <Button variant="primary" onClick={() => navigate('/orders')}>
+                        Novo Pedido
+                    </Button>
                 </Col>
             </Row>
 
@@ -74,7 +71,7 @@ const Home = () => {
                     <Table hover responsive>
                         <thead className="table-light">
                             <tr>
-                                <th>#</th>
+                                <th>O.S</th>
                                 <th>Cliente</th>
                                 <th>Data</th>
                                 <th>Status</th>
@@ -82,6 +79,7 @@ const Home = () => {
                             </tr>
                         </thead>
                         <tbody>
+
                             {pedidosFiltrados.map((pedido, index) => (
                                 <tr key={index}>
                                     <td>{pedido.numero}</td>
@@ -105,19 +103,6 @@ const Home = () => {
                     </Table>
                 </Card.Body>
             </Card>
-
-            <Row className="mt-4">
-                <Col md={3}>
-                    <Button variant="primary" onClick={() => navigate('/orders')}>
-                        Novo Pedido
-                    </Button>
-                </Col>
-                <Col md={3}>
-                    <Button variant="secondary" onClick={() => navigate('/clientes')}>
-                        Cadastrar Cliente
-                    </Button>
-                </Col>
-            </Row>
         </Container>
     );
 };

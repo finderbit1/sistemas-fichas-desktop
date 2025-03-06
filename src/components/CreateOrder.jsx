@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Row, Col, Button, Card } from 'react-bootstrap';
+import { Typeahead } from 'react-bootstrap-typeahead';
+import { invoke } from '@tauri-apps/api/core';
+
 import FormOrder from '../components/FormOrder';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 const CreateOrder = () => {
     const [formData, setFormData] = useState({
@@ -11,13 +15,16 @@ const CreateOrder = () => {
         dataEntrega: '',
         cidadeCliente: '',
         observacao: '',
+        prioridade: '1',
         items: []
     });
 
-    const [clientesSugeridos, setClientesSugeridos] = useState([]);
+    const [clientes, setClientes] = useState([]);
+    const [selectedCliente, setSelectedCliente] = useState([]);
 
     useEffect(() => {
-        const generateOrderId = () => `ORD-${Math.floor(Math.random() * 100000)}`;
+        let lastId = 0; // Simulação, ajuste conforme seu backend
+        const generateOrderId = () => `${lastId + 1}`;
         setFormData((prev) => ({ ...prev, numeroPedido: generateOrderId() }));
     }, []);
 
@@ -26,31 +33,26 @@ const CreateOrder = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleNomeClienteChange = async (e) => {
-        const valor = e.target.value;
-        setFormData((prev) => ({ ...prev, nomeCliente: valor }));
-
-        if (valor.length > 1) {
-            try {
-                const response = await fetch(`http://localhost:5000/api/clientes?search=${valor}`);
-                const data = await response.json();
-                setClientesSugeridos(data);
-            } catch (error) {
-                console.error('Erro ao buscar clientes:', error);
-            }
+    const handleBuscarClientes = async (input) => {
+        if (!input || input.length < 2) return;
+        try {
+            const resultado = await invoke('buscar_clientes', { nomeParcial: input });
+            setClientes(resultado);
+        } catch (err) {
+            console.error('Erro ao buscar clientes:', err);
         }
     };
 
-    const handleClienteSelecionado = (e) => {
-        const nomeSelecionado = e.target.value;
-        const cliente = clientesSugeridos.find(c => c.name === nomeSelecionado);
-        if (cliente) {
+    const handleClienteSelecionado = (selected) => {
+        if (selected.length > 0) {
+            const cliente = selected[0];
             setFormData((prev) => ({
                 ...prev,
-                nomeCliente: cliente.name,
-                telefoneCliente: cliente.phone,
-                cidadeCliente: cliente.city,
+                nomeCliente: cliente.nome,
+                telefoneCliente: cliente.telefone,
+                cidadeCliente: cliente.cidade,
             }));
+            setSelectedCliente([cliente]);
         }
     };
 
@@ -68,42 +70,26 @@ const CreateOrder = () => {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('http://localhost:5000/api/pedidos', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                alert('Pedido salvo com sucesso!');
-                setFormData({
-                    numeroPedido: `ORD-${Math.floor(Math.random() * 100000)}`,
-                    nomeCliente: '',
-                    telefoneCliente: '',
-                    dataEntrada: '',
-                    dataEntrega: '',
-                    cidadeCliente: '',
-                    observacao: '',
-                    items: []
-                });
-            } else {
-                alert('Erro ao salvar pedido!');
-            }
-        } catch (error) {
-            console.error('Erro na requisição:', error);
-            alert('Erro ao conectar com o servidor!');
+    const handleSalvarPedido = () => {
+        if (
+            !formData.nomeCliente ||
+            !formData.dataEntrada ||
+            !formData.dataEntrega ||
+            !formData.telefoneCliente ||
+            !formData.cidadeCliente
+        ) {
+            alert('Preencha todos os campos obrigatórios!');
+            return;
         }
+
+        console.log('Pedido salvo:', formData);
+        // Aqui você faz o POST via invoke ou fetch
     };
 
     return (
         <>
             <Card className="p-3">
-                <Form onSubmit={handleSubmit}>
+                <Form onSubmit={(e) => e.preventDefault()}>
                     <Row className="mb-3">
                         <Col md={2}>
                             <Form.Group controlId="numeroPedido">
@@ -117,23 +103,18 @@ const CreateOrder = () => {
                             </Form.Group>
                         </Col>
 
-                        <Col md={6}>
+                        <Col md={7}>
                             <Form.Group controlId="nomeCliente">
-                                <Form.Control
-                                    type="text"
-                                    name="nomeCliente"
-                                    value={formData.nomeCliente}
-                                    onChange={handleNomeClienteChange}
-                                    onBlur={handleClienteSelecionado}
-                                    list="sugestoesClientes"
+                                <Typeahead
+                                    id="autocomplete-clientes"
+                                    labelKey="nome"
+                                    options={clientes}
+                                    onInputChange={handleBuscarClientes}
+                                    onChange={handleClienteSelecionado}
+                                    selected={selectedCliente}
                                     placeholder="Digite o nome do cliente"
-                                    required
+                                    minLength={2}
                                 />
-                                <datalist id="sugestoesClientes">
-                                    {clientesSugeridos.map((cliente) => (
-                                        <option key={cliente.id} value={cliente.name} />
-                                    ))}
-                                </datalist>
                             </Form.Group>
                         </Col>
 
@@ -145,6 +126,7 @@ const CreateOrder = () => {
                                     value={formData.telefoneCliente}
                                     onChange={handleChange}
                                     placeholder="(00) 00000-0000"
+                                    readOnly
                                 />
                             </Form.Group>
                         </Col>
@@ -185,14 +167,16 @@ const CreateOrder = () => {
                                     name="cidadeCliente"
                                     value={formData.cidadeCliente}
                                     onChange={handleChange}
+                                    readOnly
                                 />
                             </Form.Group>
                         </Col>
                     </Row>
 
                     <Row className="mb-3">
-                        <Col md={6}>
+                        <Col md={10}>
                             <Form.Group controlId="observacao">
+                                <Form.Label>Observações do Pedido</Form.Label>
                                 <Form.Control
                                     as="textarea"
                                     rows={1}
@@ -203,24 +187,41 @@ const CreateOrder = () => {
                                 />
                             </Form.Group>
                         </Col>
-                    </Row>
-
-                    <Row className="mb-4">
-                        <Col md={2}>
-                            <Button variant="primary" type="submit">
-                                Salvar Pedido
-                            </Button>
-                        </Col>
-                        <Col md={2}>
-                            <Button variant="secondary" type="reset">
-                                Cancelar
-                            </Button>
+                        <Col md={2} >
+                            <Form.Group>
+                                <Form.Label>Prioridade</Form.Label>
+                                <Form.Select
+                                    name='prioridade'
+                                    value={formData.prioridade}
+                                    onChange={handleChange}
+                                >
+                                    <option value="1">Normal</option>
+                                    <option value="2">Média</option>
+                                    <option value="3">Alta</option>
+                                </Form.Select>
+                            </Form.Group>
                         </Col>
                     </Row>
                 </Form>
             </Card>
+
             <Card>
                 <FormOrder items={formData.items} addItem={addItem} removeItem={removeItem} />
+            </Card>
+
+            <Card>
+                <Row className="mb-4 p-3">
+                    <Col md={2}>
+                        <Button variant="primary" type="button" onClick={handleSalvarPedido}>
+                            Salvar Pedido
+                        </Button>
+                    </Col>
+                    <Col md={2}>
+                        <Button variant="danger" type="reset">
+                            Cancelar
+                        </Button>
+                    </Col>
+                </Row>
             </Card>
         </>
     );

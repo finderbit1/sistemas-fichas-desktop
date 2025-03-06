@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import CreateClient from './pages/CreateClient';
 import CreateOrderPage from './pages/CreateOrderPage';
 import RelatorioPedidos from './pages/RelatorioPedidos'
+import TrelloSim from './pages/TreeloPage';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -21,15 +22,15 @@ function App() {
         <Sidebar expanded={sidebarExpanded} toggleSidebar={toggleSidebar} />
         <div className={`main-content ${sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
           <div className="content-area">
-             <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/orders" element={<CreateOrderPage />} />
-      <Route path="/clientes" element={<CreateClient />} />
-      import RelatorioPedidos from './pages/RelatorioPedidos';
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/orders" element={<CreateOrderPage />} />
+              <Route path="/clientes" element={<CreateClient />} />
+              <Route path="/treelo-designer" element={<TrelloSim />} />
 
-<Route path="/relatorio" element={<RelatorioPedidos />} />
+              <Route path="/relatorio" element={<RelatorioPedidos />} />
 
-    </Routes>
+            </Routes>
           </div>
         </div>
       </div>

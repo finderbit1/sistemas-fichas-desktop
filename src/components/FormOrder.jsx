@@ -95,7 +95,9 @@ function FormOrder() {
 
     return (
         <Container className="mt-4">
-      
+            <div className="">
+                <Button onClick={adTab}>Adicionar Aba</Button>
+            </div>
             <Card className="mt-3">
                 <Tabs defaultActiveKey="tab-1" id="container-tabs" className="mb-3">
                     {tabs.map((tab, index) => (
@@ -120,9 +122,7 @@ function FormOrder() {
                 </Tabs>
             </Card>
 
-            <div className="mt-3">
-                <Button onClick={adTab}>Adicionar Aba</Button>
-            </div>
+
         </Container>
     );
 }
