@@ -1,0 +1,92 @@
+.app-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  /* Estilos da Sidebar */
+  .sidebar {
+    background-color: #343a40;
+    color: white;
+    transition: all 0.3s;
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  .sidebar.expanded {
+    width: 250px;
+    min-width: 250px;
+  }
+  
+  .sidebar.collapsed {
+    width: 60px;
+    min-width: 60px;
+  }
+  
+  .sidebar-header {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .sidebar-item {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 10px 15px;
+  }
+  
+  .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  .toggle-btn {
+    color: white;
+    text-decoration: none;
+  }
+  
+  /* Estilos do Conteúdo Principal */
+  .main-content {
+    flex-grow: 1;
+    background-color: #f8f9fa;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .main-header {
+    background-color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+  }
+  
+  .user-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .content-area {
+    padding: 20px;
+    flex-grow: 1;
+  }
+  
+  /* Estilos responsivos */
+  @media (max-width: 768px) {
+    .sidebar.expanded {
+      position: fixed;
+      z-index: 1000;
+    }
+    
+    .sidebar-collapsed {
+      margin-left: 60px;
+    }
+    
+    .sidebar-expanded {
+      margin-left: 0;
+    }
+  }
