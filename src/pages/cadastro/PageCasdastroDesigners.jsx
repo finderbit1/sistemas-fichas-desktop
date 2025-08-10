@@ -1,7 +1,6 @@
+from 
 
-
-
-const dadodMocados = [
+const dadosMocados = [
     {id:0,name:"André"},
     {id:1,name:"Carol"},
 ]

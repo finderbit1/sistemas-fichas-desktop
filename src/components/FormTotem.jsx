@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 import ImageDropZone from './ImageDropZone';
 import InputValorReal from './InputValorMoeda';
+import AreaCalculatorLinhaUnica from './AreaCalculator';
 
 function FormTotem(props) {
     const [formData, setFormData] = useState({
@@ -105,15 +106,9 @@ function FormTotem(props) {
                             <Form.Control placeholder="Descrição do Totem" type="text" name="descricao" value={formData.descricao} onChange={handleChange} required />
                         </Form.Group>
                     </Col>
-                    <Col md={2}>
-                        <Form.Group controlId="largura">
-                            <Form.Control type="number" name="largura" placeholder="Largura (cm)" value={formData.largura} onChange={handleChange} required />
-                        </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                        <Form.Group controlId="altura">
-                            <Form.Control type="number" name="altura" placeholder="Altura (cm)" value={formData.altura} onChange={handleChange} required />
-                        </Form.Group>
+                    <Col md={4}>
+                        <AreaCalculatorLinhaUnica>
+                        </AreaCalculatorLinhaUnica>
                     </Col>
                 </Row>
                 <hr />

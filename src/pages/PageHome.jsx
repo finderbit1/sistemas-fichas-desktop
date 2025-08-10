@@ -30,7 +30,6 @@ const Home = () => {
                 const pedidosFormatados = res.data.map((pedido) => ({
                     ...pedido,
                     prioridade: pedido.prioridade === "ALTA", // transforma em booleano
-                    // data: formatarData(pedido.data),          // transforma para YYYY-MM-DD
                 }));
 
                 setPedidos(pedidosFormatados);

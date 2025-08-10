@@ -30,7 +30,7 @@ export default function ImageDropZone({ onImageChange }) {
                 ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
                 // Qualidade 0.2 (20%)
-                const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.2);
+                const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
 
                 setImage(compressedDataUrl);
                 onImageChange?.(compressedDataUrl);

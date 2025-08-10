@@ -13,9 +13,6 @@ const api = axios.create({
   }
 });
 
-// Exemplo de métodos reutilizáveis
-// export const res = await axios.get(`${API_LOCAL}/pedidos`, { timeout: 150 });
-
 export const getUserById = (id) => api.get(`/users/${id}`);
 export const createUser = (data) => api.post('/users', data);
 export const updateUser = (id, data) => api.put(`/users/${id}`, data);

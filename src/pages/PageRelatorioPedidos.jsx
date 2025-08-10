@@ -84,6 +84,7 @@ function RelatorioFechamento() {
             <th>Designer</th>
             <th>Data</th>
             <th>Valor (R$)</th>
+
           </tr>
         </thead>
         <tbody>
