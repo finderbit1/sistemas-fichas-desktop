@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Form, Row, Col, Button, Card, Tabs, Tab, Container } from 'react-bootstrap';
 import { Typeahead } from 'react-bootstrap-typeahead';
-import FormPainel from './FormPainel';
-import FormTotem from './FormTotem';
-import FormLona from './FormLona';
+import FormPainel from './prouctions/FormPainel';
+import FormTotem from './prouctions/FormTotem';
+import FormLona from './prouctions/FormLona';
 import FormBolsinha from './FormBolsinha';
 import { salvarPedido as salvarPedidoStorage, obterPedidos } from '../utils/localStorageHelper';
 import { validarPedido, normalizarDecimais } from "../utils/validador"

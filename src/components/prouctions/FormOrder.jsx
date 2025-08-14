@@ -3,7 +3,7 @@ import { Form, Tabs, Tab, Container, Button, Card } from 'react-bootstrap';
 import FormPainel from './FormPainel';
 import FormTotem from './FormTotem';
 import FormLona from './FormLona';
-import FormBolsinha from './FormBolsinha';
+import FormBolsinha from '../FormBolsinha';
 
 function TypeProduction() {
     const [opcaoSelecionada, setOpcaoSelecionada] = useState('');

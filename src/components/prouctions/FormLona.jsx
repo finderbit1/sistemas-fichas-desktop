@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
-import ImageDropZone from './ImageDropZone';
-import InputValorReal from './InputValorMoeda';
+import ImageDropZone from '../ImageDropZone';
+import InputValorReal from '../InputValorMoeda';
 
 function FormLona() {
     const [formData, setFormData] = useState({

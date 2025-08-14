@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card, InputGroup, } from 'react-bootstrap';
-import ImageDropZone from './ImageDropZone';
-import AreaCalculatorLinhaUnica from './AreaCalculator';
-import InputValorReal from './InputValorMoeda';
+import ImageDropZone from '../ImageDropZone';
+import AreaCalculatorLinhaUnica from '../AreaCalculator';
+import InputValorReal from '../InputValorMoeda';
 
 
 function FormPainel({ onAdicionarItem }) {

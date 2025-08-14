@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
-import ImageDropZone from './ImageDropZone';
-import InputValorReal from './InputValorMoeda';
-import AreaCalculatorLinhaUnica from './AreaCalculator';
+import ImageDropZone from '../ImageDropZone';
+import InputValorReal from '../InputValorMoeda';
+import AreaCalculatorLinhaUnica from '../AreaCalculator';
 
 function FormTotem(props) {
     const [formData, setFormData] = useState({
