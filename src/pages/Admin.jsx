@@ -99,76 +99,26 @@
 
 // export default AdminPage;
 
-import { useState } from "react";
-import { Container, Row, Col, Nav, Tab, Button, Table } from "react-bootstrap";
+import Nav from 'react-bootstrap/Nav';
 
-const categorias = [
-  { key: "vendedores", label: "Vendedores" },
-  { key: "designers", label: "Designers" },
-  { key: "precos", label: "Preços Padrões" },
-  { key: "descontos", label: "Descontos" },
-  { key: "transportadoras", label: "Transportadoras" }
-];
 
-export default function AdminPage() {
-  const [activeKey, setActiveKey] = useState("designers");
 
-  const renderTabela = (tipo) => (
-    <>
-      <div className="d-flex justify-content-between mb-3">
-        <h4 className="text-capitalize">{tipo}</h4>
-        <Button variant="success">+ Adicionar</Button>
-      </div>
-      <Table bordered hover>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>Exemplo {tipo}</td>
-            <td>
-              <Button size="sm" variant="warning" className="me-2">Editar</Button>
-              <Button size="sm" variant="danger">Excluir</Button>
-            </td>
-          </tr>
-        </tbody>
-      </Table>
-    </>
-  );
-
+function AdminPage() {
   return (
-    <Container fluid>
-      <Row>
-        {/* Sidebar */}
-        <Col md={2} className="bg-dark text-white p-3 min-vh-100">
-          <h5 className="mb-4">Painel Admin</h5>
-          <Nav variant="pills" className="flex-column" activeKey={activeKey} onSelect={setActiveKey}>
-            {categorias.map((c) => (
-              <Nav.Link eventKey={c.key} key={c.key}>{c.label}</Nav.Link>
-            ))}
-            <hr />
-            <Button variant="outline-light" className="mt-2 w-100">Exportar Relatórios</Button>
-          </Nav>
-        </Col>
-
-        {/* Conteúdo principal */}
-        <Col md={10} className="p-4">
-          <Tab.Container activeKey={activeKey}>
-            <Tab.Content>
-              {categorias.map((c) => (
-                <Tab.Pane eventKey={c.key} key={c.key}>
-                  {renderTabela(c.label)}
-                </Tab.Pane>
-              ))}
-            </Tab.Content>
-          </Tab.Container>
-        </Col>
-      </Row>
-    </Container>
+    <Nav variant="tabs" defaultActiveKey="/home">
+      <Nav.Item>
+        <Nav.Link href="/home">Cadatros</Nav.Link>
+      </Nav.Item>
+      <Nav.Item>
+        <Nav.Link eventKey="link-1">Option 2</Nav.Link>
+      </Nav.Item>
+      <Nav.Item>
+        <Nav.Link eventKey="disabled" disabled>
+          Disabled
+        </Nav.Link>
+      </Nav.Item>
+    </Nav>
   );
 }
+
+export default AdminPage;

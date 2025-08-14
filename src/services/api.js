@@ -1,15 +1,15 @@
 import axios from 'axios';
 
 // const API_LOCAL = "http://192.168.15.24:8080";  // IP do servidor na rede
-const API_LOCAL = "http://127.0.0.1:8000";  // IP do servidor na rede
+const API_LOCAL = "http://192.168.15.8:8000";  // IP do servidor na rede
+// const API_LOCAL = "http://127.0.0.1:8000";  // IP do servidor na rede
 
 const api = axios.create({
-  baseURL: API_LOCAL, // coloque aqui a base da sua API
+  baseURL: API_LOCAL, 
   headers: {
     'Content-Type': 'application/json',
-    timeout: 3000// 5 segundos padrão
+    timeout: 3000
 
-    // Authorization: `Bearer ${token}` // se precisar autenticação
   }
 });
 
@@ -23,4 +23,5 @@ export const getAllClientes = () => api.get('/clientes');
 export const postCliente = (payload) => api.post('/clientes',payload);
 export const getAllFormasPagamentos = () => api.get('/tipos-pagamentos');
 export const getAllFormasEnvios = () => api.get('/tipos-envios');
+export const deleteUserById = () => api.delete('user')
 export default api;
