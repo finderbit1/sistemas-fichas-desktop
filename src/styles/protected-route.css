@@ -1,0 +1,44 @@
+/* ===== ESTILOS DO COMPONENTE PROTECTED ROUTE ===== */
+
+.access-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.access-denied h2 {
+  color: var(--error-600);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-3xl);
+}
+
+.access-denied p {
+  color: var(--neutral-600);
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-lg);
+}
+
+.access-denied p:last-child {
+  margin-bottom: 0;
+  font-weight: var(--font-weight-medium);
+  color: var(--neutral-700);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  .access-denied {
+    padding: var(--space-4);
+  }
+  
+  .access-denied h2 {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .access-denied p {
+    font-size: var(--font-size-base);
+  }
+}
