@@ -15,6 +15,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Função de logout
+  const logout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
   // Verificar se há usuário logado ao carregar a aplicação
   useEffect(() => {
     const checkAuth = () => {
@@ -39,12 +47,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Função de login
-  const login = async (email, password) => {
+  const login = async (credentials) => {
     try {
       setLoading(true);
       
       // Simular chamada de API (substitua pela sua API real)
-      const response = await mockLoginAPI(email, password);
+      const response = await mockLoginAPI(credentials.email, credentials.senha);
       
       if (response.success) {
         const userData = response.user;
@@ -71,14 +79,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Função de logout
-  const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-    setIsAuthenticated(false);
-  };
-
   // Verificar se o usuário é admin
   const isAdmin = () => {
     return user && user.role === 'admin';
@@ -93,6 +93,11 @@ export const AuthProvider = ({ children }) => {
     
     // Verificar permissões específicas do usuário
     return user.permissions && user.permissions.includes(permission);
+  };
+
+  // Verificar se o usuário tem role específico
+  const hasRole = (role) => {
+    return user?.role === role;
   };
 
   // Atualizar dados do usuário
@@ -160,6 +165,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     hasPermission,
+    hasRole,
     updateUser
   };
 

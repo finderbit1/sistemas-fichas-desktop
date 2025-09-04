@@ -128,33 +128,42 @@ const Clientes = () => {
 
 
     return (
-        <div className="p-4">
-            <h3>Clientes</h3>
-            <Button variant="success" onClick={() => abrirModal()}>
-                Novo Cliente
-            </Button>
-            <Table striped bordered hover className="mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Cidade</th>
-                        <th>Estado</th>
-                        <th>Telefone</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {clientes.map((cli) => (
-                        <tr key={cli.id}>
-                            <td>{cli.id}</td>
-                            <td>{cli.nome}</td>
-                            <td>{cli.cidade}</td>
-                            <td>{cli.estado}</td>
-                            <td>{cli.telefone}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+        <div style={{ padding: 0 }}>
+            <div className="dashboard-card mb-4">
+                <div className="dashboard-card-header">
+                    <h4 className="dashboard-card-title">Clientes</h4>
+                    <Button variant="success" onClick={() => abrirModal()}>
+                        Novo Cliente
+                    </Button>
+                </div>
+            </div>
+            
+            <div className="dashboard-card">
+                <div className="table-container">
+                    <Table hover responsive className="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Cidade</th>
+                                <th>Estado</th>
+                                <th>Telefone</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {clientes.map((cli) => (
+                                <tr key={cli.id}>
+                                    <td>{cli.id}</td>
+                                    <td>{cli.nome}</td>
+                                    <td>{cli.cidade}</td>
+                                    <td>{cli.estado}</td>
+                                    <td>{cli.telefone}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </div>
+            </div>
 
             <Modal show={showModal} onHide={() => setShowModal(false)}>
                 <Modal.Header closeButton>

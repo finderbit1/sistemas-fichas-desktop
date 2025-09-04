@@ -51,62 +51,77 @@ function RelatorioFechamento() {
   const total = resultados.reduce((sum, item) => sum + item.valor, 0);
 
   return (
-    <Container className="mt-4">
-      <h3>Relatório de Fechamentos</h3>
-      <Row className="mb-3">
-        <Col><Form.Control type="text" placeholder="Cliente" name="cliente" onChange={handleChange} /></Col>
-        <Col>
-          <Form.Select name="vendedor" onChange={handleChange}>
-            <option value="">Todos os Vendedores</option>
-            <option value="Andre">Andre</option>
-            <option value="Carol">Carol</option>
-          </Form.Select>
-        </Col>
-        <Col>
-          <Form.Select name="designer" onChange={handleChange}>
-            <option value="">Todos os Designers</option>
-            <option value="Carol">Carol</option>
-            <option value="Maicon">Maicon</option>
-            <option value="Willis">Willis</option>
-          </Form.Select>
-        </Col>
-        <Col><Form.Control type="date" name="dataInicio" onChange={handleChange} /></Col>
-        <Col><Form.Control type="date" name="dataFim" onChange={handleChange} /></Col>
-        <Col><Button onClick={filtrar}>Filtrar</Button></Col>
-      </Row>
+    <div style={{ padding: 0 }}>
+      <div className="dashboard-card mb-4">
+        <div className="dashboard-card-header">
+          <h4 className="dashboard-card-title">Relatório de Fechamentos</h4>
+        </div>
+      </div>
+      
+      <div className="dashboard-card mb-4">
+        <div className="dashboard-card-header">
+          <h5 className="dashboard-card-title">Filtros</h5>
+        </div>
+        <div style={{ padding: 'var(--spacing-4)' }}>
+          <Row className="mb-3">
+            <Col><Form.Control type="text" placeholder="Cliente" name="cliente" onChange={handleChange} /></Col>
+            <Col>
+              <Form.Select name="vendedor" onChange={handleChange}>
+                <option value="">Todos os Vendedores</option>
+                <option value="Andre">Andre</option>
+                <option value="Carol">Carol</option>
+              </Form.Select>
+            </Col>
+            <Col>
+              <Form.Select name="designer" onChange={handleChange}>
+                <option value="">Todos os Designers</option>
+                <option value="Carol">Carol</option>
+                <option value="Maicon">Maicon</option>
+                <option value="Willis">Willis</option>
+              </Form.Select>
+            </Col>
+            <Col><Form.Control type="date" name="dataInicio" onChange={handleChange} /></Col>
+            <Col><Form.Control type="date" name="dataFim" onChange={handleChange} /></Col>
+            <Col><Button onClick={filtrar}>Filtrar</Button></Col>
+          </Row>
+        </div>
+      </div>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Vendedor</th>
-            <th>Designer</th>
-            <th>Data</th>
-            <th>Valor (R$)</th>
-
-          </tr>
-        </thead>
-        <tbody>
-          {resultados.map(item => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.cliente}</td>
-              <td>{item.vendedor}</td>
-              <td>{item.designer}</td>
-              <td>{item.data}</td>
-              <td>{item.valor.toFixed(2)}</td>
-            </tr>
-          ))}
-          {resultados.length > 0 && (
-            <tr className="fw-bold">
-              <td colSpan={5}>Total</td>
-              <td>R$ {total.toFixed(2)}</td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
-    </Container>
+      <div className="dashboard-card">
+        <div className="table-container">
+          <Table hover responsive className="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Designer</th>
+                <th>Data</th>
+                <th>Valor (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resultados.map(item => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.cliente}</td>
+                  <td>{item.vendedor}</td>
+                  <td>{item.designer}</td>
+                  <td>{item.data}</td>
+                  <td>{item.valor.toFixed(2)}</td>
+                </tr>
+              ))}
+              {resultados.length > 0 && (
+                <tr className="fw-bold">
+                  <td colSpan={5}>Total</td>
+                  <td>R$ {total.toFixed(2)}</td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+    </div>
   );
 }
 
