@@ -1,18 +1,18 @@
 :root {
-  /* Cores primárias - Azul moderno e profissional */
-  --color-primary: #2563eb;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1d4ed8;
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Cores primárias - Gradiente moderno azul-roxo */
+  --color-primary: #6366f1;
+  --color-primary-light: #8b5cf6;
+  --color-primary-dark: #4f46e5;
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
   
   /* Neutras - Escala de cinza harmoniosa */
   --color-neutral-50: #f9fafb;
@@ -26,10 +26,10 @@
   --color-neutral-800: #1f2937;
   --color-neutral-900: #111827;
   
-  /* Cores de estado - Harmoniosas e acessíveis */
-  --color-success: #059669;
-  --color-success-light: #10b981;
-  --color-success-dark: #047857;
+  /* Cores de estado - Vibrantes e modernas */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-dark: #059669;
   --color-success-50: #ecfdf5;
   --color-success-100: #d1fae5;
   --color-success-200: #a7f3d0;
@@ -38,9 +38,9 @@
   --color-success-700: #047857;
   --color-success-900: #064e3b;
   
-  --color-warning: #d97706;
-  --color-warning-light: #f59e0b;
-  --color-warning-dark: #b45309;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #d97706;
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
   --color-warning-200: #fde68a;
@@ -49,9 +49,9 @@
   --color-warning-700: #b45309;
   --color-warning-900: #78350f;
   
-  --color-error: #dc2626;
-  --color-error-light: #ef4444;
-  --color-error-dark: #b91c1c;
+  --color-error: #ef4444;
+  --color-error-light: #f87171;
+  --color-error-dark: #dc2626;
   --color-error-50: #fef2f2;
   --color-error-100: #fee2e2;
   --color-error-200: #fecaca;
@@ -60,16 +60,16 @@
   --color-error-700: #b91c1c;
   --color-error-900: #7f1d1d;
   
-  --color-info: #0284c7;
-  --color-info-light: #0ea5e9;
-  --color-info-dark: #0369a1;
-  --color-info-50: #f0f9ff;
-  --color-info-100: #e0f2fe;
-  --color-info-200: #bae6fd;
-  --color-info-500: #0ea5e9;
-  --color-info-600: #0284c7;
-  --color-info-700: #0369a1;
-  --color-info-900: #0c4a6e;
+  --color-info: #06b6d4;
+  --color-info-light: #22d3ee;
+  --color-info-dark: #0891b2;
+  --color-info-50: #ecfeff;
+  --color-info-100: #cffafe;
+  --color-info-200: #a5f3fc;
+  --color-info-500: #06b6d4;
+  --color-info-600: #0891b2;
+  --color-info-700: #0e7490;
+  --color-info-900: #164e63;
   
   /* Tipografia mais elegante */
   --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -144,30 +144,38 @@ body {
   font-size: var(--font-size-base); /* 12px */
   line-height: 1.5;
   color: var(--color-neutral-700);
-  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #e2e8f0 75%, #f8fafc 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Modo escuro - Cores suaves e agradáveis aos olhos */
 [data-theme="dark"] {
-  /* Primárias - Azul mais suave e confortável */
-  --color-primary: #5b8def;
-  --color-primary-light: #7ba3f2;
-  --color-primary-dark: #4a7ce8;
-  --color-primary-50: #0f172a;
-  --color-primary-100: #1e293b;
-  --color-primary-200: #334155;
-  --color-primary-300: #475569;
-  --color-primary-400: #64748b;
-  --color-primary-500: #5b8def;
-  --color-primary-600: #7ba3f2;
-  --color-primary-700: #9bb5f5;
-  --color-primary-800: #bdd1f8;
-  --color-primary-900: #dfedfb;
+  /* Primárias - Gradiente roxo-azul suave */
+  --color-primary: #8b5cf6;
+  --color-primary-light: #a78bfa;
+  --color-primary-dark: #7c3aed;
+  --color-primary-50: #0f0b1a;
+  --color-primary-100: #1e1a2e;
+  --color-primary-200: #2d2542;
+  --color-primary-300: #3c3056;
+  --color-primary-400: #4b3b6a;
+  --color-primary-500: #8b5cf6;
+  --color-primary-600: #a78bfa;
+  --color-primary-700: #c4b5fd;
+  --color-primary-800: #ddd6fe;
+  --color-primary-900: #f3f0ff;
   
   /* Neutras - Tons mais suaves e confortáveis */
-  --color-neutral-50: #0a0a0a;
+  --color-neutral-50: #0c0c0c;
   --color-neutral-100: #1a1a1a;
   --color-neutral-200: #2a2a2a;
   --color-neutral-300: #3a3a3a;
@@ -179,13 +187,13 @@ body {
   --color-neutral-900: #eaeaea;
   
   /* Estados - Cores suaves e confortáveis para modo escuro */
-  --color-success: #4ade80;
+  --color-success: #34d399;
   --color-success-light: #6ee7b7;
-  --color-success-dark: #22c55e;
+  --color-success-dark: #10b981;
   --color-success-50: #0a1f0a;
   --color-success-100: #1a3a1a;
   --color-success-200: #2a5a2a;
-  --color-success-500: #4ade80;
+  --color-success-500: #34d399;
   --color-success-600: #6ee7b7;
   --color-success-700: #8ef0a4;
   --color-success-900: #f0fdf4;
@@ -212,20 +220,22 @@ body {
   --color-error-700: #fecaca;
   --color-error-900: #fef2f2;
   
-  --color-info: #60a5fa;
-  --color-info-light: #93c5fd;
-  --color-info-dark: #3b82f6;
+  --color-info: #22d3ee;
+  --color-info-light: #67e8f9;
+  --color-info-dark: #06b6d4;
   --color-info-50: #0a1a2a;
   --color-info-100: #1a3a5a;
   --color-info-200: #2a5a8a;
-  --color-info-500: #60a5fa;
-  --color-info-600: #93c5fd;
-  --color-info-700: #bfdbfe;
-  --color-info-900: #eff6ff;
+  --color-info-500: #22d3ee;
+  --color-info-600: #67e8f9;
+  --color-info-700: #a5f3fc;
+  --color-info-900: #ecfeff;
 }
 
 [data-theme="dark"] body {
-  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 50%, var(--color-neutral-200) 100%);
+  background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%, #0c0c0c 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
   color: var(--color-neutral-700);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

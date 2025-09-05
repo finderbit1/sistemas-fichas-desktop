@@ -72,7 +72,7 @@ const SystemBackup = () => {
   const handleRestore = (backupId) => {
     if (window.confirm('Tem certeza que deseja restaurar este backup? Esta ação não pode ser desfeita.')) {
       // Simular restauração
-      alert('Backup restaurado com sucesso!');
+      // Backup restaurado com sucesso
     }
   };
 

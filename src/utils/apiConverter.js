@@ -188,3 +188,5 @@ export const convertStatusFromApi = (status) => {
   
   return statusMap[status] || 'Pendente';
 };
+
+

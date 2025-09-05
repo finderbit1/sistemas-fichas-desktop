@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import ImageDropZone from './ImageDropZone';
 import InputValorReal from './InputValorMoeda';
 import ValidationModal from './ValidationModal';
+import { useVendedoresDesigners } from '../hooks/useVendedoresDesigners';
 
 function FormBolsinha({ onAdicionarItem }) {
+    const { vendedores, designers, loading, error } = useVendedoresDesigners();
+    
     const [formData, setFormData] = useState({
         descricao: '',
         tipo: 'necessaire',
@@ -34,7 +37,7 @@ function FormBolsinha({ onAdicionarItem }) {
         e.preventDefault();
 
         if (!formData.descricao || !formData.valorBolsinha) {
-            alert('Preencha todos os campos obrigatórios.');
+            // Validação removida - será feita no componente pai
             return;
         }
 
@@ -61,7 +64,7 @@ function FormBolsinha({ onAdicionarItem }) {
             valorBolsinha: '',
         });
         setImages([]);
-        alert('Item adicionado!');
+        // Item adicionado com sucesso
     };
 
     return (

@@ -8,7 +8,7 @@ export default function ImageDropZone({ onImageChange }) {
 
     const processImage = (file) => {
         if (file.size > MAX_FILE_SIZE) {
-            alert("A imagem excede o limite de 5 MB.");
+            // Imagem excede o limite de 5 MB
             return;
         }
 
@@ -45,7 +45,7 @@ export default function ImageDropZone({ onImageChange }) {
         event.preventDefault();
         const file = event.dataTransfer.files[0];
         if (file?.type.startsWith("image/")) processImage(file);
-        else alert("Por favor, solte uma imagem válida.");
+        else console.warn("Por favor, solte uma imagem válida.");
     };
 
     const handlePaste = (event) => {
@@ -60,7 +60,7 @@ export default function ImageDropZone({ onImageChange }) {
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
         if (file?.type.startsWith("image/")) processImage(file);
-        else alert("Por favor, selecione uma imagem válida.");
+        else console.warn("Por favor, selecione uma imagem válida.");
     };
 
     return (

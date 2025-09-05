@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert } from 'react-bootstrap';
 import { Plus, Pencil, Trash, CreditCard } from 'react-bootstrap-icons';
+import { useServerConfig } from '../../contexts/ServerConfigContext';
 import { 
   getAllFormasPagamentos, 
   createFormaPagamento, 
@@ -9,16 +10,19 @@ import {
 } from '../../services/api';
 
 const FormasPagamentoManagement = () => {
+  const { isConnected, connectionStatus } = useServerConfig();
   const [formasPagamento, setFormasPagamento] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({ name: '' });
+  const [formData, setFormData] = useState({ name: '', value: '' });
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
 
   useEffect(() => {
-    loadFormasPagamento();
-  }, []);
+    if (isConnected) {
+      loadFormasPagamento();
+    }
+  }, [isConnected]);
 
   const loadFormasPagamento = async () => {
     try {
@@ -37,7 +41,8 @@ const FormasPagamentoManagement = () => {
     e.preventDefault();
     try {
       const data = {
-        name: formData.name
+        name: formData.name,
+        value: formData.value ? parseFloat(formData.value) : null
       };
 
       if (editingItem) {
@@ -49,7 +54,7 @@ const FormasPagamentoManagement = () => {
       }
 
       setShowModal(false);
-      setFormData({ name: '' });
+      setFormData({ name: '', value: '' });
       setEditingItem(null);
       loadFormasPagamento();
     } catch (error) {
@@ -60,7 +65,7 @@ const FormasPagamentoManagement = () => {
 
   const handleEdit = (item) => {
     setEditingItem(item);
-    setFormData({ name: item.name });
+    setFormData({ name: item.name, value: item.value || '' });
     setShowModal(true);
   };
 
@@ -79,9 +84,29 @@ const FormasPagamentoManagement = () => {
 
   const handleNew = () => {
     setEditingItem(null);
-    setFormData({ name: '' });
+    setFormData({ name: '', value: '' });
     setShowModal(true);
   };
+
+  if (connectionStatus === 'checking') {
+    return (
+      <div className="text-center p-4">
+        <Spinner animation="border" variant="primary" />
+        <p className="mt-2">Verificando conexão com a API...</p>
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="text-center p-4">
+        <Alert variant="danger">
+          <strong>Erro de Conexão</strong>
+          <p className="mt-2">Não foi possível conectar com a API. Verifique se o servidor está rodando.</p>
+        </Alert>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -112,6 +137,7 @@ const FormasPagamentoManagement = () => {
               <thead>
                 <tr>
                   <th>Nome</th>
+                  <th>Valor</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -123,6 +149,9 @@ const FormasPagamentoManagement = () => {
                         <CreditCard size={16} className="me-2 text-muted" />
                         {item.name}
                       </div>
+                    </td>
+                    <td>
+                      {item.value ? `R$ ${item.value.toFixed(2)}` : 'Sem valor'}
                     </td>
                     <td>
                       <Button
@@ -170,6 +199,18 @@ const FormasPagamentoManagement = () => {
                   />
                 </Form.Group>
               </Col>
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Valor (opcional)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={formData.value}
+                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                    placeholder="Ex: 2.50 (taxa de processamento)"
+                  />
+                </Form.Group>
+              </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
@@ -202,3 +243,4 @@ const FormasPagamentoManagement = () => {
 };
 
 export default FormasPagamentoManagement;
+

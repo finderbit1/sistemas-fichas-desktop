@@ -27,3 +27,7 @@ export function excluirPedido(pedidoId) {
   const pedidosFiltrados = pedidos.filter(p => p.id !== pedidoId);
   localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(pedidosFiltrados));
 }
+
+// Funções com nomes mais específicos para compatibilidade
+export const salvarPedidoStorage = salvarPedido;
+export const removerPedidoStorage = excluirPedido;

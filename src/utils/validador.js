@@ -1,6 +1,6 @@
 
 export function validarPedido(dados) {
-    alert(dados)
+    console.log('Dados validados:', dados)
     const erros = [];
 
     if (!dados.nomeCliente.trim()) erros.push("Nome do cliente é obrigatório.");

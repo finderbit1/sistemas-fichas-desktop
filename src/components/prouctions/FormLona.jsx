@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
 import ValidationModal from '../ValidationModal';
+import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
 
 function FormLona({ onAdicionarItem }) {
+    const { vendedores, designers, loading, error } = useVendedoresDesigners();
+    
     const [formData, setFormData] = useState({
         descricao: '',
         largura: '',
         altura: '',
-        vendedor: 'andre',
-        designer: 'andre',
+        vendedor: '',
+        designer: '',
         material: 'Lona 280g',
         acabamento: {
             solda: false,
@@ -92,7 +95,7 @@ function FormLona({ onAdicionarItem }) {
         }
         
         console.log('Lona cadastrada:', dataProducao);
-        alert("✅ Lona adicionada com sucesso!");
+        // Lona adicionada com sucesso
         
         // Resetar estado de sucesso após 3 segundos
         setTimeout(() => {
@@ -102,6 +105,11 @@ function FormLona({ onAdicionarItem }) {
 
     return (
         <>
+        {error && (
+            <Alert variant="warning" className="mb-3">
+                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
+            </Alert>
+        )}
         <Container className={`mt-4 ${isSuccess ? 'form-success form-success-animation' : ''}`}>
             <Form onSubmit={handleSubmit}>
                 <Row>
@@ -133,18 +141,39 @@ function FormLona({ onAdicionarItem }) {
                     </Col>
                     <Col>
                         <Form.Label>Vendedor</Form.Label>
-                        <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange}>
-                            <option value="andre">Andre</option>
-                            <option value="carol">Carol</option>
-                        </Form.Select>
+                        {loading ? (
+                            <div className="d-flex align-items-center">
+                                <Spinner size="sm" className="me-2" />
+                                <span>Carregando...</span>
+                            </div>
+                        ) : (
+                            <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange}>
+                                <option value="">Selecione um Vendedor</option>
+                                {vendedores.map(vendedor => (
+                                    <option key={vendedor.id} value={vendedor.name}>
+                                        {vendedor.name}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        )}
                     </Col>
                     <Col>
                         <Form.Label>Designer</Form.Label>
-                        <Form.Select name="designer" value={formData.designer} onChange={handleChange}>
-                            <option value="andre">Andre</option>
-                            <option value="carol">Carol</option>
-                            <option value="fabio">Fabio</option>
-                        </Form.Select>
+                        {loading ? (
+                            <div className="d-flex align-items-center">
+                                <Spinner size="sm" className="me-2" />
+                                <span>Carregando...</span>
+                            </div>
+                        ) : (
+                            <Form.Select name="designer" value={formData.designer} onChange={handleChange}>
+                                <option value="">Selecione um Designer</option>
+                                {designers.map(designer => (
+                                    <option key={designer.id} value={designer.name}>
+                                        {designer.name}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        )}
                     </Col>
                 </Row>
 

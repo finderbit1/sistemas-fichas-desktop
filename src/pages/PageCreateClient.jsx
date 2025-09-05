@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form } from 'react-bootstrap';
 import InputMask from 'react-input-mask';
 import { getAllClientes, postCliente } from '../services/api';
+import CustomAlertModal from '../components/CustomAlertModal';
+import useCustomAlert from '../hooks/useCustomAlert';
 
 const Clientes = () => {
     const [clientes, setClientes] = useState([]);
@@ -14,6 +16,7 @@ const Clientes = () => {
         telefone: '',
     });
     const [editando, setEditando] = useState(null);
+    const customAlert = useCustomAlert();
     const buscarEnderecoPorCep = async (cep) => {
         try {
             const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -40,7 +43,7 @@ const Clientes = () => {
             const res = await getAllClientes();
             setClientes(res.data);
         } catch (error) {
-            alert('Erro ao carregar clientes.');
+            customAlert.showError('Erro', 'Erro ao carregar clientes.');
         }
     };
 
@@ -67,28 +70,28 @@ const Clientes = () => {
         const { nome, cidade, estado, telefone } = form;
 
         if (!nome.trim() || !cidade.trim() || !estado.trim() || !telefone.trim()) {
-            alert('Todos os campos são obrigatórios!');
+            customAlert.showWarning('Atenção', 'Todos os campos são obrigatórios!');
             return;
         }
 
         // Validações simples
         if (!/^\([0-9]{2}\)\s[0-9]{5}-[0-9]{4}$/.test(telefone)) {
-            alert('Telefone inválido. Use o formato (99) 99999-9999');
+            customAlert.showWarning('Atenção', 'Telefone inválido. Use o formato (99) 99999-9999');
             return;
         }
 
         if (!/^[A-Z]{2}$/.test(estado)) {
-            alert('UF deve conter exatamente 2 letras maiúsculas (ex: SP)');
+            customAlert.showWarning('Atenção', 'UF deve conter exatamente 2 letras maiúsculas (ex: SP)');
             return;
         }
 
         try {
             if (editando) {
                 // Aqui você pode implementar edição via API
-                alert('Funcionalidade de editar ainda não implementada');
+                customAlert.showInfo('Informação', 'Funcionalidade de editar ainda não implementada');
             } else {
                 await postCliente(form);
-                alert('Cliente cadastrado com sucesso!');
+                customAlert.showSuccess('Sucesso!', 'Cliente cadastrado com sucesso!');
             }
             setShowModal(false);
             setForm({
@@ -101,7 +104,7 @@ const Clientes = () => {
             setEditando(null);
             carregarClientes();
         } catch (err) {
-            alert('Erro ao salvar cliente.');
+            customAlert.showError('Erro', 'Erro ao salvar cliente.');
         }
     };
     useEffect(() => {
@@ -115,7 +118,7 @@ const Clientes = () => {
                         estado: endereco.estado,
                     }));
                 } else {
-                    alert("CEP não encontrado.");
+                    customAlert.showWarning('Atenção', 'CEP não encontrado.');
                     setForm((prev) => ({
                         ...prev,
                         cidade: '',
@@ -218,6 +221,18 @@ const Clientes = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            <CustomAlertModal
+                isOpen={customAlert.alertState.isOpen}
+                onClose={customAlert.hideAlert}
+                type={customAlert.alertState.type}
+                title={customAlert.alertState.title}
+                message={customAlert.alertState.message}
+                confirmText={customAlert.alertState.confirmText}
+                onConfirm={customAlert.alertState.onConfirm}
+                showCancel={customAlert.alertState.showCancel}
+                cancelText={customAlert.alertState.cancelText}
+            />
         </div>
     );
 };

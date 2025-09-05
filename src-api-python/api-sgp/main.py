@@ -11,6 +11,7 @@ from clientes.router import router as clientes_router
 from pagamentos.router import router as pagamentos_router
 from envios.router import router as envios_router
 from admin.router import router as admin_router
+from descontos.router import router as descontos_router
 
 # Importar routers dinamicamente para evitar problemas de import circular
 try:
@@ -50,6 +51,7 @@ app.include_router(clientes_router, prefix=settings.API_V1_STR)
 app.include_router(pagamentos_router, prefix=settings.API_V1_STR)
 app.include_router(envios_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(descontos_router, prefix=settings.API_V1_STR)
 
 # Incluir routers opcionais se estiverem disponíveis
 if designers_router:
@@ -66,6 +68,14 @@ async def root():
         "message": "API Sistema de Fichas",
         "version": settings.VERSION,
         "docs": "/docs"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "message": "API funcionando corretamente",
+        "version": settings.VERSION
     }
     
     

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert } from 'react-bootstrap';
 import { Plus, Pencil, Trash, Check, X } from 'react-bootstrap-icons';
+import { useServerConfig } from '../../contexts/ServerConfigContext';
 import { 
   getAllFormasEnvios, 
   createFormaEnvio, 
@@ -9,6 +10,7 @@ import {
 } from '../../services/api';
 
 const FormasEnvioManagement = () => {
+  const { isConnected, connectionStatus } = useServerConfig();
   const [formasEnvio, setFormasEnvio] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -17,8 +19,10 @@ const FormasEnvioManagement = () => {
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
 
   useEffect(() => {
-    loadFormasEnvio();
-  }, []);
+    if (isConnected) {
+      loadFormasEnvio();
+    }
+  }, [isConnected]);
 
   const loadFormasEnvio = async () => {
     try {
@@ -83,6 +87,26 @@ const FormasEnvioManagement = () => {
     setFormData({ name: '', value: '' });
     setShowModal(true);
   };
+
+  if (connectionStatus === 'checking') {
+    return (
+      <div className="text-center p-4">
+        <Spinner animation="border" variant="primary" />
+        <p className="mt-2">Verificando conexão com a API...</p>
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="text-center p-4">
+        <Alert variant="danger">
+          <strong>Erro de Conexão</strong>
+          <p className="mt-2">Não foi possível conectar com a API. Verifique se o servidor está rodando.</p>
+        </Alert>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -214,3 +238,5 @@ const FormasEnvioManagement = () => {
 };
 
 export default FormasEnvioManagement;
+
+

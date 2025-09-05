@@ -18,3 +18,5 @@ class DesignerUpdate(SQLModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     active: Optional[bool] = None
+
+

@@ -22,26 +22,38 @@ import {
     CheckCircle,
     XCircle,
     Printer,
+    Calendar,
+    CurrencyDollar,
+    FileText,
+    PencilSquare,
+    Trash,
 } from 'react-bootstrap-icons';
 import { getAllPedidos, updatePedido } from '../services/api';
 import { obterPedidos, salvarPedido, atualizarPedido } from '../utils/localStorageHelper';
 import { convertApiPedidosToList, convertApiPedidoToFormData, convertFormDataToApiPedido } from '../utils/apiConverter';
 import Tooltip from '../components/Tooltip';
+import EditOrderModal from '../components/EditOrderModal';
+import CustomAlertModal from '../components/CustomAlertModal';
+import LogsModal from '../components/LogsModal';
+import useCustomAlert from '../hooks/useCustomAlert';
+import logger from '../utils/logger';
 import '../styles/home.css';
 
 
 const Home = () => {
     const navigate = useNavigate();
+    const customAlert = useCustomAlert();
     const [pedidos, setPedidos] = useState([]);
     const [erro, setErro] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '' });
     const [modal, setModal] = useState({ show: false, index: null, campo: '', pedido: null });
     const [previewModal, setPreviewModal] = useState({ show: false, pedido: null });
     const [confirmModal, setConfirmModal] = useState({ show: false, pedido: null, setor: '', action: '' });
-    const [logsModal, setLogsModal] = useState({ show: false });
     const [logs, setLogs] = useState([]);
     const [pedidosSelecionados, setPedidosSelecionados] = useState([]);
     const [filtro, setFiltro] = useState('');
+    const [editModal, setEditModal] = useState({ show: false, pedido: null });
+    const [logsModal, setLogsModal] = useState({ show: false });
 
     useEffect(() => {
         const carregarPedidos = async () => {
@@ -98,10 +110,19 @@ const Home = () => {
 
     // Função para gerar logs
     const gerarLog = (pedido, setor, action, usuario = 'Sistema') => {
-        const timestamp = new Date().toISOString();
+        // Usar o sistema de logs centralizado
+        logger.logSetorChanged(
+            pedido.id,
+            setor,
+            action === 'marcar' ? 'checked' : 'unchecked',
+            !pedido[setor],
+            pedido[setor]
+        );
+        
+        // Manter compatibilidade com o estado local de logs
         const logEntry = {
             id: Date.now(),
-            timestamp,
+            timestamp: new Date().toISOString(),
             pedidoId: pedido.id,
             numeroPedido: pedido.numeroPedido,
             cliente: pedido.nomeCliente,
@@ -112,13 +133,8 @@ const Home = () => {
             statusNovo: action === 'marcar' ? 'Em Andamento' : 'Pendente'
         };
         
-        console.log('📋 LOG DE ALTERAÇÃO DE SETOR:', logEntry);
-        
-        // Adicionar log ao estado
+        // Adicionar log ao estado local
         setLogs(prevLogs => [logEntry, ...prevLogs].slice(0, 100)); // Manter apenas os últimos 100 logs
-        
-        // Aqui você pode enviar para um serviço de logs, banco de dados, etc.
-        // Exemplo: enviarLogParaAPI(logEntry);
         
         return logEntry;
     };
@@ -240,11 +256,46 @@ const Home = () => {
         }
 
         const pedidosParaImprimir = pedidos.filter(p => pedidosSelecionados.includes(p.id));
+        
+        // Log da impressão
+        logger.logPrint(pedidosSelecionados, 'multiple');
+        
         imprimirConteudo(pedidosParaImprimir, `${pedidosParaImprimir.length} pedido(s)`);
     };
 
     const imprimirPedidoIndividual = (pedido) => {
+        // Log da impressão individual
+        logger.logPrint(pedido.id, 'individual');
+        
         imprimirConteudo([pedido], `Pedido #${pedido.numeroPedido}`);
+    };
+
+    const handleEditPedido = (pedido) => {
+        setEditModal({ show: true, pedido });
+    };
+
+    const handlePedidoUpdated = (pedidoAtualizado) => {
+        setPedidos(prev => prev.map(p => p.id === pedidoAtualizado.id ? pedidoAtualizado : p));
+        setEditModal({ show: false, pedido: null });
+        
+        // Log da atualização
+        logger.log('PEDIDO_UPDATED_IN_LIST', {
+            pedidoId: pedidoAtualizado.id,
+            numeroPedido: pedidoAtualizado.numeroPedido
+        }, 'info');
+    };
+
+    const handlePedidoDeleted = (pedidoId) => {
+        setPedidos(prev => prev.filter(p => p.id !== pedidoId));
+        setEditModal({ show: false, pedido: null });
+        
+        // Remover da seleção se estiver selecionado
+        setPedidosSelecionados(prev => prev.filter(id => id !== pedidoId));
+        
+        // Log da remoção
+        logger.log('PEDIDO_DELETED_FROM_LIST', {
+            pedidoId: pedidoId
+        }, 'info');
     };
 
     const imprimirConteudo = (pedidos, titulo) => {
@@ -787,6 +838,33 @@ const Home = () => {
                 </Toast>
             </ToastContainer>
 
+            {/* Modal de Edição de Pedido */}
+            <EditOrderModal
+                show={editModal.show}
+                onHide={() => setEditModal({ show: false, pedido: null })}
+                pedido={editModal.pedido}
+                onPedidoUpdated={handlePedidoUpdated}
+                onPedidoDeleted={handlePedidoDeleted}
+                customAlert={customAlert}
+            />
+
+            {/* Modal de Alertas Customizados */}
+            <CustomAlertModal
+                show={customAlert.show}
+                onHide={customAlert.hide}
+                type={customAlert.type}
+                title={customAlert.title}
+                message={customAlert.message}
+                onConfirm={customAlert.onConfirm}
+                onCancel={customAlert.onCancel}
+            />
+
+            {/* Modal de Logs */}
+            <LogsModal
+                show={logsModal.show}
+                onHide={() => setLogsModal({ show: false })}
+            />
+
             <Modal show={modal.show} onHide={handleCancel} backdrop="static" centered>
                 <Modal.Header closeButton className="modal-header">
                     <Modal.Title className="modal-title">Confirmar alteração</Modal.Title>
@@ -811,89 +889,242 @@ const Home = () => {
             <Modal
                 show={previewModal.show}
                 onHide={() => setPreviewModal({ show: false, pedido: null })}
-                size="lg"
+                size="xl"
                 centered
             >
                 <Modal.Header closeButton className="modal-header">
-                    <Modal.Title className="modal-title">Visualização do Pedido</Modal.Title>
+                    <Modal.Title className="modal-title">
+                        <ClipboardData className="me-2" />
+                        Visualização Completa do Pedido
+                    </Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="modal-body">
+                <Modal.Body className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                     {previewModal.pedido && (
-                        <Row>
-                            <Col md={6}>
-                                <div className="dashboard-card" style={{ marginBottom: '16px' }}>
-                                    <div className="dashboard-card-header">
-                                        <h6 className="dashboard-card-title">Informações do Pedido</h6>
-                                        <ClipboardData className="dashboard-card-icon" />
+                        <div>
+                            {/* Informações Principais */}
+                            <Row className="mb-4">
+                                <Col md={6}>
+                                    <div className="dashboard-card">
+                                        <div className="dashboard-card-header">
+                                            <h6 className="dashboard-card-title">Informações do Pedido</h6>
+                                            <ClipboardData className="dashboard-card-icon" />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Número do Pedido:</span>
+                                                <p style={{ margin: '4px 0 0 0', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-primary)' }}>
+                                                    {previewModal.pedido.numero || previewModal.pedido.numeroPedido || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Cliente:</span>
+                                                <p style={{ margin: '4px 0 0 0', fontWeight: 'var(--font-weight-medium)' }}>
+                                                    {previewModal.pedido.cliente || previewModal.pedido.nomeCliente || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Telefone:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.telefone || previewModal.pedido.telefoneCliente || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Cidade:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.cidade || previewModal.pedido.cidadeCliente || 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>O.S:</span>
-                                            <p style={{ margin: '4px 0 0 0', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-primary)' }}>
-                                                {previewModal.pedido.numero}
-                                            </p>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="dashboard-card">
+                                        <div className="dashboard-card-header">
+                                            <h6 className="dashboard-card-title">Datas e Status</h6>
+                                            <Calendar className="dashboard-card-icon" />
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Cliente:</span>
-                                            <p style={{ margin: '4px 0 0 0', fontWeight: 'var(--font-weight-medium)' }}>
-                                                {previewModal.pedido.cliente}
-                                            </p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Data de Entrada:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.data_entrada || previewModal.pedido.dataEntrada || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Data de Entrega:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.data_entrega || previewModal.pedido.dataEntrega || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Status:</span>
+                                                <div style={{ marginTop: '4px' }}>
+                                                    <span className={`badge ${
+                                                        previewModal.pedido.status === 'pendente' ? 'badge-warning' : 
+                                                        previewModal.pedido.status === 'em andamento' ? 'badge-info' :
+                                                        previewModal.pedido.status === 'pronto' ? 'badge-success' : 'badge-neutral'
+                                                    }`}>
+                                                        {previewModal.pedido.status || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Prioridade:</span>
+                                                <div style={{ marginTop: '4px' }}>
+                                                    {previewModal.pedido.prioridade || previewModal.pedido.prioridade === '1' ? (
+                                                        <span className="badge badge-error">ALTA</span>
+                                                    ) : (
+                                                        <span className="badge badge-neutral">NORMAL</span>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Data de Entrada:</span>
-                                            <p style={{ margin: '4px 0 0 0' }}>{previewModal.pedido.data_entrada}</p>
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            {/* Informações Financeiras */}
+                            <Row className="mb-4">
+                                <Col md={6}>
+                                    <div className="dashboard-card">
+                                        <div className="dashboard-card-header">
+                                            <h6 className="dashboard-card-title">Informações Financeiras</h6>
+                                            <CurrencyDollar className="dashboard-card-icon" />
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Data de Entrega:</span>
-                                            <p style={{ margin: '4px 0 0 0' }}>{previewModal.pedido.data_entrega}</p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Valor Total:</span>
+                                                <p style={{ margin: '4px 0 0 0', fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-success)' }}>
+                                                    R$ {previewModal.pedido.valorTotal || previewModal.pedido.valor_total || '0,00'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Valor do Frete:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    R$ {previewModal.pedido.valorFrete || previewModal.pedido.valor_frete || '0,00'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Forma de Pagamento:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.tipoPagamento || previewModal.pedido.forma_pagamento || 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Forma de Envio:</span>
+                                                <p style={{ margin: '4px 0 0 0' }}>
+                                                    {previewModal.pedido.formaEnvio || previewModal.pedido.forma_envio || 'N/A'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Status:</span>
-                                            <div style={{ marginTop: '4px' }}>
-                                                <span className={`badge ${previewModal.pedido.status === 'pendente' ? 'badge-warning' : 'badge-success'}`}>
-                                                    {previewModal.pedido.status}
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div className="dashboard-card">
+                                        <div className="dashboard-card-header">
+                                            <h6 className="dashboard-card-title">Status dos Setores</h6>
+                                            <CheckCircle className="dashboard-card-icon" />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: 'var(--font-size-sm)' }}>Financeiro:</span>
+                                                <span className={`badge ${previewModal.pedido.financeiro ? 'badge-success' : 'badge-neutral'}`}>
+                                                    {previewModal.pedido.financeiro ? 'Concluído' : 'Pendente'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: 'var(--font-size-sm)' }}>Conferência:</span>
+                                                <span className={`badge ${previewModal.pedido.conferencia ? 'badge-success' : 'badge-neutral'}`}>
+                                                    {previewModal.pedido.conferencia ? 'Concluído' : 'Pendente'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: 'var(--font-size-sm)' }}>Sublimação:</span>
+                                                <span className={`badge ${previewModal.pedido.sublimacao ? 'badge-success' : 'badge-neutral'}`}>
+                                                    {previewModal.pedido.sublimacao ? 'Concluído' : 'Pendente'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: 'var(--font-size-sm)' }}>Costura:</span>
+                                                <span className={`badge ${previewModal.pedido.costura ? 'badge-success' : 'badge-neutral'}`}>
+                                                    {previewModal.pedido.costura ? 'Concluído' : 'Pendente'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: 'var(--font-size-sm)' }}>Expedição:</span>
+                                                <span className={`badge ${previewModal.pedido.expedicao ? 'badge-success' : 'badge-neutral'}`}>
+                                                    {previewModal.pedido.expedicao ? 'Concluído' : 'Pendente'}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>Prioridade:</span>
-                                            <div style={{ marginTop: '4px' }}>
-                                                {previewModal.pedido.prioridade ? (
-                                                    <span className="badge badge-error">ALTA</span>
-                                                ) : (
-                                                    <span className="badge badge-neutral">NORMAL</span>
-                                                )}
-                                            </div>
-                                        </div>
+                                    </div>
+                                </Col>
+                            </Row>
+
+                            {/* Itens do Pedido */}
+                            {previewModal.pedido.items && previewModal.pedido.items.length > 0 && (
+                                <div className="dashboard-card mb-4">
+                                    <div className="dashboard-card-header">
+                                        <h6 className="dashboard-card-title">Itens do Pedido</h6>
+                                        <FileText className="dashboard-card-icon" />
+                                    </div>
+                                    <div className="table-responsive">
+                                        <table className="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Descrição</th>
+                                                    <th>Quantidade</th>
+                                                    <th>Valor Unitário</th>
+                                                    <th>Valor Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {previewModal.pedido.items.map((item, index) => (
+                                                    <tr key={index}>
+                                                        <td>
+                                                            <span className="badge badge-info">
+                                                                {item.tipo || 'Item'}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div>
+                                                                <strong>{item.descricao || item.nome || 'Sem descrição'}</strong>
+                                                                {item.observacao && (
+                                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-600)', marginTop: '4px' }}>
+                                                                        {item.observacao}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td>{item.quantidade || 1}</td>
+                                                        <td>R$ {item.valor || item.valorUnitario || '0,00'}</td>
+                                                        <td>
+                                                            <strong>R$ {((item.quantidade || 1) * parseFloat(item.valor || item.valorUnitario || 0)).toFixed(2)}</strong>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            </Col>
-                            <Col md={6}>
+                            )}
+
+                            {/* Observações */}
+                            {previewModal.pedido.observacao && (
                                 <div className="dashboard-card">
                                     <div className="dashboard-card-header">
-                                        <h6 className="dashboard-card-title">Ficha do Pedido</h6>
+                                        <h6 className="dashboard-card-title">Observações</h6>
+                                        <FileText className="dashboard-card-icon" />
                                     </div>
-                                    <div style={{ 
-                                        background: 'var(--color-neutral-100)', 
-                                        borderRadius: 'var(--border-radius)',
-                                        padding: '24px',
-                                        textAlign: 'center',
-                                        border: '2px dashed var(--color-neutral-300)'
-                                    }}>
-                                        <img
-                                            src="https://via.placeholder.com/300x200?text=Ficha+do+Pedido"
-                                    alt="Ficha do Pedido"
-                                            style={{ 
-                                                maxWidth: '100%', 
-                                                height: 'auto',
-                                                borderRadius: 'var(--border-radius)',
-                                                boxShadow: 'var(--shadow-sm)'
-                                            }}
-                                        />
+                                    <div style={{ padding: '16px', background: 'var(--color-neutral-50)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-neutral-200)' }}>
+                                        <p style={{ margin: 0, fontSize: 'var(--font-size-sm)', lineHeight: '1.5' }}>
+                                            {previewModal.pedido.observacao}
+                                        </p>
                                     </div>
                                 </div>
-                            </Col>
-                        </Row>
+                            )}
+                        </div>
                     )}
                 </Modal.Body>
                 <Modal.Footer className="modal-footer">
@@ -1001,13 +1232,10 @@ const Home = () => {
                     </Button>
                     <Button 
                         variant="info" 
-                        onClick={() => {
-                            console.log('📋 TODOS OS LOGS:', logs);
-                            setToast({ show: true, message: 'Logs exportados para o console!' });
-                        }}
+                        onClick={() => setLogsModal({ show: true })}
                     >
                         <ClipboardData size={16} className="me-2" />
-                        Exportar Console
+                        Ver Logs
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1270,6 +1498,15 @@ const Home = () => {
                                                     Ver
                                                 </button>
                                             </Tooltip>
+                                            <Tooltip content="Editar pedido" position="top">
+                                                <button
+                                                    onClick={() => handleEditPedido(pedido)}
+                                                    className="action-button btn-outline-warning"
+                                                >
+                                                    <PencilSquare size={14} />
+                                                    Editar
+                                                </button>
+                                            </Tooltip>
                                             <Tooltip content="Imprimir ficha do pedido" position="top">
                                                 <button
                                                     onClick={() => imprimirPedidoIndividual(pedido)}
@@ -1292,3 +1529,4 @@ const Home = () => {
 };
 
 export default Home;
+export { Home };

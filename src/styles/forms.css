@@ -10,11 +10,11 @@
 /* Seções de formulário */
 .form-section {
   margin-bottom: var(--spacing-6);
-  background: var(--color-neutral-50);
+  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 100%);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-6);
   border: 1px solid var(--color-neutral-200);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .form-section:last-child {
@@ -27,16 +27,18 @@
   border-radius: var(--border-radius);
   padding: var(--spacing-3) var(--spacing-4);
   font-size: var(--font-size-base);
-  background-color: var(--color-neutral-50);
+  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 100%);
   color: var(--color-neutral-700);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-normal);
 }
 
 .form-control:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), var(--shadow-sm);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   outline: none;
-  background-color: var(--color-neutral-50);
+  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-primary-50) 100%);
+  transform: translateY(-1px);
 }
 
 .form-control:disabled,

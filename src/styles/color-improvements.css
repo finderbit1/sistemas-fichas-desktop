@@ -79,9 +79,13 @@
 
 /* Melhorar estilos de modais */
 .modal-header {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   color: white;
   border-bottom: 1px solid var(--color-primary-dark);
+}
+
+.modal-header .modal-title {
+  color: white !important;
 }
 
 .modal-header .btn-close {
@@ -297,8 +301,12 @@
   }
   
   .modal-header {
-    background-color: var(--color-neutral-200) !important;
-    border-color: var(--color-neutral-300) !important;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    border-color: var(--color-primary-dark) !important;
+  }
+  
+  .modal-header .modal-title {
+    color: white !important;
   }
   
   .modal-footer {

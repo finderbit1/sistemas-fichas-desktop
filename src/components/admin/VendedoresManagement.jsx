@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
-import { Plus, Pencil, Trash, Person, Envelope, Telephone } from 'react-bootstrap-icons';
+import { Plus, Pencil, Trash, Person } from 'react-bootstrap-icons';
 import { 
   getAllVendedores, 
   createVendedor, 
@@ -15,8 +15,6 @@ const VendedoresManagement = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({ 
     name: '', 
-    email: '', 
-    phone: '', 
     active: true 
   });
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
@@ -43,8 +41,6 @@ const VendedoresManagement = () => {
     try {
       const data = {
         name: formData.name,
-        email: formData.email || null,
-        phone: formData.phone || null,
         active: formData.active
       };
 
@@ -57,7 +53,7 @@ const VendedoresManagement = () => {
       }
 
       setShowModal(false);
-      setFormData({ name: '', email: '', phone: '', active: true });
+      setFormData({ name: '', active: true });
       setEditingItem(null);
       loadVendedores();
     } catch (error) {
@@ -70,8 +66,6 @@ const VendedoresManagement = () => {
     setEditingItem(item);
     setFormData({ 
       name: item.name, 
-      email: item.email || '', 
-      phone: item.phone || '', 
       active: item.active 
     });
     setShowModal(true);
@@ -92,7 +86,7 @@ const VendedoresManagement = () => {
 
   const handleNew = () => {
     setEditingItem(null);
-    setFormData({ name: '', email: '', phone: '', active: true });
+    setFormData({ name: '', active: true });
     setShowModal(true);
   };
 
@@ -125,8 +119,6 @@ const VendedoresManagement = () => {
               <thead>
                 <tr>
                   <th>Nome</th>
-                  <th>Email</th>
-                  <th>Telefone</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -139,26 +131,6 @@ const VendedoresManagement = () => {
                         <Person size={16} className="me-2 text-muted" />
                         {item.name}
                       </div>
-                    </td>
-                    <td>
-                      {item.email ? (
-                        <div className="d-flex align-items-center">
-                          <Envelope size={14} className="me-2 text-muted" />
-                          {item.email}
-                        </div>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
-                    </td>
-                    <td>
-                      {item.phone ? (
-                        <div className="d-flex align-items-center">
-                          <Telephone size={14} className="me-2 text-muted" />
-                          {item.phone}
-                        </div>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
                     </td>
                     <td>
                       <Badge bg={item.active ? 'success' : 'secondary'}>
@@ -211,28 +183,6 @@ const VendedoresManagement = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Ex: maria@empresa.com"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Telefone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="Ex: (11) 99999-9999"
-                  />
-                </Form.Group>
-              </Col>
               <Col md={12}>
                 <Form.Group className="mb-3">
                   <Form.Check
@@ -275,3 +225,5 @@ const VendedoresManagement = () => {
 };
 
 export default VendedoresManagement;
+
+

@@ -16,6 +16,8 @@ import {
   Eye,
   CurrencyDollar
 } from 'react-bootstrap-icons';
+import CustomAlertModal from './CustomAlertModal';
+import useCustomAlert from '../hooks/useCustomAlert';
 import FormPainel from './prouctions/FormPainel';
 import FormTotem from './prouctions/FormTotem';
 import FormLona from './prouctions/FormLona';
@@ -27,8 +29,9 @@ import { salvarPedido as salvarPedidoStorage, obterPedidos } from '../utils/loca
 import { validarPedido, normalizarDecimais } from "../utils/validador"
 import { validateOrderDates } from "../utils/dateValidator"
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, createPedido } from '../services/api';
+import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, getAllDescontos, calcularDesconto, createPedido } from '../services/api';
 import { convertFormDataToApiPedido, validatePedidoForApi } from '../utils/apiConverter';
+import logger from '../utils/logger';
 import '../styles/forms.css';
 
 function TypeProduction({ onItemsChange }) {
@@ -107,18 +110,25 @@ const CreateOrder = () => {
   const [formasPagamento, setFormaPagamento] = useState([]);
   const [selectedCliente, setSelectedCliente] = useState([]);
   const [formasEnvio, setFormasEnvio] = useState([]);
+  const [descontos, setDescontos] = useState([]);
+  const [descontoSelecionado, setDescontoSelecionado] = useState(null);
+  const [descontoCalculado, setDescontoCalculado] = useState(null);
   const [formaSelecionada, setFormaSelecionada] = useState(null);
   const [frete, setFrete] = useState('');
   const [loadingData, setLoadingData] = useState({
     clientes: true,
     formasPagamento: true,
-    formasEnvio: true
+    formasEnvio: true,
+    descontos: true
   });
   const [apiErrors, setApiErrors] = useState({
     clientes: false,
     formasPagamento: false,
-    formasEnvio: false
+    formasEnvio: false,
+    descontos: false
   });
+
+  const customAlert = useCustomAlert();
   const [tabsItems, setTabsItems] = useState({});
   const [count, setCount] = useState(1);
   const [tabs, setTabs] = useState([
@@ -212,6 +222,20 @@ const CreateOrder = () => {
         setLoadingData(prev => ({ ...prev, formasEnvio: false }));
         setApiErrors(prev => ({ ...prev, formasEnvio: true }));
       });
+
+    // Carregar descontos
+    getAllDescontos()
+      .then((res) => {
+        console.log('Descontos carregados:', res.data.length);
+        setDescontos(res.data || []);
+        setLoadingData(prev => ({ ...prev, descontos: false }));
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar descontos:', err);
+        setDescontos([]);
+        setLoadingData(prev => ({ ...prev, descontos: false }));
+        setApiErrors(prev => ({ ...prev, descontos: true }));
+      });
   }, []);
 
   const validateDatesInRealTime = (dataEntrada, dataEntrega) => {
@@ -280,6 +304,33 @@ const CreateOrder = () => {
     const freteValue = forma && forma.value !== null ? forma.value : '';
     setFrete(freteValue);
     setFormData((prev) => ({ ...prev, valorFrete: freteValue }));
+  };
+
+  const handleChangeDesconto = async (e) => {
+    const id = parseInt(e.target.value);
+    if (id) {
+      const desconto = descontos.find((d) => d.id === id);
+      setDescontoSelecionado(desconto);
+      
+      // Calcular desconto baseado no valor total atual
+      const allItems = Object.values(tabsItems).flat();
+      const valorTotal = allItems.reduce((total, item) => {
+        const valor = parseFloat(item.valor?.replace(',', '.') || 0);
+        return total + (isNaN(valor) ? 0 : valor);
+      }, 0);
+      
+      if (valorTotal > 0) {
+        try {
+          const response = await calcularDesconto(valorTotal);
+          setDescontoCalculado(response.data);
+        } catch (error) {
+          console.error('Erro ao calcular desconto:', error);
+        }
+      }
+    } else {
+      setDescontoSelecionado(null);
+      setDescontoCalculado(null);
+    }
   };
 
   const handleItemsChange = (tabKey, newItems) => {
@@ -391,8 +442,11 @@ const CreateOrder = () => {
         // Salvar no localStorage como backup
         salvarPedidoStorage(pedidoCompleto);
         
+        // Log da criação do pedido
+        logger.logPedidoCreated(pedidoCompleto);
+        
         // Mostrar sucesso
-        alert('✅ Pedido salvo com sucesso na API!');
+        customAlert.showSuccess('Sucesso!', 'Pedido salvo com sucesso na API!');
         
       } catch (apiError) {
         console.warn('Erro ao salvar na API, salvando localmente:', apiError);
@@ -413,8 +467,16 @@ const CreateOrder = () => {
         
         salvarPedidoStorage(pedidoCompleto);
         
+        // Log da criação do pedido (local)
+        logger.log('PEDIDO_CREATED_LOCAL', {
+          pedidoId: pedidoCompleto.id,
+          numeroPedido: pedidoCompleto.numeroPedido,
+          cliente: pedidoCompleto.nomeCliente,
+          note: 'API indisponível - salvo localmente'
+        }, 'warning');
+        
         // Mostrar aviso
-        alert('⚠️ Pedido salvo localmente (API indisponível)');
+        customAlert.showWarning('Aviso', 'Pedido salvo localmente (API indisponível)');
       }
 
       // Resetar formulário
@@ -425,7 +487,7 @@ const CreateOrder = () => {
       
     } catch (error) {
       console.error("Erro ao salvar pedido:", error);
-      alert("❌ Erro ao salvar pedido: " + (error.message || "Erro desconhecido"));
+      customAlert.showError('Erro', 'Erro ao salvar pedido: ' + (error.message || "Erro desconhecido"));
     } finally {
       setIsSaving(false);
     }
@@ -505,7 +567,7 @@ const CreateOrder = () => {
   return (
     <div className="create-order-container">
       {/* Status da API */}
-      {(loadingData.clientes || loadingData.formasPagamento || loadingData.formasEnvio) && (
+      {(loadingData.clientes || loadingData.formasPagamento || loadingData.formasEnvio || loadingData.descontos) && (
         <div className="alert alert-info d-flex align-items-center mb-3" role="alert">
           <div className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
           <div>
@@ -514,13 +576,14 @@ const CreateOrder = () => {
               {loadingData.clientes && 'Clientes '}
               {loadingData.formasPagamento && 'Formas de Pagamento '}
               {loadingData.formasEnvio && 'Formas de Envio '}
+              {loadingData.descontos && 'Descontos '}
             </div>
           </div>
         </div>
       )}
       
       {/* Erros da API */}
-      {(apiErrors.clientes || apiErrors.formasPagamento || apiErrors.formasEnvio) && (
+      {(apiErrors.clientes || apiErrors.formasPagamento || apiErrors.formasEnvio || apiErrors.descontos) && (
         <div className="alert alert-warning d-flex align-items-center mb-3" role="alert">
           <ExclamationTriangle size={20} className="me-2" />
           <div>
@@ -529,6 +592,7 @@ const CreateOrder = () => {
               {apiErrors.clientes && 'Clientes '}
               {apiErrors.formasPagamento && 'Formas de Pagamento '}
               {apiErrors.formasEnvio && 'Formas de Envio '}
+              {apiErrors.descontos && 'Descontos '}
               - usando dados padrão para garantir funcionamento.
             </div>
           </div>
@@ -536,18 +600,6 @@ const CreateOrder = () => {
       )}
 
       {/* Sucesso da API */}
-      {!loadingData.clientes && !loadingData.formasPagamento && !loadingData.formasEnvio && 
-       !apiErrors.clientes && !apiErrors.formasPagamento && !apiErrors.formasEnvio && (
-        <div className="alert alert-success d-flex align-items-center mb-3" role="alert">
-          <div className="me-2">✅</div>
-          <div>
-            <strong>Dados carregados com sucesso!</strong>
-            <div className="small">
-              Formas de pagamento e envio disponíveis da API.
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="dashboard-card mb-4">
         <div className="dashboard-card-header">
@@ -758,7 +810,7 @@ const CreateOrder = () => {
                   </option>
                   {formasEnvio.map((forma) => (
                     <option key={forma.id} value={forma.id}>
-                      {forma.name}
+                      {forma.name} {forma.value ? `(R$ ${forma.value.toFixed(2)})` : ''}
                     </option>
                   ))}
                 </Form.Select>
@@ -787,6 +839,7 @@ const CreateOrder = () => {
               </div>
             </Col>
           </Row>
+          
         </Form>
       </div>
       <div className="dashboard-card mb-4">
@@ -886,23 +939,23 @@ const CreateOrder = () => {
                 <CurrencyDollar size={16} style={{ marginRight: '8px' }} />
                 Tipo de Pagamento
               </label>
-              <Form.Select
-                name="tipoPagamento"
-                value={formData.tipoPagamento || ''}
-                onChange={handleChange}
-                className={`form-control ${apiErrors.formasPagamento ? 'is-invalid' : ''}`}
-                disabled={loadingData.formasPagamento}
-              >
-                <option value="">
-                  {loadingData.formasPagamento ? 'Carregando...' : 
-                   apiErrors.formasPagamento ? 'Erro ao carregar' : 'Selecione'}
-                </option>
-                {formasPagamento.map((forma) => (
-                  <option key={forma.id} value={forma.id}>
-                    {forma.name}
+                              <Form.Select 
+                  name="tipoPagamento"
+                  value={formData.tipoPagamento || ''}
+                  onChange={handleChange}
+                  className={`form-control ${apiErrors.formasPagamento ? 'is-invalid' : ''}`}
+                  disabled={loadingData.formasPagamento}
+                >
+                  <option value="">
+                    {loadingData.formasPagamento ? 'Carregando...' : 
+                     apiErrors.formasPagamento ? 'Erro ao carregar' : 'Selecione'}
                   </option>
-                ))}
-              </Form.Select>
+                  {formasPagamento.map((forma) => (
+                    <option key={forma.id} value={forma.id}>
+                      {forma.name} {forma.value ? `(+R$ ${forma.value.toFixed(2)})` : ''}
+                    </option>
+                  ))}
+                </Form.Select>
               {apiErrors.formasPagamento && (
                 <div className="invalid-feedback">
                   Erro ao carregar formas de pagamento da API
@@ -927,6 +980,65 @@ const CreateOrder = () => {
             </div>
           </Col>
         </Row>
+        
+        {/* Campo de Desconto */}
+        <Row className="mb-4">
+          <Col md={6}>
+            <div className="form-group">
+              <label className="form-label">
+                <CurrencyDollar size={16} style={{ marginRight: '8px' }} />
+                Desconto
+              </label>
+              <Form.Select 
+                name="desconto" 
+                onChange={handleChangeDesconto} 
+                className={`form-control ${apiErrors.descontos ? 'is-invalid' : ''}`}
+                disabled={loadingData.descontos}
+              >
+                <option value="">
+                  {loadingData.descontos ? 'Carregando...' : 
+                   apiErrors.descontos ? 'Erro ao carregar' : 'Selecione um desconto'}
+                </option>
+                {descontos.map((desconto) => (
+                  <option key={desconto.id} value={desconto.id}>
+                    {desconto.descricao} - {desconto.percentual}% (mín. R$ {desconto.valor_minimo.toFixed(2)})
+                  </option>
+                ))}
+              </Form.Select>
+              {apiErrors.descontos && (
+                <div className="invalid-feedback">
+                  Erro ao carregar descontos da API
+                </div>
+              )}
+            </div>
+          </Col>
+          <Col md={6}>
+            {descontoCalculado && (
+              <div className="form-group">
+                <label className="form-label">
+                  <CurrencyDollar size={16} style={{ marginRight: '8px' }} />
+                  Resumo do Desconto
+                </label>
+                <div className="alert alert-info">
+                  <div className="d-flex justify-content-between">
+                    <span>Valor Original:</span>
+                    <strong>R$ {descontoCalculado.valor_original.toFixed(2)}</strong>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Desconto ({descontoCalculado.percentual_aplicado}%):</span>
+                    <strong className="text-success">-R$ {descontoCalculado.valor_desconto.toFixed(2)}</strong>
+                  </div>
+                  <hr className="my-2" />
+                  <div className="d-flex justify-content-between">
+                    <span><strong>Valor Final:</strong></span>
+                    <strong className="text-primary">R$ {descontoCalculado.valor_final.toFixed(2)}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Col>
+        </Row>
+        
         <Row>
           <Col md={12}>
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
@@ -1011,6 +1123,18 @@ const CreateOrder = () => {
           validationErrors={saveValidationErrors || []}
         />
       </ErrorBoundary>
+
+      <CustomAlertModal
+        isOpen={customAlert.alertState.isOpen}
+        onClose={customAlert.hideAlert}
+        type={customAlert.alertState.type}
+        title={customAlert.alertState.title}
+        message={customAlert.alertState.message}
+        confirmText={customAlert.alertState.confirmText}
+        onConfirm={customAlert.alertState.onConfirm}
+        showCancel={customAlert.alertState.showCancel}
+        cancelText={customAlert.alertState.cancelText}
+      />
     </div>
   );
 };

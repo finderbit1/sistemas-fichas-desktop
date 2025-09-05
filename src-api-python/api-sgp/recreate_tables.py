@@ -51,3 +51,5 @@ if __name__ == "__main__":
     else:
         print("\n💥 Falha ao recriar o banco de dados")
         sys.exit(1)
+
+

@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card, InputGroup, } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, InputGroup, Spinner, Alert } from 'react-bootstrap';
 import { FileText, Person } from 'react-bootstrap-icons';
 import ImageDropZone from '../ImageDropZone';
 import AreaCalculatorLinhaUnica from '../AreaCalculator';
 import InputValorReal from '../InputValorMoeda';
 import ValidationModal from '../ValidationModal';
+import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
 
 
 function FormPainel({ onAdicionarItem }) {
+    const { vendedores, designers, loading, error } = useVendedoresDesigners();
+    
     const [imagem, setImagem] = useState(null);
     const [showValidationModal, setShowValidationModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState([]);
@@ -164,6 +167,11 @@ function FormPainel({ onAdicionarItem }) {
 
     return (
         <>
+        {error && (
+            <Alert variant="warning" className="mb-3">
+                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
+            </Alert>
+        )}
         <Form className={isSuccess ? 'form-success form-success-animation' : ''}>
                 <Row className="mb-3">
                     <Col md={8}>
@@ -197,13 +205,21 @@ function FormPainel({ onAdicionarItem }) {
                                 <Person size={16} style={{ marginRight: '8px' }} />
                                 Vendedor
                             </label>
-                            <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
-                                <option value="">Selecione um Vendedor</option>
-                                <option value="andre">Andre</option>
-                                <option value="carol">Carol</option>
-                                <option value="maicon">Maicon</option>
-                                <option value="robson">Robson</option>
-                            </Form.Select>
+                            {loading ? (
+                                <div className="d-flex align-items-center">
+                                    <Spinner size="sm" className="me-2" />
+                                    <span>Carregando vendedores...</span>
+                                </div>
+                            ) : (
+                                <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
+                                    <option value="">Selecione um Vendedor</option>
+                                    {vendedores.map(vendedor => (
+                                        <option key={vendedor.id} value={vendedor.name}>
+                                            {vendedor.name}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </div>
                     </Col>
                     <Col md={6}>
@@ -212,15 +228,21 @@ function FormPainel({ onAdicionarItem }) {
                                 <FileText size={16} style={{ marginRight: '8px' }} />
                                 Designer
                             </label>
-                            <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
-                                <option value="">Selecione um Designer</option>
-                                <option value="andre">Andre</option>
-                                <option value="carol">Carol</option>
-                                <option value="fabio">Fabio</option>
-                                <option value="maicon">Maicon</option>
-                                <option value="robson">Robson</option>
-                                <option value="willis">Willis</option>
-                            </Form.Select>
+                            {loading ? (
+                                <div className="d-flex align-items-center">
+                                    <Spinner size="sm" className="me-2" />
+                                    <span>Carregando designers...</span>
+                                </div>
+                            ) : (
+                                <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
+                                    <option value="">Selecione um Designer</option>
+                                    {designers.map(designer => (
+                                        <option key={designer.id} value={designer.name}>
+                                            {designer.name}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </div>
                     </Col>
                 </Row>

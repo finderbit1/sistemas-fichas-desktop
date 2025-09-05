@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
 import AreaCalculatorLinhaUnica from '../AreaCalculator';
 import ValidationModal from '../ValidationModal';
+import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
 
 function FormTotem(props) {
+    const { vendedores, designers, loading, error } = useVendedoresDesigners();
+    
     const [formData, setFormData] = useState({
         descricao: '',
         altura: '',
         largura: '',
-        vendedor: 'andre',
-        designer: 'andre',
+        vendedor: '',
+        designer: '',
         material: 'MDF 6MM',
         acabamento: {
             corteReto: false,
@@ -107,7 +110,7 @@ function FormTotem(props) {
         setIsSuccess(true);
 
         console.log("✅ Pedido validado:", pedido);
-        alert("✅ Totem adicionado com sucesso!");
+        // Totem adicionado com sucesso
         props.onAdicionarItem(pedido);
         
         // Resetar estado de sucesso após 3 segundos
@@ -120,11 +123,16 @@ function FormTotem(props) {
         e.preventDefault();
         console.log('Dados do formulário:', formData);
         console.log('Imagens:', images);
-        alert("Totem salvo com sucesso");
+        // Totem salvo com sucesso
     };
 
     return (
         <>
+        {error && (
+            <Alert variant="warning" className="mb-3">
+                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
+            </Alert>
+        )}
         <Form onSubmit={handleSubmit} className={isSuccess ? 'form-success form-success-animation' : ''}>
                 <Row className="mb-3">
                     <Col md={8}>
@@ -144,27 +152,41 @@ function FormTotem(props) {
                     <Col md={6}>
                         <div className="form-group mb-3">
                             <label className="form-label">Vendedor</label>
-                            <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
-                                <option value="">Selecione um Vendedor</option>
-                                <option value="andre">Andre</option>
-                                <option value="carol">Carol</option>
-                                <option value="maicon">Maicon</option>
-                                <option value="robson">Robson</option>
-                            </Form.Select>
+                            {loading ? (
+                                <div className="d-flex align-items-center">
+                                    <Spinner size="sm" className="me-2" />
+                                    <span>Carregando vendedores...</span>
+                                </div>
+                            ) : (
+                                <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
+                                    <option value="">Selecione um Vendedor</option>
+                                    {vendedores.map(vendedor => (
+                                        <option key={vendedor.id} value={vendedor.name}>
+                                            {vendedor.name}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </div>
                     </Col>
                     <Col md={6}>
                         <div className="form-group mb-3">
                             <label className="form-label">Designer</label>
-                            <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
-                                <option value="">Selecione um Designer</option>
-                                <option value="andre">Andre</option>
-                                <option value="carol">Carol</option>
-                                <option value="fabio">Fabio</option>
-                                <option value="maicon">Maicon</option>
-                                <option value="robson">Robson</option>
-                                <option value="willis">Willis</option>
-                            </Form.Select>
+                            {loading ? (
+                                <div className="d-flex align-items-center">
+                                    <Spinner size="sm" className="me-2" />
+                                    <span>Carregando designers...</span>
+                                </div>
+                            ) : (
+                                <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
+                                    <option value="">Selecione um Designer</option>
+                                    {designers.map(designer => (
+                                        <option key={designer.id} value={designer.name}>
+                                            {designer.name}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </div>
                     </Col>
                 </Row>

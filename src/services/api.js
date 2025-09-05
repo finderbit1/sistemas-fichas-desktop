@@ -64,6 +64,14 @@ export const createVendedor = (vendedor) => api.post('/vendedores', vendedor);
 export const updateVendedor = (id, vendedor) => api.patch(`/vendedores/${id}`, vendedor);
 export const deleteVendedor = (id) => api.delete(`/vendedores/${id}`);
 
+// ===== DESCONTOS =====
+export const getAllDescontos = () => api.get('/descontos');
+export const getDescontoById = (id) => api.get(`/descontos/${id}`);
+export const createDesconto = (desconto) => api.post('/descontos', desconto);
+export const updateDesconto = (id, desconto) => api.patch(`/descontos/${id}`, desconto);
+export const deleteDesconto = (id) => api.delete(`/descontos/${id}`);
+export const calcularDesconto = (valorTotal) => api.get(`/descontos/calcular/${valorTotal}`);
+
 // ===== FUNÇÕES DE COMPATIBILIDADE (mantidas para não quebrar código existente) =====
 export const postPedido = createPedido;
 export const postCliente = createCliente;
