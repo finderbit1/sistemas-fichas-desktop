@@ -1,0 +1,358 @@
+/* Estilos para tabela moderna e funcional */
+
+/* Tabela moderna */
+.table-modern {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--color-neutral-50);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.table-modern thead th {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--spacing-4) var(--spacing-3);
+  border: none;
+  position: relative;
+}
+
+.table-modern thead th:first-child {
+  border-top-left-radius: var(--border-radius-lg);
+}
+
+.table-modern thead th:last-child {
+  border-top-right-radius: var(--border-radius-lg);
+}
+
+.table-modern tbody tr {
+  background: var(--color-neutral-50);
+  border-bottom: 1px solid var(--color-neutral-200);
+  transition: all var(--transition-normal);
+}
+
+.table-modern tbody tr:hover {
+  background: var(--color-neutral-100);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.table-modern tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table-modern tbody td {
+  padding: var(--spacing-4) var(--spacing-3);
+  border: none;
+  vertical-align: middle;
+}
+
+/* Linha da tabela moderna */
+.table-row-modern {
+  transition: all var(--transition-normal);
+}
+
+.table-row-modern:hover {
+  background: var(--color-neutral-100) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Badges de prioridade */
+.badge-priority-high {
+  background: linear-gradient(135deg, var(--color-error) 0%, var(--color-error-light) 100%);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--border-radius);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+}
+
+.badge-priority-normal {
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
+  color: white;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--border-radius);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+/* Container dos setores */
+.setores-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: var(--spacing-2);
+  padding: var(--spacing-2);
+  background: var(--color-neutral-100);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.setor-item {
+  display: flex;
+  justify-content: center;
+}
+
+/* Botões dos setores */
+.setor-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2);
+  border: 2px solid transparent;
+  border-radius: var(--border-radius);
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-600);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  min-width: 70px;
+  min-height: 60px;
+  position: relative;
+  overflow: hidden;
+}
+
+.setor-button:hover {
+  background: var(--color-neutral-300);
+  color: var(--color-neutral-700);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.setor-button:active {
+  transform: translateY(0);
+}
+
+/* Estado pendente */
+.setor-pendente {
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-600);
+  border-color: var(--color-neutral-300);
+}
+
+.setor-pendente:hover {
+  background: var(--color-warning-100);
+  color: var(--color-warning-700);
+  border-color: var(--color-warning-300);
+}
+
+/* Estado concluído */
+.setor-concluido {
+  background: var(--color-success-100);
+  color: var(--color-success-700);
+  border-color: var(--color-success-300);
+  position: relative;
+}
+
+.setor-concluido::before {
+  content: '✓';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--color-success);
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+}
+
+.setor-concluido:hover {
+  background: var(--color-success-200);
+  color: var(--color-success-800);
+  border-color: var(--color-success-400);
+}
+
+/* Ícones dos setores */
+.setor-button svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.setor-button span {
+  font-size: var(--font-size-xs);
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Botões de ação */
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--border-radius);
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-600);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+}
+
+.action-button:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.action-button:active {
+  transform: translateY(0);
+}
+
+/* Container de filtros */
+.filtros-container {
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.filtros-container .form-select-sm {
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.filtros-container .form-control {
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+/* Indicadores de ordenação */
+.arrow-indicator {
+  opacity: 0.5;
+  transition: opacity var(--transition-normal);
+}
+
+.arrow-indicator:hover {
+  opacity: 1;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .setores-container {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-1);
+  }
+  
+  .setor-button {
+    min-width: 60px;
+    min-height: 50px;
+    padding: var(--spacing-1);
+  }
+  
+  .setor-button span {
+    font-size: var(--font-size-xs);
+  }
+  
+  .table-modern thead th {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-2);
+  }
+  
+  .table-modern tbody td {
+    padding: var(--spacing-2);
+  }
+}
+
+@media (max-width: 576px) {
+  .setores-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .setor-button {
+    min-width: 100%;
+    min-height: 40px;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+  
+  .filtros-container .row > div {
+    margin-bottom: var(--spacing-2);
+  }
+}
+
+/* Modo escuro */
+[data-theme="dark"] .table-modern {
+  background: var(--color-neutral-100);
+}
+
+[data-theme="dark"] .table-modern tbody tr {
+  background: var(--color-neutral-100);
+  border-bottom-color: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .table-modern tbody tr:hover {
+  background: var(--color-neutral-200);
+}
+
+[data-theme="dark"] .setores-container {
+  background: var(--color-neutral-200);
+  border-color: var(--color-neutral-300);
+}
+
+[data-theme="dark"] .setor-pendente {
+  background: var(--color-neutral-300);
+  color: var(--color-neutral-600);
+  border-color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .setor-pendente:hover {
+  background: var(--color-warning-200);
+  color: var(--color-warning-800);
+  border-color: var(--color-warning-400);
+}
+
+[data-theme="dark"] .setor-concluido {
+  background: var(--color-success-200);
+  color: var(--color-success-800);
+  border-color: var(--color-success-400);
+}
+
+[data-theme="dark"] .setor-concluido:hover {
+  background: var(--color-success-300);
+  color: var(--color-success-900);
+  border-color: var(--color-success-500);
+}
+
+[data-theme="dark"] .action-button {
+  background: var(--color-neutral-200);
+  color: var(--color-neutral-600);
+  border-color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .action-button:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .filtros-container {
+  background: var(--color-neutral-200);
+  border-color: var(--color-neutral-300);
+}

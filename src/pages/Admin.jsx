@@ -28,6 +28,10 @@ import UserManagement from '../components/admin/UserManagement';
 import SecurityAudit from '../components/admin/SecurityAudit';
 import SystemSettings from '../components/admin/SystemSettings';
 import ExecutiveDashboard from '../components/admin/ExecutiveDashboard';
+import FormasEnvioManagement from '../components/admin/FormasEnvioManagement';
+import FormasPagamentoManagement from '../components/admin/FormasPagamentoManagement';
+import DesignersManagement from '../components/admin/DesignersManagement';
+import VendedoresManagement from '../components/admin/VendedoresManagement';
 
 const AdminPage = () => {
   const { user } = useAuth();
@@ -121,13 +125,29 @@ const AdminPage = () => {
       id: 'payments',
       title: 'Formas de Pagamento',
       description: 'Configurar métodos de pagamento',
-      icon: <CreditCard size={24} />
+      icon: <CreditCard size={24} />,
+      component: <FormasPagamentoManagement />
     },
     {
       id: 'shipping',
-      title: 'Transportadoras',
-      description: 'Gerenciar empresas de transporte',
-      icon: <Truck size={24} />
+      title: 'Formas de Envio',
+      description: 'Gerenciar formas de envio e transportadoras',
+      icon: <Truck size={24} />,
+      component: <FormasEnvioManagement />
+    },
+    {
+      id: 'designers',
+      title: 'Designers',
+      description: 'Gerenciar designers cadastrados',
+      icon: <Palette size={24} />,
+      component: <DesignersManagement />
+    },
+    {
+      id: 'vendedores',
+      title: 'Vendedores',
+      description: 'Gerenciar vendedores cadastrados',
+      icon: <People size={24} />,
+      component: <VendedoresManagement />
     },
     {
       id: 'discounts',

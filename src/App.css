@@ -1,3 +1,6 @@
+/* Importar melhorias de cor */
+@import './styles/color-improvements.css';
+
 /* Variáveis CSS */
 :root {
   /* Cores */

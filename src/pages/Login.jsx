@@ -79,7 +79,7 @@ const Login = () => {
                 {/* Header */}
                 <div className="text-center mb-4">
                   <div className="mb-3">
-                    <span style={{ fontSize: '3rem' }}>🚀</span>
+                    <span style={{ fontSize: 'var(--font-size-3xl)' }}>🚀</span>
                   </div>
                   <h2 className="text-primary fw-bold mb-2">
                     Sistema de Fichas

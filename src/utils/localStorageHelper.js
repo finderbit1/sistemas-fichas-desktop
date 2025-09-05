@@ -12,3 +12,18 @@ export function salvarPedido(pedido) {
   pedidos.push(pedido);
   localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(pedidos));
 }
+
+export function atualizarPedido(pedidoId, pedidoAtualizado) {
+  const pedidos = obterPedidos();
+  const indice = pedidos.findIndex(p => p.id === pedidoId);
+  if (indice !== -1) {
+    pedidos[indice] = pedidoAtualizado;
+    localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(pedidos));
+  }
+}
+
+export function excluirPedido(pedidoId) {
+  const pedidos = obterPedidos();
+  const pedidosFiltrados = pedidos.filter(p => p.id !== pedidoId);
+  localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(pedidosFiltrados));
+}

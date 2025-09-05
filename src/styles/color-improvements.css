@@ -1,0 +1,401 @@
+/* Melhorias de cor para harmonização visual */
+
+/* Melhorar contraste e legibilidade */
+.text-muted {
+  color: var(--color-neutral-500) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-success {
+  color: var(--color-success) !important;
+}
+
+.text-warning {
+  color: var(--color-warning) !important;
+}
+
+.text-danger {
+  color: var(--color-error) !important;
+}
+
+/* Melhorar estilos de alertas */
+.alert {
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.alert-success {
+  background-color: var(--color-success-50);
+  border-color: var(--color-success-200);
+  color: var(--color-success-700);
+}
+
+.alert-warning {
+  background-color: var(--color-warning-50);
+  border-color: var(--color-warning-200);
+  color: var(--color-warning-700);
+}
+
+.alert-danger {
+  background-color: var(--color-error-50);
+  border-color: var(--color-error-200);
+  color: var(--color-error-700);
+}
+
+.alert-info {
+  background-color: var(--color-info-50);
+  border-color: var(--color-info-200);
+  color: var(--color-info-700);
+}
+
+/* Melhorar estilos de tabela */
+.table {
+  color: var(--color-neutral-700);
+  background-color: var(--color-neutral-50);
+}
+
+.table thead th {
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-700);
+  border-bottom: 2px solid var(--color-neutral-200);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-neutral-100);
+}
+
+/* Melhorar estilos de modais */
+.modal-header {
+  background-color: var(--color-primary);
+  color: white;
+  border-bottom: 1px solid var(--color-primary-dark);
+}
+
+.modal-header .btn-close {
+  filter: invert(1);
+}
+
+.modal-body {
+  background-color: var(--color-neutral-50);
+  color: var(--color-neutral-700);
+}
+
+.modal-footer {
+  background-color: var(--color-neutral-100);
+  border-top: 1px solid var(--color-neutral-200);
+}
+
+/* Melhorar estilos de cards */
+.card {
+  background-color: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  background-color: var(--color-neutral-100);
+  border-bottom: 1px solid var(--color-neutral-200);
+  color: var(--color-neutral-700);
+}
+
+.card-body {
+  background-color: var(--color-neutral-50);
+  color: var(--color-neutral-700);
+}
+
+/* Melhorar estilos de inputs */
+.form-select {
+  background-color: var(--color-neutral-50);
+  border: 2px solid var(--color-neutral-300);
+  color: var(--color-neutral-700);
+}
+
+.form-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.form-select:disabled {
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-500);
+}
+
+/* Melhorar estilos de checkboxes e radios */
+.form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+/* Melhorar estilos de tooltips */
+.tooltip .tooltip-inner {
+  background-color: var(--color-neutral-800);
+  color: var(--color-neutral-50);
+  font-size: var(--font-size-xs);
+}
+
+.tooltip .tooltip-arrow::before {
+  border-top-color: var(--color-neutral-800);
+}
+
+/* Melhorar estilos de spinners */
+.spinner-border {
+  color: var(--color-primary);
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.1em;
+}
+
+/* Melhorar estilos de progress bars */
+.progress {
+  background-color: var(--color-neutral-200);
+  height: 0.5rem;
+}
+
+.progress-bar {
+  background-color: var(--color-primary);
+}
+
+/* Melhorar estilos de pagination */
+.pagination .page-link {
+  color: var(--color-primary);
+  border-color: var(--color-neutral-300);
+  background-color: var(--color-neutral-50);
+}
+
+.pagination .page-link:hover {
+  color: var(--color-primary-dark);
+  background-color: var(--color-neutral-100);
+  border-color: var(--color-neutral-400);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Melhorar estilos de dropdowns */
+.dropdown-menu {
+  background-color: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dropdown-item {
+  color: var(--color-neutral-700);
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-neutral-100);
+  color: var(--color-neutral-800);
+}
+
+.dropdown-item.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Melhorar estilos de navs */
+.nav-tabs .nav-link {
+  color: var(--color-neutral-600);
+  border-color: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+  color: var(--color-primary);
+  border-color: var(--color-neutral-300);
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--color-primary);
+  background-color: var(--color-neutral-50);
+  border-color: var(--color-neutral-200) var(--color-neutral-200) var(--color-neutral-50);
+}
+
+/* Melhorar estilos de breadcrumbs */
+.breadcrumb {
+  background-color: var(--color-neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.breadcrumb-item a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+  color: var(--color-neutral-600);
+}
+
+/* ===== MELHORIAS PARA MODO ESCURO ===== */
+[data-theme="dark"] {
+  /* Cards e containers */
+  .card, .dashboard-card {
+    background-color: var(--color-neutral-100) !important;
+    border-color: var(--color-neutral-300) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  /* Tabelas */
+  .table {
+    background-color: var(--color-neutral-100) !important;
+    color: var(--color-neutral-700) !important;
+  }
+  
+  .table th {
+    background-color: var(--color-neutral-200) !important;
+    color: var(--color-neutral-800) !important;
+    border-color: var(--color-neutral-300) !important;
+  }
+  
+  .table td {
+    border-color: var(--color-neutral-300) !important;
+    color: var(--color-neutral-700) !important;
+  }
+  
+  /* Formulários */
+  .form-control {
+    background-color: var(--color-neutral-200) !important;
+    border-color: var(--color-neutral-400) !important;
+    color: var(--color-neutral-800) !important;
+  }
+  
+  .form-control:focus {
+    background-color: var(--color-neutral-200) !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(91, 141, 239, 0.25) !important;
+  }
+  
+  /* Modais */
+  .modal-content {
+    background-color: var(--color-neutral-100) !important;
+    border-color: var(--color-neutral-300) !important;
+  }
+  
+  .modal-header {
+    background-color: var(--color-neutral-200) !important;
+    border-color: var(--color-neutral-300) !important;
+  }
+  
+  .modal-footer {
+    background-color: var(--color-neutral-200) !important;
+    border-color: var(--color-neutral-300) !important;
+  }
+  
+  /* Botões */
+  .btn-outline-primary {
+    color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: white !important;
+  }
+  
+  /* Badges */
+  .badge {
+    color: white !important;
+  }
+  
+  .badge-success {
+    background-color: var(--color-success) !important;
+  }
+  
+  .badge-warning {
+    background-color: var(--color-warning) !important;
+  }
+  
+  .badge-neutral {
+    background-color: var(--color-neutral-500) !important;
+  }
+  
+  /* Alerts */
+  .alert {
+    border-color: var(--color-neutral-400) !important;
+  }
+  
+  .alert-info {
+    background-color: var(--color-info-50) !important;
+    color: var(--color-info-800) !important;
+  }
+  
+  .alert-warning {
+    background-color: var(--color-warning-50) !important;
+    color: var(--color-warning-800) !important;
+  }
+  
+  .alert-success {
+    background-color: var(--color-success-50) !important;
+    color: var(--color-success-800) !important;
+  }
+  
+  /* Dropdowns */
+  .dropdown-menu {
+    background-color: var(--color-neutral-100) !important;
+    border-color: var(--color-neutral-300) !important;
+  }
+  
+  .dropdown-item {
+    color: var(--color-neutral-700) !important;
+  }
+  
+  .dropdown-item:hover {
+    background-color: var(--color-neutral-200) !important;
+    color: var(--color-neutral-800) !important;
+  }
+  
+  /* Navs */
+  .nav-tabs .nav-link {
+    color: var(--color-neutral-600) !important;
+  }
+  
+  .nav-tabs .nav-link:hover {
+    color: var(--color-primary) !important;
+    border-color: var(--color-neutral-400) !important;
+  }
+  
+  .nav-tabs .nav-link.active {
+    color: var(--color-primary) !important;
+    background-color: var(--color-neutral-100) !important;
+    border-color: var(--color-neutral-300) var(--color-neutral-300) var(--color-neutral-100) !important;
+  }
+  
+  /* Breadcrumbs */
+  .breadcrumb {
+    background-color: var(--color-neutral-200) !important;
+  }
+  
+  .breadcrumb-item a {
+    color: var(--color-primary) !important;
+  }
+  
+  .breadcrumb-item.active {
+    color: var(--color-neutral-600) !important;
+  }
+}

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 import ImageDropZone from './ImageDropZone';
 import InputValorReal from './InputValorMoeda';
+import ValidationModal from './ValidationModal';
 
-function FormBolsinha({ adicionarItem }) {
+function FormBolsinha({ onAdicionarItem }) {
     const [formData, setFormData] = useState({
         descricao: '',
         tipo: 'necessaire',
@@ -17,6 +18,9 @@ function FormBolsinha({ adicionarItem }) {
     });
 
     const [images, setImages] = useState([]);
+    const [showValidationModal, setShowValidationModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

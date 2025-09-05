@@ -1,12 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, InputGroup } from "react-bootstrap";
 
-function AreaCalculatorLinhaUnica() {
+function AreaCalculatorLinhaUnica({ formData, onChange }) {
   const [form, setForm] = useState({
-    largura: "",
-    altura: "",
+    largura: formData?.largura || "",
+    altura: formData?.altura || "",
     area: "",
   });
+
+  useEffect(() => {
+    if (formData) {
+      setForm(prev => ({
+        ...prev,
+        largura: formData.largura || "",
+        altura: formData.altura || "",
+      }));
+    }
+  }, [formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +33,15 @@ function AreaCalculatorLinhaUnica() {
     }
 
     setForm(updated);
+    
+    // Notificar o componente pai sobre as mudanças
+    if (onChange) {
+      onChange({
+        largura: updated.largura,
+        altura: updated.altura,
+        area: updated.area
+      });
+    }
   };
 
   return (

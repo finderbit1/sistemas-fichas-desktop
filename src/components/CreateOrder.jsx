@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Form, Row, Col, Button, Card, Tabs, Tab, Container } from 'react-bootstrap';
+import { Form, Row, Col, Button, Card, Tabs, Tab } from 'react-bootstrap';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { 
   Person, 
@@ -20,10 +20,15 @@ import FormPainel from './prouctions/FormPainel';
 import FormTotem from './prouctions/FormTotem';
 import FormLona from './prouctions/FormLona';
 import FormBolsinha from './FormBolsinha';
+import ResumoModal from './ResumoModal';
+import SaveConfirmModal from './SaveConfirmModal';
+import ErrorBoundary from './ErrorBoundary';
 import { salvarPedido as salvarPedidoStorage, obterPedidos } from '../utils/localStorageHelper';
 import { validarPedido, normalizarDecimais } from "../utils/validador"
+import { validateOrderDates } from "../utils/dateValidator"
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, postPedido } from '../services/api';
+import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, createPedido } from '../services/api';
+import { convertFormDataToApiPedido, validatePedidoForApi } from '../utils/apiConverter';
 import '../styles/forms.css';
 
 function TypeProduction({ onItemsChange }) {
@@ -68,7 +73,7 @@ function TypeProduction({ onItemsChange }) {
         </Form.Select>
       </div>
       {opcaoSelecionada && (
-        <div className="animate-fade-in">
+        <div>
           {opcaoSelecionada === 'painel' && <FormPainel {...formProps} />}
           {opcaoSelecionada === 'totem' && <FormTotem {...formProps} />}
           {opcaoSelecionada === 'lona' && <FormLona {...formProps} />}
@@ -98,11 +103,22 @@ const CreateOrder = () => {
   });
 
   const [clientes, setClientes] = useState([]);
+  const [clientesOriginais, setClientesOriginais] = useState([]);
   const [formasPagamento, setFormaPagamento] = useState([]);
   const [selectedCliente, setSelectedCliente] = useState([]);
   const [formasEnvio, setFormasEnvio] = useState([]);
   const [formaSelecionada, setFormaSelecionada] = useState(null);
   const [frete, setFrete] = useState('');
+  const [loadingData, setLoadingData] = useState({
+    clientes: true,
+    formasPagamento: true,
+    formasEnvio: true
+  });
+  const [apiErrors, setApiErrors] = useState({
+    clientes: false,
+    formasPagamento: false,
+    formasEnvio: false
+  });
   const [tabsItems, setTabsItems] = useState({});
   const [count, setCount] = useState(1);
   const [tabs, setTabs] = useState([
@@ -112,36 +128,128 @@ const CreateOrder = () => {
       content: <TypeProduction onItemsChange={(items) => handleItemsChange('tab-1', items)} />,
     },
   ]);
+  const [showResumoModal, setShowResumoModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveValidationErrors, setSaveValidationErrors] = useState([]);
+  const [dateValidationErrors, setDateValidationErrors] = useState([]);
 
   useEffect(() => {
     const pedidos = obterPedidos();
     const lastId = pedidos.length;
     setFormData((prev) => ({ ...prev, numeroPedido: String(lastId + 1) }));
 
+    // Carregar clientes
     getAllClientes()
-      .then((res) => setClientes(res.data))
-      .catch((err) => console.error(err));
+      .then((res) => {
+        console.log('Clientes carregados:', res.data.length);
+        setClientes(res.data);
+        setClientesOriginais(res.data);
+        setLoadingData(prev => ({ ...prev, clientes: false }));
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar clientes:', err);
+        setClientes([]);
+        setClientesOriginais([]);
+        setLoadingData(prev => ({ ...prev, clientes: false }));
+        setApiErrors(prev => ({ ...prev, clientes: true }));
+      });
 
+    // Carregar formas de pagamento
     getAllFormasPagamentos()
-      .then((res) => setFormaPagamento(res.data))
-      .catch((err) => console.error(err));
+      .then((res) => {
+        console.log('Formas de pagamento carregadas:', res.data.length);
+        // Se a API retornar array vazio, usar dados padrão
+        const dados = res.data.length > 0 ? res.data : [
+          { id: 1, name: 'Dinheiro' },
+          { id: 2, name: 'Cartão de Crédito' },
+          { id: 3, name: 'PIX' },
+          { id: 4, name: 'Boleto' },
+          { id: 5, name: 'Transferência' }
+        ];
+        setFormaPagamento(dados);
+        setLoadingData(prev => ({ ...prev, formasPagamento: false }));
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar formas de pagamento:', err);
+        // Usar dados padrão em caso de erro
+        setFormaPagamento([
+          { id: 1, name: 'Dinheiro' },
+          { id: 2, name: 'Cartão de Crédito' },
+          { id: 3, name: 'PIX' },
+          { id: 4, name: 'Boleto' },
+          { id: 5, name: 'Transferência' }
+        ]);
+        setLoadingData(prev => ({ ...prev, formasPagamento: false }));
+        setApiErrors(prev => ({ ...prev, formasPagamento: true }));
+      });
 
+    // Carregar formas de envio
     getAllFormasEnvios()
-      .then((res) => setFormasEnvio(res.data))
-      .catch((err) => console.error(err));
+      .then((res) => {
+        console.log('Formas de envio carregadas:', res.data.length);
+        // Se a API retornar array vazio, usar dados padrão
+        const dados = res.data.length > 0 ? res.data : [
+          { id: 1, name: 'Retirada no Local', value: 0 },
+          { id: 2, name: 'Entrega Local', value: 15 },
+          { id: 3, name: 'Sedex', value: 25 },
+          { id: 4, name: 'PAC', value: 20 },
+          { id: 5, name: 'Transportadora', value: 30 }
+        ];
+        setFormasEnvio(dados);
+        setLoadingData(prev => ({ ...prev, formasEnvio: false }));
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar formas de envio:', err);
+        // Usar dados padrão em caso de erro
+        setFormasEnvio([
+          { id: 1, name: 'Retirada no Local', value: 0 },
+          { id: 2, name: 'Entrega Local', value: 15 },
+          { id: 3, name: 'Sedex', value: 25 },
+          { id: 4, name: 'PAC', value: 20 },
+          { id: 5, name: 'Transportadora', value: 30 }
+        ]);
+        setLoadingData(prev => ({ ...prev, formasEnvio: false }));
+        setApiErrors(prev => ({ ...prev, formasEnvio: true }));
+      });
   }, []);
+
+  const validateDatesInRealTime = (dataEntrada, dataEntrega) => {
+    if (dataEntrada && dataEntrega) {
+      const dateValidation = validateOrderDates(dataEntrada, dataEntrega);
+      setDateValidationErrors(dateValidation.errors);
+    } else {
+      setDateValidationErrors([]);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newFormData = { ...prev, [name]: value };
+      
+      // Validar datas em tempo real
+      if (name === 'dataEntrada' || name === 'dataEntrega') {
+        validateDatesInRealTime(
+          name === 'dataEntrada' ? value : newFormData.dataEntrada,
+          name === 'dataEntrega' ? value : newFormData.dataEntrega
+        );
+      }
+      
+      return newFormData;
+    });
   };
 
   const handleBuscarClientes = (input) => {
-    if (!input || input.length < 1) return;
-    const resultado = clientes.filter((cliente) =>
-      cliente.nome.toLowerCase().includes(input.toLowerCase())
-    );
-    setClientes(resultado);
+    // A busca será feita pelo filterBy personalizado
+    // Esta função pode ser usada para debounce ou outras lógicas se necessário
+    if (!input || input.length < 1) {
+      // Mostrar clientes mais recentes quando não há input
+      const clientesRecentes = clientesOriginais
+        .sort((a, b) => (b.ultimoPedido || 0) - (a.ultimoPedido || 0))
+        .slice(0, 5);
+      setClientes(clientesRecentes);
+    }
   };
   const handleClienteSelecionado = (selected) => {
     if (selected.length > 0) {
@@ -149,10 +257,19 @@ const CreateOrder = () => {
       setFormData((prev) => ({
         ...prev,
         nomeCliente: cliente.nome,
-        telefoneCliente: cliente.telefone,
-        cidadeCliente: cliente.cidade,
+        telefoneCliente: cliente.telefone || '',
+        cidadeCliente: cliente.cidade || '',
       }));
       setSelectedCliente([cliente]);
+    } else {
+      // Limpar campos quando não há seleção
+      setFormData((prev) => ({
+        ...prev,
+        nomeCliente: '',
+        telefoneCliente: '',
+        cidadeCliente: '',
+      }));
+      setSelectedCliente([]);
     }
   };
 
@@ -169,33 +286,155 @@ const CreateOrder = () => {
     setTabsItems((prev) => {
       const updated = { ...prev, [tabKey]: newItems };
       const allItems = Object.values(updated).flat();
-      setFormData((prevForm) => ({ ...prevForm, items: allItems }));
+      
+      // Calcular valor total baseado nos itens
+      const valorTotal = allItems.reduce((total, item) => {
+        const valor = parseFloat(item.valor?.replace(',', '.') || 0);
+        return total + (isNaN(valor) ? 0 : valor);
+      }, 0);
+      
+      setFormData((prevForm) => ({ 
+        ...prevForm, 
+        items: allItems,
+        valorTotal: valorTotal.toFixed(2).replace('.', ',')
+      }));
       return updated;
     });
   };
 
-  async function handleSalvarPedido() {
-    const erros = validarPedido(formData);
-    if (erros.length > 0) {
-      alert("Erros encontrados:\n\n" + erros.join("\n"));
-      return;
+  const validarPedidoCompleto = () => {
+    const erros = [];
+    
+    // Validação básica usando a função existente
+    const errosBasicos = validarPedido(formData);
+    erros.push(...errosBasicos);
+    
+    // Validações adicionais específicas
+    if (!formData.nomeCliente?.trim()) {
+      erros.push("Nome do cliente é obrigatório");
     }
+    
+    if (!formData.dataEntrada) {
+      erros.push("Data de entrada é obrigatória");
+    }
+    
+    if (!formData.dataEntrega) {
+      erros.push("Data de entrega é obrigatória");
+    }
+    
+    // Validação específica de datas
+    if (formData.dataEntrada && formData.dataEntrega) {
+      const dateValidation = validateOrderDates(formData.dataEntrada, formData.dataEntrega);
+      if (!dateValidation.isValid) {
+        erros.push(...dateValidation.errors);
+      }
+    }
+    
+    if (!formData.items || formData.items.length === 0) {
+      erros.push("Pelo menos um item de produção deve ser adicionado");
+    }
+    
+    // Validar se todos os itens têm valor
+    if (formData.items && formData.items.length > 0) {
+      formData.items.forEach((item, index) => {
+        if (!item.valor || parseFloat(item.valor.replace(',', '.')) <= 0) {
+          erros.push(`Item ${index + 1} (${item.tipoProducao || 'Produção'}): Valor deve ser maior que zero`);
+        }
+      });
+    }
+    
+    return erros;
+  };
+
+  const handleSalvarPedido = () => {
+    const erros = validarPedidoCompleto();
+    setSaveValidationErrors(erros);
+    setShowSaveModal(true);
+  };
+
+  const confirmarSalvamento = async () => {
+    setIsSaving(true);
 
     try {
       const payload = normalizarDecimais(formData);
-      postPedido(payload)
-        .then((res) => {
-          alert('Pedido salvo com sucesso!');
-
-        })
-        .catch((err) => {
-          alert(err)
-        })
-      // salvarPedidoStorage(payload);
+      
+      // Converter para formato da API
+      const apiPedido = convertFormDataToApiPedido(payload);
+      
+      // Validar dados para API
+      const validation = validatePedidoForApi(apiPedido);
+      if (!validation.isValid) {
+        setSaveValidationErrors(validation.errors);
+        setIsSaving(false);
+        return;
+      }
+      
+      // Tentar salvar via API primeiro
+      try {
+        const response = await createPedido(apiPedido);
+        console.log('Pedido salvo na API com sucesso:', response.data);
+        
+        // Adicionar timestamp, status e estados dos setores para localStorage
+        const pedidoCompleto = {
+          ...payload,
+          id: response.data.id || Date.now(),
+          dataCriacao: new Date().toISOString(),
+          status: 'Pendente',
+          prioridade: payload.prioridade === '2' ? 'ALTA' : 'NORMAL',
+          financeiro: false,
+          conferencia: false,
+          sublimacao: false,
+          costura: false,
+          expedicao: false
+        };
+        
+        // Salvar no localStorage como backup
+        salvarPedidoStorage(pedidoCompleto);
+        
+        // Mostrar sucesso
+        alert('✅ Pedido salvo com sucesso na API!');
+        
+      } catch (apiError) {
+        console.warn('Erro ao salvar na API, salvando localmente:', apiError);
+        
+        // Se a API falhou, salvar apenas no localStorage
+        const pedidoCompleto = {
+          ...payload,
+          id: Date.now(),
+          dataCriacao: new Date().toISOString(),
+          status: 'Pendente',
+          prioridade: payload.prioridade === '2' ? 'ALTA' : 'NORMAL',
+          financeiro: false,
+          conferencia: false,
+          sublimacao: false,
+          costura: false,
+          expedicao: false
+        };
+        
+        salvarPedidoStorage(pedidoCompleto);
+        
+        // Mostrar aviso
+        alert('⚠️ Pedido salvo localmente (API indisponível)');
+      }
 
       // Resetar formulário
+      resetarFormulario();
+      
+      // Fechar modal
+      setShowSaveModal(false);
+      
+    } catch (error) {
+      console.error("Erro ao salvar pedido:", error);
+      alert("❌ Erro ao salvar pedido: " + (error.message || "Erro desconhecido"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const resetarFormulario = () => {
       const pedidos = obterPedidos();
       const proximoId = pedidos.length + 1;
+    
       setFormData({
         numeroPedido: String(proximoId),
         nomeCliente: '',
@@ -206,11 +445,12 @@ const CreateOrder = () => {
         observacao: '',
         prioridade: '1',
         items: [],
-        valorTotal: '',
+      valorTotal: '0,00',
         valorFrete: '',
         tipoPagamento: '',
         obsPagamento: '',
       });
+    
       setSelectedCliente([]);
       setTabsItems({});
       setTabs([
@@ -221,11 +461,9 @@ const CreateOrder = () => {
         },
       ]);
       setCount(1);
-    } catch (error) {
-      console.error("Erro ao salvar pedido:", error.response?.data || error.message);
-      alert("Erro ao salvar pedido: " + JSON.stringify(error.response?.data || error.message));
-    }
-  }
+    setFrete('');
+    setFormaSelecionada(null);
+  };
 
   const adTab = () => {
     const newCount = count + 1;
@@ -265,7 +503,52 @@ const CreateOrder = () => {
   };
 
   return (
-    <div style={{ padding: 0 }}>
+    <div className="create-order-container">
+      {/* Status da API */}
+      {(loadingData.clientes || loadingData.formasPagamento || loadingData.formasEnvio) && (
+        <div className="alert alert-info d-flex align-items-center mb-3" role="alert">
+          <div className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+          <div>
+            <strong>Carregando dados da API...</strong>
+            <div className="small">
+              {loadingData.clientes && 'Clientes '}
+              {loadingData.formasPagamento && 'Formas de Pagamento '}
+              {loadingData.formasEnvio && 'Formas de Envio '}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Erros da API */}
+      {(apiErrors.clientes || apiErrors.formasPagamento || apiErrors.formasEnvio) && (
+        <div className="alert alert-warning d-flex align-items-center mb-3" role="alert">
+          <ExclamationTriangle size={20} className="me-2" />
+          <div>
+            <strong>Atenção:</strong> Alguns dados não puderam ser carregados da API.
+            <div className="small">
+              {apiErrors.clientes && 'Clientes '}
+              {apiErrors.formasPagamento && 'Formas de Pagamento '}
+              {apiErrors.formasEnvio && 'Formas de Envio '}
+              - usando dados padrão para garantir funcionamento.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sucesso da API */}
+      {!loadingData.clientes && !loadingData.formasPagamento && !loadingData.formasEnvio && 
+       !apiErrors.clientes && !apiErrors.formasPagamento && !apiErrors.formasEnvio && (
+        <div className="alert alert-success d-flex align-items-center mb-3" role="alert">
+          <div className="me-2">✅</div>
+          <div>
+            <strong>Dados carregados com sucesso!</strong>
+            <div className="small">
+              Formas de pagamento e envio disponíveis da API.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-card mb-4">
         <div className="dashboard-card-header">
           <h5 className="dashboard-card-title">
@@ -302,10 +585,45 @@ const CreateOrder = () => {
                   onInputChange={handleBuscarClientes}
                   onChange={handleClienteSelecionado}
                   selected={selectedCliente}
-                  placeholder="Digite o nome do cliente"
-                  minLength={2}
-                  className="form-control"
+                  placeholder="Digite o nome do cliente..."
+                  minLength={1}
+                  className="form-control typeahead-normal"
+                  clearButton
+                  highlightOnlyResult
+                  selectHintOnEnter
+                  allowNew={false}
+                  newSelectionPrefix=""
+                  maxResults={8}
+                  renderMenuItemChildren={(option, props) => (
+                    <div>
+                      <div className="fw-semibold">{option.nome}</div>
+                      <small className="text-muted">
+                        {option.telefone && `${option.telefone} • `}
+                        {option.cidade}
+                      </small>
+                    </div>
+                  )}
+                  filterBy={(option, props) => {
+                    const text = props.text.toLowerCase();
+                    return (
+                      option.nome.toLowerCase().includes(text) ||
+                      (option.telefone && option.telefone.includes(text)) ||
+                      (option.cidade && option.cidade.toLowerCase().includes(text))
+                    );
+                  }}
                 />
+                {loadingData.clientes && (
+                  <div className="form-text">
+                    <div className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+                    Carregando clientes...
+                  </div>
+                )}
+                {apiErrors.clientes && (
+                  <div className="form-text text-warning">
+                    <ExclamationTriangle size={12} className="me-1" />
+                    Erro ao carregar clientes - usando dados locais
+                  </div>
+                )}
               </div>
             </Col>
             <Col md={3}>
@@ -338,8 +656,13 @@ const CreateOrder = () => {
                   value={formData.dataEntrada}
                   onChange={handleChange}
                   required
-                  className="form-control"
+                  className={`form-control ${dateValidationErrors.some(err => err.includes('entrada')) ? 'is-invalid' : ''}`}
                 />
+                {dateValidationErrors.some(err => err.includes('entrada')) && (
+                  <div className="invalid-feedback">
+                    {dateValidationErrors.find(err => err.includes('entrada'))}
+                  </div>
+                )}
               </div>
             </Col>
             <Col md={3}>
@@ -354,8 +677,13 @@ const CreateOrder = () => {
                   value={formData.dataEntrega}
                   onChange={handleChange}
                   required
-                  className="form-control"
+                  className={`form-control ${dateValidationErrors.some(err => err.includes('entrega')) ? 'is-invalid' : ''}`}
                 />
+                {dateValidationErrors.some(err => err.includes('entrega')) && (
+                  <div className="invalid-feedback">
+                    {dateValidationErrors.find(err => err.includes('entrega'))}
+                  </div>
+                )}
               </div>
             </Col>
             <Col md={6}>
@@ -374,6 +702,26 @@ const CreateOrder = () => {
               </div>
             </Col>
           </Row>
+          
+          {/* Alerta de validação de datas */}
+          {dateValidationErrors.length > 0 && (
+            <Row className="mb-3">
+              <Col md={12}>
+                <div className="alert alert-warning d-flex align-items-center" role="alert">
+                  <ExclamationTriangle size={20} className="me-2" />
+                  <div>
+                    <strong>Atenção:</strong>
+                    <ul className="mb-0 mt-1">
+                      {dateValidationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          )}
+          
           <Row className="mb-4">
             <Col md={6}>
               <div className="form-group">
@@ -398,14 +746,27 @@ const CreateOrder = () => {
                   <Truck size={16} style={{ marginRight: '8px' }} />
                   Forma de Envio
                 </label>
-                <Form.Select name="envio" onChange={handleChangeFormaEnvio} className="form-control">
-                  <option value="">Selecione</option>
+                <Form.Select 
+                  name="envio" 
+                  onChange={handleChangeFormaEnvio} 
+                  className={`form-control ${apiErrors.formasEnvio ? 'is-invalid' : ''}`}
+                  disabled={loadingData.formasEnvio}
+                >
+                  <option value="">
+                    {loadingData.formasEnvio ? 'Carregando...' : 
+                     apiErrors.formasEnvio ? 'Erro ao carregar' : 'Selecione'}
+                  </option>
                   {formasEnvio.map((forma) => (
                     <option key={forma.id} value={forma.id}>
                       {forma.name}
                     </option>
                   ))}
                 </Form.Select>
+                {apiErrors.formasEnvio && (
+                  <div className="invalid-feedback">
+                    Erro ao carregar formas de envio da API
+                  </div>
+                )}
               </div>
             </Col>
             <Col md={2}>
@@ -436,7 +797,7 @@ const CreateOrder = () => {
           </h5>
           <Button 
             onClick={adTab} 
-            className="btn btn-outline btn-sm"
+            className="add-tab-button"
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <Plus size={16} />
@@ -457,21 +818,7 @@ const CreateOrder = () => {
                           e.stopPropagation();
                           removeTab(tab.eventKey);
                         }}
-                        style={{ 
-                          background: 'none', 
-                          border: 'none', 
-                          color: 'var(--color-error)', 
-                          cursor: 'pointer',
-                          padding: '2px',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '20px',
-                          height: '20px'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--color-error-light)'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        className="tab-close-button"
                       >
                         <X size={12} />
                       </button>
@@ -503,14 +850,13 @@ const CreateOrder = () => {
                 Valor Total (R$)
               </label>
               <Form.Control
-                type="number"
+                type="text"
                 name="valorTotal"
-                value={formData.valorTotal || ''}
-                onChange={handleChange}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
+                value={formData.valorTotal || '0,00'}
+                readOnly
+                placeholder="0,00"
                 className="form-control"
+                style={{ backgroundColor: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)' }}
               />
             </div>
           </Col>
@@ -544,15 +890,24 @@ const CreateOrder = () => {
                 name="tipoPagamento"
                 value={formData.tipoPagamento || ''}
                 onChange={handleChange}
-                className="form-control"
+                className={`form-control ${apiErrors.formasPagamento ? 'is-invalid' : ''}`}
+                disabled={loadingData.formasPagamento}
               >
-                <option value="">Selecione</option>
+                <option value="">
+                  {loadingData.formasPagamento ? 'Carregando...' : 
+                   apiErrors.formasPagamento ? 'Erro ao carregar' : 'Selecione'}
+                </option>
                 {formasPagamento.map((forma) => (
                   <option key={forma.id} value={forma.id}>
                     {forma.name}
                   </option>
                 ))}
               </Form.Select>
+              {apiErrors.formasPagamento && (
+                <div className="invalid-feedback">
+                  Erro ao carregar formas de pagamento da API
+                </div>
+              )}
             </div>
           </Col>
           <Col md={3}>
@@ -628,7 +983,7 @@ const CreateOrder = () => {
               <Button 
                 variant="primary" 
                 type="button" 
-                onClick={() => console.log(JSON.stringify(formData))}
+                onClick={() => setShowResumoModal(true)}
                 className="btn btn-outline"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
               >
@@ -639,6 +994,23 @@ const CreateOrder = () => {
           </Col>
         </Row>
       </div>
+      
+      <ResumoModal
+        show={showResumoModal}
+        onHide={() => setShowResumoModal(false)}
+        formData={formData}
+      />
+      
+      <ErrorBoundary>
+        <SaveConfirmModal
+          show={showSaveModal}
+          onHide={() => setShowSaveModal(false)}
+          onConfirm={confirmarSalvamento}
+          isSaving={isSaving}
+          formData={formData || {}}
+          validationErrors={saveValidationErrors || []}
+        />
+      </ErrorBoundary>
     </div>
   );
 };

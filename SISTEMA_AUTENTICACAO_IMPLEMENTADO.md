@@ -236,3 +236,4 @@ const login = async (credentials) => {
 ---
 
 **Resultado**: Sistema de autenticação completo, seguro e profissional, com controle granular de acesso e interface moderna.
+

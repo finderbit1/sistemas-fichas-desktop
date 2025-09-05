@@ -3,6 +3,7 @@ import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
 import AreaCalculatorLinhaUnica from '../AreaCalculator';
+import ValidationModal from '../ValidationModal';
 
 function FormTotem(props) {
     const [formData, setFormData] = useState({
@@ -22,6 +23,9 @@ function FormTotem(props) {
     });
 
     const [images, setImages] = useState([]);
+    const [showValidationModal, setShowValidationModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -42,52 +46,74 @@ function FormTotem(props) {
         }
     };
 
+    const handleAreaChange = (areaData) => {
+        setFormData(prev => ({
+            ...prev,
+            largura: areaData.largura,
+            altura: areaData.altura,
+            area: areaData.area
+        }));
+    };
+
+    const validarCampos = () => {
+        const erros = [];
+        
+        // Debug: verificar valores
+        console.log('FormData na validação Totem:', formData);
+        console.log('Largura:', formData.largura, 'Altura:', formData.altura);
+        
+        // Campos obrigatórios básicos
+        if (!formData.descricao?.trim()) erros.push("Descrição do Totem");
+        if (!formData.altura?.trim()) erros.push("Altura");
+        if (!formData.largura?.trim()) erros.push("Largura");
+        if (!formData.vendedor?.trim()) erros.push("Vendedor");
+        if (!formData.designer?.trim()) erros.push("Designer");
+        if (!formData.material?.trim()) erros.push("Material");
+        if (!formData.comPe?.trim()) erros.push("Acabamento (Com Pé, Sem Pé, etc)");
+        if (!formData.valorTotem?.trim()) erros.push("Valor do Totem");
+        
+        // Validação de valores numéricos
+        if (formData.altura && (isNaN(parseFloat(formData.altura)) || parseFloat(formData.altura) <= 0)) {
+            erros.push("Altura deve ser um número maior que zero");
+        }
+        if (formData.largura && (isNaN(parseFloat(formData.largura)) || parseFloat(formData.largura) <= 0)) {
+            erros.push("Largura deve ser um número maior que zero");
+        }
+        if (formData.valorTotem && (isNaN(parseFloat(formData.valorTotem.replace(',', '.'))) || parseFloat(formData.valorTotem.replace(',', '.')) <= 0)) {
+            erros.push("Valor do Totem deve ser um número maior que zero");
+        }
+        
+        return erros;
+    };
+
     const saveOrder = (e) => {
         e.preventDefault();
 
-        // Verificação de campos obrigatórios simples
-        const camposObrigatorios = [
-            { nome: "descricao", label: "Descrição" },
-            { nome: "altura", label: "Altura" },
-            { nome: "largura", label: "Largura" },
-            { nome: "vendedor", label: "Vendedor" },
-            { nome: "designer", label: "Designer" },
-            { nome: "material", label: "Material" },
-            { nome: "comPe", label: "Acabamento (Com Pé, Sem Pé, etc)" },
-            { nome: "valorTotem", label: "Valor do Totem" }
-        ];
-
-        for (let campo of camposObrigatorios) {
-            if (!formData[campo.nome] || formData[campo.nome].toString().trim() === "") {
-                alert(`⚠️ Por favor, preencha o campo "${campo.label}".`);
-                return;
-            }
-        }
-
-        // Validação de altura e largura
-        const altura = parseFloat(formData.altura);
-        const largura = parseFloat(formData.largura);
-        if (isNaN(altura) || altura <= 0 || isNaN(largura) || largura <= 0) {
-            alert("⚠️ Altura e largura devem ser maiores que zero.");
-            return;
-        }
-
-        // Validação de valor do totem
-        const valorNumerico = parseFloat(formData.valorTotem.replace(',', '.'));
-        if (isNaN(valorNumerico) || valorNumerico <= 0) {
-            alert("⚠️ O valor do totem deve ser maior que zero.");
+        const erros = validarCampos();
+        if (erros.length > 0) {
+            setValidationErrors(erros);
+            setShowValidationModal(true);
             return;
         }
 
         // Se passou tudo:
         const pedido = {
             ...formData,
-            imagens: images
+            imagens: images,
+            valor: formData.valorTotem
         };
+
+        // Ativar estado de sucesso
+        setIsSuccess(true);
 
         console.log("✅ Pedido validado:", pedido);
         alert("✅ Totem adicionado com sucesso!");
-        props.items.push("Totem");
+        props.onAdicionarItem(pedido);
+        
+        // Resetar estado de sucesso após 3 segundos
+        setTimeout(() => {
+            setIsSuccess(false);
+        }, 3000);
     };
 
     const handleSubmit = (e) => {
@@ -98,36 +124,40 @@ function FormTotem(props) {
     };
 
     return (
-        <Container className="mt-4">
-            <Form onSubmit={handleSubmit}>
-                <Row>
-                    <Col>
-                        <Form.Group controlId="descricao">
-                            <Form.Control placeholder="Descrição do Totem" type="text" name="descricao" value={formData.descricao} onChange={handleChange} required />
-                        </Form.Group>
+        <>
+        <Form onSubmit={handleSubmit} className={isSuccess ? 'form-success form-success-animation' : ''}>
+                <Row className="mb-3">
+                    <Col md={8}>
+                        <div className="form-group mb-3">
+                            <label className="form-label">Descrição do Totem</label>
+                            <Form.Control placeholder="Digite a descrição do totem" type="text" name="descricao" value={formData.descricao} onChange={handleChange} required className="form-control" />
+                        </div>
                     </Col>
                     <Col md={4}>
-                        <AreaCalculatorLinhaUnica>
-                        </AreaCalculatorLinhaUnica>
+                        <AreaCalculatorLinhaUnica 
+                            formData={formData}
+                            onChange={handleAreaChange}
+                        />
                     </Col>
                 </Row>
-                <hr />
-                <Row>
-                    <Col>
-                        <Form.Group controlId="vendedor">
-                            <Form.Label>Vendedor</Form.Label>
-                            <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required>
+                <Row className="mb-3">
+                    <Col md={6}>
+                        <div className="form-group mb-3">
+                            <label className="form-label">Vendedor</label>
+                            <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
+                                <option value="">Selecione um Vendedor</option>
                                 <option value="andre">Andre</option>
                                 <option value="carol">Carol</option>
                                 <option value="maicon">Maicon</option>
                                 <option value="robson">Robson</option>
                             </Form.Select>
-                        </Form.Group>
+                        </div>
                     </Col>
-                    <Col>
-                        <Form.Group controlId="designer">
-                            <Form.Label>Designer</Form.Label>
-                            <Form.Select name="designer" value={formData.designer} onChange={handleChange} required>
+                    <Col md={6}>
+                        <div className="form-group mb-3">
+                            <label className="form-label">Designer</label>
+                            <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
+                                <option value="">Selecione um Designer</option>
                                 <option value="andre">Andre</option>
                                 <option value="carol">Carol</option>
                                 <option value="fabio">Fabio</option>
@@ -135,71 +165,90 @@ function FormTotem(props) {
                                 <option value="robson">Robson</option>
                                 <option value="willis">Willis</option>
                             </Form.Select>
-                        </Form.Group>
+                        </div>
                     </Col>
                 </Row>
-                <br />
-                <Row>
-                    <Col>
-                        <Form.Group controlId="material">
-                            <Form.Label>Material</Form.Label>
-                            <Form.Select name="material" value={formData.material} onChange={handleChange} required>
+                <Row className="mb-3">
+                    <Col md={6}>
+                        <div className="form-group mb-3">
+                            <label className="form-label">Material</label>
+                            <Form.Select name="material" value={formData.material} onChange={handleChange} required className="form-control">
+                                <option value="">Selecione o Material</option>
                                 <option value="MDF 6MM">MDF 6MM</option>
                                 <option value="MDF 3MM">MDF 3MM</option>
                                 <option value="poliondas">POLIONDAS</option>
                             </Form.Select>
-                        </Form.Group>
-                        <br />
-                        <Card>
-                            <Card.Header>Acabamento</Card.Header>
-                            <Card.Body>
-                                <Form.Check
-                                    type='radio'
-                                    label="Com Pé"
-                                    name='comPe'
-                                    value="com"
-                                    checked={formData.comPe === 'com'}
-                                    onChange={handleChange}
-                                />
-                                <Form.Check
-                                    type='radio'
-                                    label="Sem Pé"
-                                    name='comPe'
-                                    value="sem"
-                                    checked={formData.comPe === 'sem'}
-                                    onChange={handleChange}
-                                />
-                                <Form.Check
-                                    type='radio'
-                                    label="Com Base"
-                                    name='comPe'
-                                    value="base"
-                                    checked={formData.comPe === 'base'}
-                                    onChange={handleChange}
-                                />
-                                <Form.Check
-                                    type='radio'
-                                    label="Sem Acabamento"
-                                    name='comPe'
-                                    value="semAcabamento"
-                                    checked={formData.comPe === 'semAcabamento'}
-                                    onChange={handleChange}
-                                />
-                            </Card.Body>
+                        </div>
+                        <Card className="dashboard-card">
+                            <div className="dashboard-card-header">
+                                <h6 className="dashboard-card-title">Acabamento</h6>
+                            </div>
+                            <div className="p-3">
+                                <div className="form-check mb-2">
+                                    <Form.Check
+                                        type='radio'
+                                        label="Com Pé"
+                                        name='comPe'
+                                        value="com"
+                                        checked={formData.comPe === 'com'}
+                                        onChange={handleChange}
+                                        className="form-check-input"
+                                    />
+                                </div>
+                                <div className="form-check mb-2">
+                                    <Form.Check
+                                        type='radio'
+                                        label="Sem Pé"
+                                        name='comPe'
+                                        value="sem"
+                                        checked={formData.comPe === 'sem'}
+                                        onChange={handleChange}
+                                        className="form-check-input"
+                                    />
+                                </div>
+                                <div className="form-check mb-2">
+                                    <Form.Check
+                                        type='radio'
+                                        label="Com Base"
+                                        name='comPe'
+                                        value="base"
+                                        checked={formData.comPe === 'base'}
+                                        onChange={handleChange}
+                                        className="form-check-input"
+                                    />
+                                </div>
+                                <div className="form-check mb-2">
+                                    <Form.Check
+                                        type='radio'
+                                        label="Sem Acabamento"
+                                        name='comPe'
+                                        value="semAcabamento"
+                                        checked={formData.comPe === 'semAcabamento'}
+                                        onChange={handleChange}
+                                        className="form-check-input"
+                                    />
+                                </div>
+                            </div>
                         </Card>
 
-                        <br />
-                        <Form.Group controlId="observacao">
-                            <Form.Label>Observações</Form.Label>
-                            <Form.Control as="textarea" rows={2} name="observacao" value={formData.observacao} onChange={handleChange} />
-                        </Form.Group>
+                        <div className="form-group mb-3">
+                            <label className="form-label">Observações</label>
+                            <Form.Control 
+                                as="textarea" 
+                                rows={2} 
+                                name="observacao" 
+                                value={formData.observacao} 
+                                onChange={handleChange}
+                                className="form-control form-textarea"
+                                placeholder="Observações adicionais sobre o totem..."
+                            />
+                        </div>
                     </Col>
-                    <Col>
+                    <Col md={6}>
                         <ImageDropZone />
                     </Col>
                 </Row>
-                <hr />
-                <Row className="align-items-center mb-4">
+                <Row className="align-items-center mb-3">
                     <Col md={8}>
                         <InputValorReal
                             name="valorTotem"
@@ -209,15 +258,21 @@ function FormTotem(props) {
                             required
                         />
                     </Col>
-                    <Col md={4} className="d-flex justify-content-end gap-2 mt-4">
-                        <Button variant="danger" type="button" onClick={function () { }} size="md">Limpar</Button>
-                        <Button variant="success" type="button" size="md" onClick={saveOrder}>Salvar</Button>
-
+                    <Col md={4} className="d-flex justify-content-end gap-2">
+                        <Button variant="danger" type="button" onClick={function () { }} className="btn btn-error">Limpar</Button>
+                        <Button variant="success" type="button" onClick={saveOrder} className="btn btn-success">Salvar</Button>
                     </Col>
                 </Row>
 
-            </Form>
-        </Container>
+        </Form>
+        
+        <ValidationModal
+            show={showValidationModal}
+            onHide={() => setShowValidationModal(false)}
+            errors={validationErrors}
+            title="Validação do Formulário - Totem"
+        />
+        </>
     );
 }
 

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
+import ValidationModal from '../ValidationModal';
 
-function FormLona() {
+function FormLona({ onAdicionarItem }) {
     const [formData, setFormData] = useState({
         descricao: '',
         largura: '',
@@ -21,6 +22,9 @@ function FormLona() {
     });
 
     const [images, setImages] = useState([]);
+    const [showValidationModal, setShowValidationModal] = useState(false);
+    const [validationErrors, setValidationErrors] = useState([]);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -37,15 +41,68 @@ function FormLona() {
         }
     };
 
+    const validarCampos = () => {
+        const erros = [];
+        
+        // Campos obrigatórios básicos
+        if (!formData.descricao?.trim()) erros.push("Descrição da Lona");
+        if (!formData.largura?.trim()) erros.push("Largura");
+        if (!formData.altura?.trim()) erros.push("Altura");
+        if (!formData.vendedor?.trim()) erros.push("Vendedor");
+        if (!formData.designer?.trim()) erros.push("Designer");
+        if (!formData.material?.trim()) erros.push("Material");
+        if (!formData.valorLona?.trim()) erros.push("Valor da Lona");
+        
+        // Validação de valores numéricos
+        if (formData.largura && (isNaN(parseFloat(formData.largura)) || parseFloat(formData.largura) <= 0)) {
+            erros.push("Largura deve ser um número maior que zero");
+        }
+        if (formData.altura && (isNaN(parseFloat(formData.altura)) || parseFloat(formData.altura) <= 0)) {
+            erros.push("Altura deve ser um número maior que zero");
+        }
+        if (formData.valorLona && (isNaN(parseFloat(formData.valorLona.replace(',', '.'))) || parseFloat(formData.valorLona.replace(',', '.')) <= 0)) {
+            erros.push("Valor da Lona deve ser um número maior que zero");
+        }
+        
+        return erros;
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Lona cadastrada:', formData);
-        console.log('Imagens:', images);
-        alert("Lona salva!");
+        
+        const erros = validarCampos();
+        if (erros.length > 0) {
+            setValidationErrors(erros);
+            setShowValidationModal(true);
+            return;
+        }
+        
+        const dataProducao = {
+            "tipoProducao": "lona",
+            "imagens": images,
+            "valor": formData.valorLona,
+            ...formData
+        };
+        
+        // Ativar estado de sucesso
+        setIsSuccess(true);
+        
+        if (onAdicionarItem) {
+            onAdicionarItem(dataProducao);
+        }
+        
+        console.log('Lona cadastrada:', dataProducao);
+        alert("✅ Lona adicionada com sucesso!");
+        
+        // Resetar estado de sucesso após 3 segundos
+        setTimeout(() => {
+            setIsSuccess(false);
+        }, 3000);
     };
 
     return (
-        <Container className="mt-4">
+        <>
+        <Container className={`mt-4 ${isSuccess ? 'form-success form-success-animation' : ''}`}>
             <Form onSubmit={handleSubmit}>
                 <Row>
                     <Col>
@@ -134,6 +191,14 @@ function FormLona() {
                 </Row>
             </Form>
         </Container>
+        
+        <ValidationModal
+            show={showValidationModal}
+            onHide={() => setShowValidationModal(false)}
+            errors={validationErrors}
+            title="Validação do Formulário - Lona"
+        />
+        </>
     );
 }
 

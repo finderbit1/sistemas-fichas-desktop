@@ -634,3 +634,4 @@ const AdminPage = () => {
 ---
 
 **Conclusão:** Uma página de admin completa deve ser um centro de comando que permite controle total sobre o sistema, com foco em segurança, usabilidade e eficiência operacional. A implementação deve ser feita em fases, priorizando funcionalidades críticas primeiro.
+
