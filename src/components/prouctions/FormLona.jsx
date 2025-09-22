@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
+import AreaCalculatorLinhaUnica from '../AreaCalculator';
 import ValidationModal from '../ValidationModal';
 import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
+import useCustomAlert from '../../hooks/useCustomAlert';
+import CustomAlertModal from '../CustomAlertModal';
 
 function FormLona({ onAdicionarItem }) {
     const { vendedores, designers, loading, error } = useVendedoresDesigners();
+    const customAlert = useCustomAlert();
     
     const [formData, setFormData] = useState({
         descricao: '',
@@ -22,6 +26,7 @@ function FormLona({ onAdicionarItem }) {
         },
         observacao: '',
         valorLona: '',
+        valorAdicionais: '',
     });
 
     const [images, setImages] = useState([]);
@@ -42,6 +47,37 @@ function FormLona({ onAdicionarItem }) {
                 [name]: value
             }));
         }
+    };
+
+    const handleAreaChange = (areaData) => {
+        setFormData(prev => ({
+            ...prev,
+            largura: areaData.largura,
+            altura: areaData.altura,
+            area: areaData.area
+        }));
+    };
+
+    const resetForm = () => {
+        setFormData({
+            descricao: '',
+            largura: '',
+            altura: '',
+            vendedor: '',
+            designer: '',
+            material: 'Lona 280g',
+            acabamento: {
+                solda: false,
+                bastao: false,
+                ilhos: false,
+            },
+            observacao: '',
+            valorLona: '',
+        });
+        setImages([]);
+        setValidationErrors([]);
+        setShowValidationModal(false);
+        setIsSuccess(false);
     };
 
     const validarCampos = () => {
@@ -70,6 +106,14 @@ function FormLona({ onAdicionarItem }) {
         return erros;
     };
 
+    const parseBR = (v) => {
+        if (!v) return 0;
+        if (typeof v === 'number') return v;
+        const normalized = String(v).replace(/\./g, '').replace(',', '.');
+        const num = parseFloat(normalized);
+        return isNaN(num) ? 0 : num;
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         
@@ -79,11 +123,11 @@ function FormLona({ onAdicionarItem }) {
             setShowValidationModal(true);
             return;
         }
-        
+        const total = (parseBR(formData.valorLona) + parseBR(formData.valorAdicionais)).toFixed(2).replace('.', ',');
         const dataProducao = {
             "tipoProducao": "lona",
-            "imagens": images,
-            "valor": formData.valorLona,
+            "imagem": images.length > 0 ? images[0] : null,
+            "valor": total,
             ...formData
         };
         
@@ -105,28 +149,20 @@ function FormLona({ onAdicionarItem }) {
 
     return (
         <>
-        {error && (
-            <Alert variant="warning" className="mb-3">
-                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
-            </Alert>
-        )}
+        {error && customAlert.showWarning('Atenção', `${error}. Os campos de vendedor e designer podem não estar disponíveis.`)}
         <Container className={`mt-4 ${isSuccess ? 'form-success form-success-animation' : ''}`}>
             <Form onSubmit={handleSubmit}>
                 <Row>
-                    <Col>
+                    <Col md={8}>
                         <Form.Group controlId="descricao">
                             <Form.Control placeholder="Descrição da Lona" type="text" name="descricao" value={formData.descricao} onChange={handleChange} required />
                         </Form.Group>
                     </Col>
-                    <Col md={2}>
-                        <Form.Group controlId="largura">
-                            <Form.Control type="number" name="largura" placeholder="Largura" value={formData.largura} onChange={handleChange} required />
-                        </Form.Group>
-                    </Col>
-                    <Col md={2}>
-                        <Form.Group controlId="altura">
-                            <Form.Control type="number" name="altura" placeholder="Altura" value={formData.altura} onChange={handleChange} required />
-                        </Form.Group>
+                    <Col md={4}>
+                        <AreaCalculatorLinhaUnica 
+                            formData={formData}
+                            onChange={handleAreaChange}
+                        />
                     </Col>
                 </Row>
 
@@ -189,7 +225,7 @@ function FormLona({ onAdicionarItem }) {
                         </Card>
                     </Col>
                     <Col>
-                        <ImageDropZone />
+                        <ImageDropZone onImageChange={(image) => setImages([image])} />
                     </Col>
                 </Row>
 
@@ -205,16 +241,28 @@ function FormLona({ onAdicionarItem }) {
                 <Row className="align-items-center mb-4">
                     <Col md={8}>
                         <InputValorReal
-                            name="valorTotem"
-                            label="Valor do Totem"
-                            value={formData.valorTotem}
+                            name="valorLona"
+                            label="Valor da Lona"
+                            value={formData.valorLona}
                             onChange={handleChange}
                             required
                         />
                     </Col>
+                    <Col md={4}>
+                        <Form.Group controlId="valorAdicionais">
+                            <Form.Label>Valores adicionais (opcional)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="valorAdicionais"
+                                value={formData.valorAdicionais}
+                                onChange={handleChange}
+                                placeholder="Ex.: 10,00"
+                            />
+                        </Form.Group>
+                    </Col>
                     <Col md={4} className="d-flex justify-content-end gap-2">
-                        <Button variant="danger" type="button" onClick={function () { }} size="md">Limpar</Button>
-                        <Button variant="success" type="button" size="md" onClick={saveOrder}>Salvar</Button>
+                        <Button variant="danger" type="button" onClick={resetForm} size="md">Limpar</Button>
+                        <Button variant="success" type="submit" size="md">Salvar</Button>
 
                     </Col>
                 </Row>
@@ -226,6 +274,17 @@ function FormLona({ onAdicionarItem }) {
             onHide={() => setShowValidationModal(false)}
             errors={validationErrors}
             title="Validação do Formulário - Lona"
+        />
+        <CustomAlertModal
+            isOpen={customAlert.alertState.isOpen}
+            onClose={customAlert.hideAlert}
+            type={customAlert.alertState.type}
+            title={customAlert.alertState.title}
+            message={customAlert.alertState.message}
+            confirmText={customAlert.alertState.confirmText}
+            onConfirm={customAlert.alertState.onConfirm}
+            showCancel={customAlert.alertState.showCancel}
+            cancelText={customAlert.alertState.cancelText}
         />
         </>
     );

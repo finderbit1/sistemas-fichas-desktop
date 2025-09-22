@@ -10,7 +10,9 @@
 export const isWeekend = (dateString) => {
   if (!dateString) return false;
   
-  const date = new Date(dateString);
+  // Criar data no fuso horário local para evitar problemas de UTC
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month é 0-indexed
   const dayOfWeek = date.getDay();
   
   // 0 = Domingo, 6 = Sábado
@@ -54,7 +56,9 @@ export const compareDates = (date1, date2) => {
 export const formatDateForDisplay = (dateString) => {
   if (!dateString) return '';
   
-  const date = new Date(dateString);
+  // Criar data no fuso horário local para evitar problemas de UTC
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month é 0-indexed
   return date.toLocaleDateString('pt-BR');
 };
 
@@ -66,7 +70,9 @@ export const formatDateForDisplay = (dateString) => {
 export const getDayName = (dateString) => {
   if (!dateString) return '';
   
-  const date = new Date(dateString);
+  // Criar data no fuso horário local para evitar problemas de UTC
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day); // month é 0-indexed
   const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   return days[date.getDay()];
 };
@@ -116,5 +122,8 @@ export const validateOrderDates = (dataEntrada, dataEntrega) => {
     errors
   };
 };
+
+
+
 
 

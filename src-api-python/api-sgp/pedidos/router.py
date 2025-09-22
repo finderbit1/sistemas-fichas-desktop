@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from base import get_session
 from .schema import Pedido, PedidoCreate, PedidoUpdate, PedidoResponse, ItemPedido, Acabamento
 from datetime import datetime
@@ -79,6 +79,11 @@ def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
         # Converter de volta para response
         pedido_dict = db_pedido.model_dump()
         pedido_dict['items'] = pedido.items  # Usar os items originais
+        
+        # Tratar prioridade vazia ou inválida
+        if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
+            pedido_dict['prioridade'] = 'NORMAL'
+        
         return PedidoResponse(**pedido_dict)
         
     except Exception as e:
@@ -100,6 +105,11 @@ def listar_pedidos(session: Session = Depends(get_session)):
             
             pedido_dict = pedido.model_dump()
             pedido_dict['items'] = items
+            
+            # Tratar prioridade vazia ou inválida
+            if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
+                pedido_dict['prioridade'] = 'NORMAL'
+            
             response_pedido = PedidoResponse(**pedido_dict)
             response_pedidos.append(response_pedido)
         
@@ -107,6 +117,49 @@ def listar_pedidos(session: Session = Depends(get_session)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao listar pedidos: {str(e)}")
+
+@router.get("/proximo-numero")
+def obter_proximo_numero_pedido(session: Session = Depends(get_session)):
+    """Obtém o próximo número de pedido incremental"""
+    try:
+        # Buscar todos os números de pedidos existentes
+        pedidos = session.exec(select(Pedido.numero)).all()
+        
+        if not pedidos:
+            # Se não há pedidos, começar do 1
+            proximo_numero = 1
+        else:
+            # Converter strings para int, filtrar valores válidos e pegar o maior
+            numeros_validos = []
+            for num_str in pedidos:
+                try:
+                    num_int = int(num_str)
+                    numeros_validos.append(num_int)
+                except (ValueError, TypeError):
+                    # Ignorar números inválidos
+                    continue
+            
+            if numeros_validos:
+                maior_numero = max(numeros_validos)
+                proximo_numero = maior_numero + 1
+            else:
+                # Se nenhum número válido foi encontrado, começar do 1
+                proximo_numero = 1
+        
+        # Contar total de pedidos para estatística
+        total_pedidos = session.exec(select(func.count(Pedido.id))).first()
+        
+        # Log para debug
+        print(f"🔢 DEBUG: Números encontrados: {numeros_validos if 'numeros_validos' in locals() else 'Nenhum'}")
+        print(f"🔢 DEBUG: Próximo número calculado: {proximo_numero}")
+        
+        return {
+            "proximo_numero": proximo_numero,
+            "total_pedidos": total_pedidos or 0
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter próximo número: {str(e)}")
 
 @router.get("/{pedido_id}", response_model=PedidoResponse)
 def obter_pedido(pedido_id: int, session: Session = Depends(get_session)):
@@ -123,6 +176,11 @@ def obter_pedido(pedido_id: int, session: Session = Depends(get_session)):
         
         pedido_dict = pedido.model_dump()
         pedido_dict['items'] = items
+        
+        # Tratar prioridade vazia ou inválida
+        if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
+            pedido_dict['prioridade'] = 'NORMAL'
+        
         return PedidoResponse(**pedido_dict)
         
     except HTTPException:
@@ -163,6 +221,11 @@ def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Sessi
         
         pedido_dict = db_pedido.model_dump()
         pedido_dict['items'] = items
+        
+        # Tratar prioridade vazia ou inválida
+        if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
+            pedido_dict['prioridade'] = 'NORMAL'
+        
         return PedidoResponse(**pedido_dict)
         
     except HTTPException:
@@ -212,6 +275,11 @@ def listar_pedidos_por_status(status: str, session: Session = Depends(get_sessio
             
             pedido_dict = pedido.model_dump()
             pedido_dict['items'] = items
+            
+            # Tratar prioridade vazia ou inválida
+            if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
+                pedido_dict['prioridade'] = 'NORMAL'
+            
             response_pedido = PedidoResponse(**pedido_dict)
             response_pedidos.append(response_pedido)
         
@@ -221,3 +289,4 @@ def listar_pedidos_por_status(status: str, session: Session = Depends(get_sessio
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao listar pedidos por status: {str(e)}")
+

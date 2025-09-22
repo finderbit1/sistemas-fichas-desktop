@@ -31,3 +31,21 @@ export function excluirPedido(pedidoId) {
 // Funções com nomes mais específicos para compatibilidade
 export const salvarPedidoStorage = salvarPedido;
 export const removerPedidoStorage = excluirPedido;
+
+// ===== Filtros Persistentes (Home) =====
+const CHAVE_FILTROS_HOME = 'home_pedidos_filters_v1';
+
+export function salvarFiltrosHome(filtros) {
+  try {
+    localStorage.setItem(CHAVE_FILTROS_HOME, JSON.stringify(filtros));
+  } catch (e) {}
+}
+
+export function obterFiltrosHome() {
+  try {
+    const raw = localStorage.getItem(CHAVE_FILTROS_HOME);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}

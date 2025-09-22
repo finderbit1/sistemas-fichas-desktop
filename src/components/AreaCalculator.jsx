@@ -45,29 +45,32 @@ function AreaCalculatorLinhaUnica({ formData, onChange }) {
   };
 
   return (
-      <InputGroup>
-        <Form.Control
-          name="largura"
-          value={form.largura}
-          onChange={handleChange}
-          placeholder="Largura"
-        />
-        <InputGroup.Text>x</InputGroup.Text>
-        <Form.Control
-          name="altura"
-          value={form.altura}
-          onChange={handleChange}
-          placeholder="Altura"
-        />
-        <InputGroup.Text>=</InputGroup.Text>
-        <Form.Control
-          name="area"
-          value={form.area}
-          readOnly
-          placeholder="Área (m²)"
-        />
-        <InputGroup.Text>m²</InputGroup.Text>
-      </InputGroup>
+      <div className="form-group mb-3">
+        <label className="form-label">Medidas (L × A = m²)</label>
+        <InputGroup>
+          <Form.Control
+            name="largura"
+            value={form.largura}
+            onChange={handleChange}
+            placeholder="Largura"
+          />
+          <InputGroup.Text>x</InputGroup.Text>
+          <Form.Control
+            name="altura"
+            value={form.altura}
+            onChange={handleChange}
+            placeholder="Altura"
+          />
+          <InputGroup.Text>=</InputGroup.Text>
+          <Form.Control
+            name="area"
+            value={form.area}
+            readOnly
+            placeholder="Área (m²)"
+          />
+          <InputGroup.Text>m²</InputGroup.Text>
+        </InputGroup>
+      </div>
   );
 }
 

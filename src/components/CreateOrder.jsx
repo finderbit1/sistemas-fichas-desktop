@@ -21,15 +21,16 @@ import useCustomAlert from '../hooks/useCustomAlert';
 import FormPainel from './prouctions/FormPainel';
 import FormTotem from './prouctions/FormTotem';
 import FormLona from './prouctions/FormLona';
+import FormAlmofada from './prouctions/FormAlmofada';
 import FormBolsinha from './FormBolsinha';
 import ResumoModal from './ResumoModal';
 import SaveConfirmModal from './SaveConfirmModal';
 import ErrorBoundary from './ErrorBoundary';
-import { salvarPedido as salvarPedidoStorage, obterPedidos } from '../utils/localStorageHelper';
+import pedidosCache from '../utils/pedidosCache';
 import { validarPedido, normalizarDecimais } from "../utils/validador"
 import { validateOrderDates } from "../utils/dateValidator"
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, getAllDescontos, calcularDesconto, createPedido } from '../services/api';
+import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, getAllDescontos, calcularDesconto, createPedido, getProximoNumeroPedido } from '../services/api';
 import { convertFormDataToApiPedido, validatePedidoForApi } from '../utils/apiConverter';
 import logger from '../utils/logger';
 import '../styles/forms.css';
@@ -56,7 +57,7 @@ function TypeProduction({ onItemsChange }) {
   };
 
   return (
-    <div className="form-section">
+    <div className="form-section" >
       <div className="form-group">
         <label className="form-label">
           <FileText size={16} style={{ marginRight: '8px' }} />
@@ -73,6 +74,7 @@ function TypeProduction({ onItemsChange }) {
           <option value="totem">Totem</option>
           <option value="lona">Lona</option>
           <option value="bolsinha">Bolsinha</option>
+          <option value="almofada">Almofada</option>
         </Form.Select>
       </div>
       {opcaoSelecionada && (
@@ -81,6 +83,7 @@ function TypeProduction({ onItemsChange }) {
           {opcaoSelecionada === 'totem' && <FormTotem {...formProps} />}
           {opcaoSelecionada === 'lona' && <FormLona {...formProps} />}
           {opcaoSelecionada === 'bolsinha' && <FormBolsinha {...formProps} />}
+          {opcaoSelecionada === 'almofada' && <FormAlmofada {...formProps} />}
         </div>
       )}
     </div>
@@ -89,6 +92,17 @@ function TypeProduction({ onItemsChange }) {
 
 
 const CreateOrder = () => {
+  const parseBRLMoney = (value) => {
+    if (typeof value === 'number') return value;
+    if (!value || value === '') return 0;
+    
+    // Remove pontos (separador de milhares) e substitui vírgula por ponto
+    const normalized = String(value).replace(/\./g, '').replace(',', '.');
+    const num = parseFloat(normalized);
+    
+    return isNaN(num) ? 0 : num;
+  };
+
   const [formData, setFormData] = useState({
     numeroPedido: '',
     nomeCliente: '',
@@ -119,23 +133,27 @@ const CreateOrder = () => {
     clientes: true,
     formasPagamento: true,
     formasEnvio: true,
-    descontos: true
+    descontos: true,
+    numeroPedido: true
   });
   const [apiErrors, setApiErrors] = useState({
     clientes: false,
     formasPagamento: false,
     formasEnvio: false,
-    descontos: false
+    descontos: false,
+    numeroPedido: false
   });
 
   const customAlert = useCustomAlert();
   const [tabsItems, setTabsItems] = useState({});
   const [count, setCount] = useState(1);
+  const [resetKey, setResetKey] = useState(0);
+  const [activeTab, setActiveTab] = useState('tab-1');
   const [tabs, setTabs] = useState([
     {
       eventKey: `tab-1`,
       title: `Tab 1`,
-      content: <TypeProduction onItemsChange={(items) => handleItemsChange('tab-1', items)} />,
+      content: <TypeProduction key={`tp-init-tab-1`} onItemsChange={(items) => handleItemsChange('tab-1', items)} />,
     },
   ]);
   const [showResumoModal, setShowResumoModal] = useState(false);
@@ -145,9 +163,22 @@ const CreateOrder = () => {
   const [dateValidationErrors, setDateValidationErrors] = useState([]);
 
   useEffect(() => {
-    const pedidos = obterPedidos();
-    const lastId = pedidos.length;
-    setFormData((prev) => ({ ...prev, numeroPedido: String(lastId + 1) }));
+    // Carregar próximo número de pedido da API
+    getProximoNumeroPedido()
+      .then((res) => {
+        const proximoNumero = res.data.proximo_numero;
+        setFormData((prev) => ({ ...prev, numeroPedido: proximoNumero.toString() }));
+        setLoadingData(prev => ({ ...prev, numeroPedido: false }));
+      })
+      .catch((err) => {
+        console.error('Erro ao carregar próximo número de pedido:', err);
+        // Fallback para timestamp em caso de erro
+        const timestamp = Date.now();
+        const numeroPedido = `PED-${timestamp}`;
+        setFormData((prev) => ({ ...prev, numeroPedido }));
+        setLoadingData(prev => ({ ...prev, numeroPedido: false }));
+        setApiErrors(prev => ({ ...prev, numeroPedido: true }));
+      });
 
     // Carregar clientes
     getAllClientes()
@@ -303,7 +334,12 @@ const CreateOrder = () => {
     setFormaSelecionada(forma);
     const freteValue = forma && forma.value !== null ? forma.value : '';
     setFrete(freteValue);
-    setFormData((prev) => ({ ...prev, valorFrete: freteValue }));
+    setFormData((prev) => ({ 
+      ...prev, 
+      valorFrete: freteValue,
+      formaEnvio: forma ? forma.name : '',
+      formaEnvioId: forma ? forma.id : ''
+    }));
   };
 
   const handleChangeDesconto = async (e) => {
@@ -315,8 +351,8 @@ const CreateOrder = () => {
       // Calcular desconto baseado no valor total atual
       const allItems = Object.values(tabsItems).flat();
       const valorTotal = allItems.reduce((total, item) => {
-        const valor = parseFloat(item.valor?.replace(',', '.') || 0);
-        return total + (isNaN(valor) ? 0 : valor);
+        const valor = parseBRLMoney(item.valor);
+        return total + valor;
       }, 0);
       
       if (valorTotal > 0) {
@@ -340,8 +376,8 @@ const CreateOrder = () => {
       
       // Calcular valor total baseado nos itens
       const valorTotal = allItems.reduce((total, item) => {
-        const valor = parseFloat(item.valor?.replace(',', '.') || 0);
-        return total + (isNaN(valor) ? 0 : valor);
+        const valor = parseBRLMoney(item.valor);
+        return total + valor;
       }, 0);
       
       setFormData((prevForm) => ({ 
@@ -420,15 +456,15 @@ const CreateOrder = () => {
         return;
       }
       
-      // Tentar salvar via API primeiro
+      // Salvar apenas na API
       try {
         const response = await createPedido(apiPedido);
         console.log('Pedido salvo na API com sucesso:', response.data);
         
-        // Adicionar timestamp, status e estados dos setores para localStorage
+        // Adicionar ao cache local
         const pedidoCompleto = {
           ...payload,
-          id: response.data.id || Date.now(),
+          id: response.data.id,
           dataCriacao: new Date().toISOString(),
           status: 'Pendente',
           prioridade: payload.prioridade === '2' ? 'ALTA' : 'NORMAL',
@@ -439,8 +475,7 @@ const CreateOrder = () => {
           expedicao: false
         };
         
-        // Salvar no localStorage como backup
-        salvarPedidoStorage(pedidoCompleto);
+        pedidosCache.addPedido(pedidoCompleto);
         
         // Log da criação do pedido
         logger.logPedidoCreated(pedidoCompleto);
@@ -449,34 +484,19 @@ const CreateOrder = () => {
         customAlert.showSuccess('Sucesso!', 'Pedido salvo com sucesso na API!');
         
       } catch (apiError) {
-        console.warn('Erro ao salvar na API, salvando localmente:', apiError);
+        console.error('Erro ao salvar na API:', apiError);
         
-        // Se a API falhou, salvar apenas no localStorage
-        const pedidoCompleto = {
-          ...payload,
-          id: Date.now(),
-          dataCriacao: new Date().toISOString(),
-          status: 'Pendente',
-          prioridade: payload.prioridade === '2' ? 'ALTA' : 'NORMAL',
-          financeiro: false,
-          conferencia: false,
-          sublimacao: false,
-          costura: false,
-          expedicao: false
-        };
+        // Log do erro
+        logger.log('PEDIDO_CREATE_ERROR', {
+          numeroPedido: payload.numeroPedido,
+          cliente: payload.nomeCliente,
+          error: apiError.message || 'Erro desconhecido'
+        }, 'error');
         
-        salvarPedidoStorage(pedidoCompleto);
-        
-        // Log da criação do pedido (local)
-        logger.log('PEDIDO_CREATED_LOCAL', {
-          pedidoId: pedidoCompleto.id,
-          numeroPedido: pedidoCompleto.numeroPedido,
-          cliente: pedidoCompleto.nomeCliente,
-          note: 'API indisponível - salvo localmente'
-        }, 'warning');
-        
-        // Mostrar aviso
-        customAlert.showWarning('Aviso', 'Pedido salvo localmente (API indisponível)');
+        // Mostrar erro
+        customAlert.showError('Erro!', 'Falha ao salvar pedido na API. Tente novamente.');
+        setIsSaving(false);
+        return;
       }
 
       // Resetar formulário
@@ -494,11 +514,12 @@ const CreateOrder = () => {
   };
 
   const resetarFormulario = () => {
-      const pedidos = obterPedidos();
-      const proximoId = pedidos.length + 1;
-    
-      setFormData({
-        numeroPedido: String(proximoId),
+      // Carregar próximo número de pedido da API
+      getProximoNumeroPedido()
+        .then((res) => {
+          const proximoNumero = res.data.proximo_numero;
+          setFormData({
+            numeroPedido: proximoNumero.toString(),
         nomeCliente: '',
         telefoneCliente: '',
         dataEntrada: '',
@@ -515,20 +536,42 @@ const CreateOrder = () => {
     
       setSelectedCliente([]);
       setTabsItems({});
-      setTabs([
-        {
-          eventKey: `tab-1`,
-          title: `Tab 1`,
-          content: <TypeProduction onItemsChange={(items) => handleItemsChange('tab-1', items)} />,
-        },
-      ]);
-      setCount(1);
-    setFrete('');
-    setFormaSelecionada(null);
+      setTabs([]); // sem abas após salvar com sucesso
+      setCount(0);
+      setFrete('');
+      setFormaSelecionada(null);
+        })
+        .catch((err) => {
+          console.error('Erro ao carregar próximo número de pedido:', err);
+          // Fallback para timestamp em caso de erro
+          const timestamp = Date.now();
+          const numeroPedido = `PED-${timestamp}`;
+          setFormData({
+            numeroPedido,
+            nomeCliente: '',
+            telefoneCliente: '',
+            dataEntrada: '',
+            dataEntrega: '',
+            cidadeCliente: '',
+            observacao: '',
+            prioridade: '1',
+            items: [],
+            valorTotal: '0,00',
+            valorFrete: '',
+            tipoPagamento: '',
+            obsPagamento: '',
+          });
+          setSelectedCliente([]);
+          setTabsItems({});
+          setTabs([]);
+          setCount(0);
+          setFrete('');
+          setFormaSelecionada(null);
+        });
   };
 
   const adTab = () => {
-    const newCount = count + 1;
+    const newCount = (count || 0) + 1;
     setCount(newCount);
     const tabKey = `tab-${newCount}`;
     setTabs([
@@ -536,7 +579,7 @@ const CreateOrder = () => {
       {
         eventKey: tabKey,
         title: `Tab ${newCount}`,
-        content: <TypeProduction onItemsChange={(items) => handleItemsChange(tabKey, items)} />,
+        content: <TypeProduction key={`tp-${Date.now()}-${tabKey}`} onItemsChange={(items) => handleItemsChange(tabKey, items)} />,
       },
     ]);
   };
@@ -612,7 +655,7 @@ const CreateOrder = () => {
           <Row className="mb-4">
             <Col md={2}>
               <div className="form-group">
-                <label className="form-label">Número do Pedido</label>
+                <label className="form-label">ID Pedido</label>
                 <Form.Control
                   type="text"
                   name="numeroPedido"
@@ -783,7 +826,7 @@ const CreateOrder = () => {
                 </label>
                 <Form.Control
                   as="textarea"
-                  rows={3}
+                  rows={1}
                   name="observacao"
                   value={formData.observacao}
                   onChange={handleChange}
@@ -939,23 +982,31 @@ const CreateOrder = () => {
                 <CurrencyDollar size={16} style={{ marginRight: '8px' }} />
                 Tipo de Pagamento
               </label>
-                              <Form.Select 
-                  name="tipoPagamento"
-                  value={formData.tipoPagamento || ''}
-                  onChange={handleChange}
-                  className={`form-control ${apiErrors.formasPagamento ? 'is-invalid' : ''}`}
-                  disabled={loadingData.formasPagamento}
-                >
-                  <option value="">
-                    {loadingData.formasPagamento ? 'Carregando...' : 
-                     apiErrors.formasPagamento ? 'Erro ao carregar' : 'Selecione'}
+              <Form.Select 
+                name="tipoPagamento"
+                value={formData.tipoPagamento || ''}
+                onChange={(e) => {
+                  const id = parseInt(e.target.value);
+                  const forma = formasPagamento.find((f) => f.id === id);
+                  setFormData((prev) => ({
+                    ...prev,
+                    tipoPagamento: id || '',
+                    tipoPagamentoNome: forma ? forma.name : ''
+                  }));
+                }}
+                className={`form-control ${apiErrors.formasPagamento ? 'is-invalid' : ''}`}
+                disabled={loadingData.formasPagamento}
+              >
+                <option value="">
+                  {loadingData.formasPagamento ? 'Carregando...' : 
+                   apiErrors.formasPagamento ? 'Erro ao carregar' : 'Selecione'}
+                </option>
+                {formasPagamento.map((forma) => (
+                  <option key={forma.id} value={forma.id}>
+                    {forma.name} {forma.value ? `(+R$ ${forma.value.toFixed(2)})` : ''}
                   </option>
-                  {formasPagamento.map((forma) => (
-                    <option key={forma.id} value={forma.id}>
-                      {forma.name} {forma.value ? `(+R$ ${forma.value.toFixed(2)})` : ''}
-                    </option>
-                  ))}
-                </Form.Select>
+                ))}
+              </Form.Select>
               {apiErrors.formasPagamento && (
                 <div className="invalid-feedback">
                   Erro ao carregar formas de pagamento da API

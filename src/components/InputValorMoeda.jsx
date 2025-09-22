@@ -5,11 +5,21 @@ export default function InputValorReal({ value, onChange, name, label, required 
 
     const handleChange = (e) => {
         const apenasNumeros = e.target.value.replace(/\D/g, '');
+        
+        // Se não há números, retorna vazio
+        if (!apenasNumeros) {
+            onChange({ target: { name, value: '' } });
+            return;
+        }
+        
+        // Converte centavos em reais (divide por 100)
         const numero = Number(apenasNumeros) / 100;
+        
+        // Formata como moeda brasileira
         const formatado = numero.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-        }).replace('R$', '').trim();
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
         // Chama o onChange do pai, simulando um event com o formato esperado
         onChange({ target: { name, value: formatado } });

@@ -3,14 +3,27 @@
  */
 
 // Converter dados do formulário para o formato da API
+const parseBRLMoney = (value) => {
+  if (typeof value === 'number') return value.toFixed ? value.toFixed(2) : value;
+  if (!value) return '0';
+  
+  const v = String(value);
+  // Se já está no formato correto (ex: "90.00"), usar diretamente
+  if (/^\d+\.\d{2}$/.test(v)) return String(parseFloat(v));
+  
+  // Se está no formato brasileiro (ex: "90,00" ou "1.234,56"), converter
+  const normalized = v.replace(/\./g, '').replace(',', '.');
+  const num = parseFloat(normalized);
+  return isNaN(num) ? '0' : String(num);
+};
 export const convertFormDataToApiPedido = (formData) => {
   // Converter items para o formato da API
   const items = formData.items.map(item => ({
-    tipo_producao: item.tipo || 'painel',
+    tipo_producao: item.tipoProducao || item.tipo || 'painel',
     descricao: item.descricao || '',
     largura: item.largura || '0',
     altura: item.altura || '0',
-    metro_quadrado: item.metro_quadrado || '0',
+    metro_quadrado: item.metro_quadrado || item.metroQuadrado || '0',
     vendedor: item.vendedor || '',
     designer: item.designer || '',
     tecido: item.tecido || '',
@@ -21,7 +34,7 @@ export const convertFormDataToApiPedido = (formData) => {
     },
     emenda: item.emenda || 'sem-emenda',
     observacao: item.observacao || null,
-    valor_unitario: item.valor || '0',
+    valor_unitario: parseBRLMoney(item.valor),
     imagem: item.imagem || null,
     // Campos específicos para totem
     ilhos_qtd: item.ilhos_qtd || null,
@@ -32,8 +45,14 @@ export const convertFormDataToApiPedido = (formData) => {
   // Converter prioridade
   const prioridade = formData.prioridade === '2' ? 'ALTA' : 'NORMAL';
 
-  // Converter status
-  const status = formData.financeiro ? 'em_producao' : 'pendente';
+  // Converter status usando a função de conversão
+  const status = convertStatusToApi(formData.status || 'Pendente');
+
+  // Calcular valor total dos itens
+  const valorItens = items.reduce((total, item) => {
+    const valor = parseFloat(item.valor_unitario?.replace(',', '.') || '0');
+    return total + valor;
+  }, 0).toFixed(2);
 
   return {
     numero: formData.numeroPedido || '',
@@ -49,18 +68,19 @@ export const convertFormDataToApiPedido = (formData) => {
     cidade_cliente: formData.cidadeCliente || '',
     
     // Valores
-    valor_total: formData.valorTotal || '0',
-    valor_frete: formData.valorFrete || '0',
-    valor_itens: formData.valorItens || '0',
-    tipo_pagamento: formData.tipoPagamento || '',
+    valor_total: parseBRLMoney(formData.valorTotal),
+    valor_frete: parseBRLMoney(formData.valorFrete),
+    valor_itens: valorItens,
+    tipo_pagamento: formData.tipoPagamentoNome || formData.tipoPagamento || formData.formaSelecionada?.name || '',
     obs_pagamento: formData.obsPagamento || null,
     
     // Envio
-    forma_envio: formData.formaEnvio || '',
-    forma_envio_id: formData.formaEnvioId || 1,
+    forma_envio: formData.formaEnvio || formData.formaSelecionada?.name || '',
+    forma_envio_id: formData.formaEnvioId || formData.formaSelecionada?.id || 1,
     
     // Status de produção
     financeiro: formData.financeiro || false,
+    conferencia: formData.conferencia || false,
     sublimacao: formData.sublimacao || false,
     costura: formData.costura || false,
     expedicao: formData.expedicao || false,
@@ -75,10 +95,12 @@ export const convertApiPedidoToFormData = (apiPedido) => {
   // Converter items
   const items = apiPedido.items.map(item => ({
     tipo: item.tipo_producao || 'painel',
+    tipoProducao: item.tipo_producao || 'painel',
     descricao: item.descricao || '',
     largura: item.largura || '0',
     altura: item.altura || '0',
     metro_quadrado: item.metro_quadrado || '0',
+    metroQuadrado: item.metro_quadrado || '0',
     vendedor: item.vendedor || '',
     designer: item.designer || '',
     tecido: item.tecido || '',
@@ -90,7 +112,7 @@ export const convertApiPedidoToFormData = (apiPedido) => {
     emenda: item.emenda || 'sem-emenda',
     observacao: item.observacao || '',
     valor: item.valor_unitario || '0',
-    imagem: item.imagem || '',
+    imagem: item.imagem || null,
     // Campos específicos para totem
     ilhos_qtd: item.ilhos_qtd || '',
     ilhos_valor_unitario: item.ilhos_valor_unitario || '',
@@ -107,7 +129,7 @@ export const convertApiPedidoToFormData = (apiPedido) => {
     dataEntrega: apiPedido.data_entrega || '',
     observacao: apiPedido.observacao || '',
     prioridade: prioridade,
-    status: apiPedido.status || 'pendente',
+    status: convertStatusFromApi(apiPedido.status || 'pendente'),
     
     // Dados do cliente
     nomeCliente: apiPedido.cliente || '',
@@ -127,6 +149,7 @@ export const convertApiPedidoToFormData = (apiPedido) => {
     
     // Status de produção
     financeiro: apiPedido.financeiro || false,
+    conferencia: apiPedido.conferencia || false,
     sublimacao: apiPedido.sublimacao || false,
     costura: apiPedido.costura || false,
     expedicao: apiPedido.expedicao || false,
@@ -188,5 +211,8 @@ export const convertStatusFromApi = (status) => {
   
   return statusMap[status] || 'Pendente';
 };
+
+
+
 
 

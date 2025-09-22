@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     
     # Configurações de CORS
-    BACKEND_CORS_ORIGINS: list = ["*"]
+    BACKEND_CORS_ORIGINS: list = ["*", "http://localhost:1420", "http://127.0.0.1:1420"]
     
     # Configurações de Segurança
     SECRET_KEY: str = "your-secret-key-here"

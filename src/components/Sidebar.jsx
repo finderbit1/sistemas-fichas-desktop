@@ -5,6 +5,7 @@ import {
   ClipboardData,
   PeopleFill,
   FileTextFill,
+  BarChartFill,
   GearFill,
   ChevronDoubleLeft,
   ChevronDoubleRight
@@ -21,6 +22,8 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
     { path: '/orders', icon: ClipboardData, label: 'Pedidos' },
     { path: '/clientes', icon: PeopleFill, label: 'Cadastro' },
     { path: '/relatorio', icon: FileTextFill, label: 'Relatórios' },
+    { path: '/relatorios', icon: BarChartFill, label: 'Relatórios Admin', adminOnly: true },
+    { path: '/relatorios-matriz', icon: BarChartFill, label: 'Matriz X×Y', adminOnly: true },
     { path: '/admin', icon: GearFill, label: 'Admin', adminOnly: true }
   ].filter(item => !item.adminOnly || isAdmin());
 

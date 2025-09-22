@@ -20,3 +20,14 @@ class VendedorUpdate(SQLModel):
     active: Optional[bool] = None
 
 
+
+
+
+
+
+
+
+
+
+
+

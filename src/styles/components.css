@@ -382,8 +382,8 @@ tbody tr:hover {
   border-radius: var(--border-radius-lg);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border: 1px solid var(--color-neutral-200);
-  max-width: 90vw;
-  max-height: 90vh;
+  max-width: 95vw;
+  max-height: 95vh;
   overflow: hidden;
   animation: scaleIn 0.3s ease-out;
 }
@@ -392,7 +392,7 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-5) var(--spacing-6);
+  padding: clamp(12px, 1.8vw, 20px) clamp(16px, 2vw, 24px);
   border-bottom: 1px solid var(--color-neutral-200);
 }
 
@@ -609,4 +609,100 @@ tbody tr:hover {
   width: 28px;
   height: 28px;
   font-size: var(--font-size-xs);
+}
+
+/* ===== Custom Controls (Checkbox/Radio) ===== */
+.ccheck,
+.cradio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ccheck__input,
+.cradio__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ccheck__box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-neutral-400);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-neutral-50);
+  box-shadow: var(--shadow-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.ccheck__input:checked + .ccheck__box {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.ccheck__input:checked + .ccheck__box::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border: 2px solid white;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.ccheck__label,
+.cradio__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
+}
+
+.cradio__dot {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-neutral-400);
+  border-radius: 50%;
+  background: var(--color-neutral-50);
+  box-shadow: var(--shadow-xs);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.cradio__input:checked + .cradio__dot {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.cradio__input:checked + .cradio__dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+.ccheck--disabled,
+.cradio--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-theme="dark"] .ccheck__box,
+[data-theme="dark"] .cradio__dot {
+  background: var(--color-neutral-200);
+  border-color: var(--color-neutral-500);
+}
+
+[data-theme="dark"] .ccheck__input:checked + .ccheck__box,
+[data-theme="dark"] .cradio__input:checked + .cradio__dot {
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.25);
 }

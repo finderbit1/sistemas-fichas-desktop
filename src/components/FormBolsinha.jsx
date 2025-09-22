@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import ImageDropZone from './ImageDropZone';
 import InputValorReal from './InputValorMoeda';
+import AreaCalculatorLinhaUnica from './AreaCalculator';
 import ValidationModal from './ValidationModal';
 import { useVendedoresDesigners } from '../hooks/useVendedoresDesigners';
+import { getAllTecidos } from '../services/api';
+import CustomCheckbox from './CustomCheckbox';
 
 function FormBolsinha({ onAdicionarItem }) {
     const { vendedores, designers, loading, error } = useVendedoresDesigners();
@@ -13,17 +16,24 @@ function FormBolsinha({ onAdicionarItem }) {
         tipo: 'necessaire',
         tamanho: '',
         cor: '',
-        tecido: 'Oxford',
+        tecido: '',
         fecho: 'zíper',
         alcaAjustavel: false,
         observacao: '',
         valorBolsinha: '',
+        largura: '',
+        altura: '',
+        area: '',
+        valorAdicionais: '',
     });
 
     const [images, setImages] = useState([]);
     const [showValidationModal, setShowValidationModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState([]);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [tecidos, setTecidos] = useState([]);
+    const [tecidosLoading, setTecidosLoading] = useState(true);
+    const [tecidosError, setTecidosError] = useState(null);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -33,6 +43,28 @@ function FormBolsinha({ onAdicionarItem }) {
         }));
     };
 
+    const handleAreaChange = (areaData) => {
+        setFormData(prev => ({
+            ...prev,
+            largura: areaData.largura,
+            altura: areaData.altura,
+            area: areaData.area,
+        }));
+    };
+
+    useEffect(() => {
+        getAllTecidos()
+            .then((res) => {
+                const ativos = (res.data || []).filter((t) => t.active);
+                setTecidos(ativos);
+            })
+            .catch((e) => {
+                console.error('Erro ao carregar tecidos:', e);
+                setTecidosError('Não foi possível carregar a lista de tecidos');
+            })
+            .finally(() => setTecidosLoading(false));
+    }, []);
+
     const saveOrder = (e) => {
         e.preventDefault();
 
@@ -41,31 +73,44 @@ function FormBolsinha({ onAdicionarItem }) {
             return;
         }
 
+        const parseBR = (v) => {
+            if (!v) return 0;
+            if (typeof v === 'number') return v;
+            const normalized = String(v).replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        };
+
         const item = {
             ...formData,
-            valor: parseFloat(formData.valorBolsinha.replace(',', '.')),
-            imagens: images,
+            valor: parseBR(formData.valorBolsinha) + parseBR(formData.valorAdicionais),
+            imagem: images.length > 0 ? images[0] : null,
         };
 
         if (adicionarItem) {
             adicionarItem(item);
         }
 
-        // Resetar
+        resetForm();
+    };
+
+    const resetForm = () => {
         setFormData({
             descricao: '',
             tipo: 'necessaire',
             tamanho: '',
             cor: '',
-            tecido: 'Oxford',
+            tecido: '',
             fecho: 'zíper',
             alcaAjustavel: false,
             observacao: '',
             valorBolsinha: '',
         });
         setImages([]);
-        // Item adicionado com sucesso
-    };
+        setValidationErrors([]);
+        setShowValidationModal(false);
+        setIsSuccess(false);
+    }
 
     return (
         <Container className="mt-4">
@@ -100,6 +145,12 @@ function FormBolsinha({ onAdicionarItem }) {
 
                 <Row className="mt-3">
                     <Col md={4}>
+                        <AreaCalculatorLinhaUnica 
+                            formData={formData}
+                            onChange={handleAreaChange}
+                        />
+                    </Col>
+                    <Col md={4}>
                         <Form.Group controlId="tamanho">
                             <Form.Label>Tamanho (cm)</Form.Label>
                             <Form.Control
@@ -128,12 +179,18 @@ function FormBolsinha({ onAdicionarItem }) {
                     <Col md={4}>
                         <Form.Group controlId="tecido">
                             <Form.Label>Tecido</Form.Label>
-                            <Form.Select name="tecido" value={formData.tecido} onChange={handleChange}>
-                                <option value="Oxford">Oxford</option>
-                                <option value="Nylon">Nylon</option>
-                                <option value="Jeans">Jeans</option>
-                                <option value="PVC">PVC</option>
-                            </Form.Select>
+                            {tecidosLoading ? (
+                                <div className="d-flex align-items-center"><Spinner size="sm" className="me-2" />Carregando tecidos...</div>
+                            ) : tecidosError ? (
+                                <Alert variant="warning" className="mb-0">{tecidosError}</Alert>
+                            ) : (
+                                <Form.Select name="tecido" value={formData.tecido} onChange={handleChange}>
+                                    <option value="">Selecione o tecido</option>
+                                    {tecidos.map((t) => (
+                                        <option key={t.id} value={t.name}>{t.name}</option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </Form.Group>
                     </Col>
                 </Row>
@@ -152,8 +209,8 @@ function FormBolsinha({ onAdicionarItem }) {
 
                     <Col md={6}>
                         <Form.Group controlId="alcaAjustavel" className="mt-4">
-                            <Form.Check
-                                type="checkbox"
+                            <CustomCheckbox
+                                id="bolsinha-alca-ajustavel"
                                 label="Alça Ajustável"
                                 name="alcaAjustavel"
                                 checked={formData.alcaAjustavel}
@@ -194,8 +251,20 @@ function FormBolsinha({ onAdicionarItem }) {
                             required
                         />
                     </Col>
+                    <Col md={4}>
+                        <Form.Group controlId="valorAdicionais">
+                            <Form.Label>Valores adicionais (opcional)</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="valorAdicionais"
+                                value={formData.valorAdicionais}
+                                onChange={handleChange}
+                                placeholder="Ex.: 10,00"
+                            />
+                        </Form.Group>
+                    </Col>
                     <Col md={4} className="d-flex justify-content-end gap-2">
-                        <Button variant="danger" type="reset" onClick={() => window.location.reload()} size="md">Limpar</Button>
+                        <Button variant="danger" type="button" onClick={resetForm} size="md">Limpar</Button>
                         <Button variant="success" type="submit" size="md">Salvar</Button>
                     </Col>
                 </Row>

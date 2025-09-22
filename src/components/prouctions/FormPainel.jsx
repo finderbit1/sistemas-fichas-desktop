@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card, InputGroup, Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Container, Row, Col, Card, InputGroup, Spinner } from 'react-bootstrap';
 import { FileText, Person } from 'react-bootstrap-icons';
 import ImageDropZone from '../ImageDropZone';
 import AreaCalculatorLinhaUnica from '../AreaCalculator';
 import InputValorReal from '../InputValorMoeda';
 import ValidationModal from '../ValidationModal';
 import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
+import { getAllTecidos } from '../../services/api';
+import CustomCheckbox from '../CustomCheckbox';
+import useCustomAlert from '../../hooks/useCustomAlert';
+import CustomAlertModal from '../CustomAlertModal';
 
 
 function FormPainel({ onAdicionarItem }) {
@@ -15,10 +19,39 @@ function FormPainel({ onAdicionarItem }) {
     const [showValidationModal, setShowValidationModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState([]);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [tecidos, setTecidos] = useState([]);
+    const [tecidosLoading, setTecidosLoading] = useState(true);
+    const [tecidosError, setTecidosError] = useState(null);
+    const customAlert = useCustomAlert();
 
     const handleImageChange = (imgBase64) => {
         setImagem(imgBase64);
     };
+
+    useEffect(() => {
+        getAllTecidos()
+            .then((res) => {
+                const ativos = (res.data || []).filter((t) => t.active);
+                setTecidos(ativos);
+            })
+            .catch((e) => {
+                console.error('Erro ao carregar tecidos:', e);
+                setTecidosError('Não foi possível carregar a lista de tecidos');
+            })
+            .finally(() => setTecidosLoading(false));
+    }, []);
+
+    useEffect(() => {
+        if (error) {
+            customAlert.showWarning('Atenção', `${error}. Os campos de vendedor e designer podem não estar disponíveis.`);
+        }
+    }, [error]);
+
+    useEffect(() => {
+        if (tecidosError) {
+            customAlert.showWarning('Atenção', tecidosError);
+        }
+    }, [tecidosError]);
 
     const [formData, setFormData] = useState({
         descricao: '',
@@ -35,6 +68,7 @@ function FormPainel({ onAdicionarItem }) {
         emenda: 'sem-emenda',
         observacao: '',
         valorPainel: '',
+        valorAdicionais: '',
         ilhosQtd: '',
         ilhosValorUnitario: '',
         ilhosDistancia: '',
@@ -136,6 +170,14 @@ function FormPainel({ onAdicionarItem }) {
         return erros;
     };
 
+    const parseBR = (v) => {
+        if (!v) return 0;
+        if (typeof v === 'number') return v;
+        const normalized = String(v).replace(/\./g, '').replace(',', '.');
+        const num = parseFloat(normalized);
+        return isNaN(num) ? 0 : num;
+    };
+
     const saveProducao = (e) => {
         e.preventDefault();
         
@@ -146,10 +188,12 @@ function FormPainel({ onAdicionarItem }) {
             return;
         }
         
+        const valorTotal = (parseBR(formData.valorPainel) + parseBR(formData.valorAdicionais)).toFixed(2).replace('.', ',');
         const dataProducao = {
             "tipoProducao": "painel",
+            "tipo": "painel",
             "imagem": imagem,
-            "valor": formData.valorPainel,
+            "valor": valorTotal,
             ...formData
         }
         
@@ -167,11 +211,6 @@ function FormPainel({ onAdicionarItem }) {
 
     return (
         <>
-        {error && (
-            <Alert variant="warning" className="mb-3">
-                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
-            </Alert>
-        )}
         <Form className={isSuccess ? 'form-success form-success-animation' : ''}>
                 <Row className="mb-3">
                     <Col md={8}>
@@ -253,11 +292,18 @@ function FormPainel({ onAdicionarItem }) {
                                 <FileText size={16} style={{ marginRight: '8px' }} />
                                 Tecido
                             </label>
-                            <Form.Select name="tecido" value={formData.tecido} onChange={handleChange} required className="form-control">
-                                <option value="">Selecione o Tecido</option>
-                                <option value="Tactel">Tactel</option>
-                                <option value="Malha Vest Facil">Malha Vest Facil</option>
-                            </Form.Select>
+                            {tecidosLoading ? (
+                                <div className="d-flex align-items-center"><Spinner size="sm" className="me-2" />Carregando tecidos...</div>
+                            ) : tecidosError ? (
+                                <div className="form-text text-warning">{tecidosError}</div>
+                            ) : (
+                                <Form.Select name="tecido" value={formData.tecido} onChange={handleChange} required className="form-control">
+                                    <option value="">Selecione o Tecido</option>
+                                    {tecidos.map((t) => (
+                                        <option key={t.id} value={t.name}>{t.name}</option>
+                                    ))}
+                                </Form.Select>
+                            )}
                         </div>
                     </Col>
                 </Row>
@@ -269,33 +315,30 @@ function FormPainel({ onAdicionarItem }) {
                             </div>
                             <div className="p-3">
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type="checkbox"
+                                    <CustomCheckbox
+                                        id="acab-overloque"
                                         label="Overloque"
                                         name="overloque"
                                         checked={formData.acabamento.overloque}
                                         onChange={handleChange}
-                                        className="form-check-input"
                                     />
                                 </div>
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type="checkbox"
+                                    <CustomCheckbox
+                                        id="acab-elastico"
                                         label="Elástico"
                                         name="elastico"
                                         checked={formData.acabamento.elastico}
                                         onChange={handleChange}
-                                        className="form-check-input"
                                     />
                                 </div>
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type="checkbox"
+                                    <CustomCheckbox
+                                        id="acab-ilhos"
                                         label="Ilhós"
                                         name="ilhos"
                                         checked={formData.acabamento.ilhos}
                                         onChange={handleChange}
-                                        className="form-check-input"
                                     />
                                 </div>
 
@@ -386,6 +429,19 @@ function FormPainel({ onAdicionarItem }) {
                             required
                         />
                     </Col>
+                    <Col md={4}>
+                        <div className="form-group mb-2">
+                            <label className="form-label">Valores adicionais (opcional)</label>
+                            <Form.Control
+                                type="text"
+                                name="valorAdicionais"
+                                value={formData.valorAdicionais}
+                                onChange={handleChange}
+                                placeholder="Ex.: 10,00"
+                                className="form-control"
+                            />
+                        </div>
+                    </Col>
                     <Col md={4} className="d-flex justify-content-end gap-2">
                         <Button variant="danger" type="button" onClick={resetForm} className="btn btn-error">
                             Limpar
@@ -396,6 +452,17 @@ function FormPainel({ onAdicionarItem }) {
                     </Col>
                 </Row>
         </Form>
+        <CustomAlertModal
+            isOpen={customAlert.alertState.isOpen}
+            onClose={customAlert.hideAlert}
+            type={customAlert.alertState.type}
+            title={customAlert.alertState.title}
+            message={customAlert.alertState.message}
+            confirmText={customAlert.alertState.confirmText}
+            onConfirm={customAlert.alertState.onConfirm}
+            showCancel={customAlert.alertState.showCancel}
+            cancelText={customAlert.alertState.cancelText}
+        />
         
         <ValidationModal
             show={showValidationModal}

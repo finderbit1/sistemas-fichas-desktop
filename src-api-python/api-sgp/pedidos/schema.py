@@ -7,6 +7,11 @@ from pydantic import validator
 class Prioridade(str, Enum):
     NORMAL = "NORMAL"
     ALTA = "ALTA"
+    
+    @classmethod
+    def _missing_(cls, value):
+        # Se o valor for vazio ou inválido, retorna NORMAL
+        return cls.NORMAL
 
 class Status(str, Enum):
     PENDENTE = "pendente"
@@ -46,7 +51,7 @@ class PedidoBase(SQLModel):
     data_entrada: str
     data_entrega: str
     observacao: Optional[str] = None
-    prioridade: Prioridade
+    prioridade: Prioridade = Prioridade.NORMAL
     status: Status = Status.PENDENTE
     
     # Dados do cliente
@@ -67,6 +72,7 @@ class PedidoBase(SQLModel):
     
     # Status de produção
     financeiro: bool = False
+    conferencia: bool = False
     sublimacao: bool = False
     costura: bool = False
     expedicao: bool = False
@@ -100,6 +106,7 @@ class PedidoUpdate(SQLModel):
     
     # Status de produção
     financeiro: Optional[bool] = None
+    conferencia: Optional[bool] = None
     sublimacao: Optional[bool] = None
     costura: Optional[bool] = None
     expedicao: Optional[bool] = None

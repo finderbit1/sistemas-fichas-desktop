@@ -11,7 +11,7 @@ function RelatorioEnvios() {
   });
   const [pedidos, setPedidos] = useState([]);
   const [formasEnvio, setFormasEnvio] = useState([]);
-  const [resultados, setResultados] = useState([]);
+  const [resultados, setResultados] = useState({});
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
 
@@ -70,45 +70,93 @@ function RelatorioEnvios() {
       return dataEntrega >= filters.dataInicio && dataEntrega <= filters.dataFim;
     });
 
-    // Agrupar por forma de envio
-    const agrupados = {};
-    
+    // Agrupar por forma de envio: forma de envio:\ncliente - tipo de items - cidade/estado
+    const grupos = {};
     pedidosFiltrados.forEach(pedido => {
-      const formaEnvio = pedido.formaEnvio || pedido.forma_envio || 'Não especificado';
-      const formaEnvioObj = formasEnvio.find(f => f.id === pedido.formaEnvio || f.id === pedido.forma_envio);
-      const nomeFormaEnvio = formaEnvioObj ? formaEnvioObj.name : formaEnvio;
-      
-      if (!agrupados[nomeFormaEnvio]) {
-        agrupados[nomeFormaEnvio] = [];
-      }
-      
-      // Extrair informações do pedido
-      const cliente = pedido.cliente || pedido.nome_cliente || 'Cliente não informado';
-      const cidade = pedido.cidade || pedido.endereco?.cidade || 'Cidade não informada';
-      
-      // Extrair tipos de itens
-      const itens = pedido.itens || pedido.items || [];
-      const tiposItens = itens.map(item => item.tipo || item.nome || 'Item').join(', ');
-      
-      agrupados[nomeFormaEnvio].push({
-        cliente,
-        tiposItens: tiposItens || 'Sem itens especificados',
-        cidade,
-        pedidoId: pedido.id,
-        dataEntrega: pedido.dataEntrega || pedido.data_entrega
-      });
+      const formaEnvioId = pedido.formaEnvioId || pedido.forma_envio_id || pedido.formaEnvio || pedido.forma_envio;
+      const formaEnvioNomeDireto = pedido.formaEnvio || pedido.forma_envio || '';
+      const formaEnvioObj = formasEnvio.find(f => f.id === formaEnvioId) || formasEnvio.find(f => f.name === formaEnvioNomeDireto);
+      const formaEnvioNome = (formaEnvioObj && formaEnvioObj.name) || formaEnvioNomeDireto || 'Não especificado';
+
+      const cliente = pedido.nomeCliente || pedido.cliente || pedido.nome_cliente || 'Cliente não informado';
+      const cidade = pedido.cidadeCliente || pedido.cidade_cliente || pedido.cidade || pedido.endereco?.cidade || '';
+      const estado = pedido.estadoCliente || pedido.estado_cliente || pedido.estado || pedido.endereco?.estado || '';
+      const cidadeEstado = estado ? `${cidade}/${estado}` : (cidade || 'Cidade não informada');
+      const itens = pedido.items || pedido.itens || [];
+      const tipos = itens.map(item => item.tipoProducao || item.tipo || item.tipo_producao || item.nome || 'Item');
+      const tiposItens = tipos.length > 0 ? Array.from(new Set(tipos)).join(', ') : 'Sem itens especificados';
+
+      if (!grupos[formaEnvioNome]) grupos[formaEnvioNome] = [];
+      grupos[formaEnvioNome].push({ cliente, tiposItens, cidadeEstado });
     });
 
-    setResultados(agrupados);
+    setResultados(grupos);
     setLoading(false);
   };
 
   const imprimirRelatorio = () => {
     const conteudo = gerarConteudoImpressao();
-    const janela = window.open('', '_blank');
-    janela.document.write(conteudo);
-    janela.document.close();
-    janela.print();
+    let janela = null;
+    try {
+      janela = window.open('', '_blank');
+    } catch (e) {
+      janela = null;
+    }
+
+    if (janela && janela.document) {
+      try {
+        janela.document.open();
+        janela.document.write(conteudo);
+        janela.document.close();
+        setTimeout(() => {
+          try {
+            janela.focus();
+            janela.print();
+          } catch (e) {
+            console.error('Falha ao imprimir na nova janela. Usando fallback via iframe.', e);
+            printViaIframe(conteudo);
+          }
+        }, 300);
+      } catch (e) {
+        console.error('Erro manipulando a janela de impressão. Usando fallback via iframe.', e);
+        printViaIframe(conteudo);
+      }
+    } else {
+      // Popup bloqueado: usar fallback via iframe oculto
+      printViaIframe(conteudo);
+    }
+  };
+
+  const printViaIframe = (html) => {
+    try {
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow || iframe.contentDocument;
+      const d = doc.document || doc;
+      d.open();
+      d.write(html);
+      d.close();
+
+      setTimeout(() => {
+        try {
+          (iframe.contentWindow || iframe).focus();
+          (iframe.contentWindow || iframe).print();
+        } catch (e) {
+          console.error('Falha ao imprimir via iframe:', e);
+        } finally {
+          document.body.removeChild(iframe);
+        }
+      }, 300);
+    } catch (e) {
+      console.error('Erro no fallback de impressão via iframe:', e);
+    }
   };
 
   const gerarConteudoImpressao = () => {
@@ -123,13 +171,11 @@ function RelatorioEnvios() {
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 30px; }
-          .forma-envio { margin-bottom: 30px; page-break-inside: avoid; }
-          .forma-titulo { background: #f8f9fa; padding: 10px; font-weight: bold; border: 1px solid #dee2e6; }
-          .item { padding: 8px; border-bottom: 1px solid #eee; }
-          .item:last-child { border-bottom: none; }
-          .cliente { font-weight: bold; }
-          .tipos { color: #666; font-style: italic; }
-          .cidade { color: #007bff; }
+          .grupo { margin-bottom: 24px; }
+          .titulo { font-weight: bold; font-size: 14px; margin-bottom: 8px; }
+          .linha { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+          .linha:last-child { border-bottom: none; }
+          .upper { text-transform: uppercase; font-weight: bold; }
         </style>
       </head>
       <body>
@@ -138,28 +184,15 @@ function RelatorioEnvios() {
           <p>Período: ${dataInicio} a ${dataFim}</p>
           <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         </div>
-    `;
-
-    Object.keys(resultados).forEach(formaEnvio => {
-      html += `
-        <div class="forma-envio">
-          <div class="forma-titulo">${formaEnvio}</div>
-      `;
-      
-      resultados[formaEnvio].forEach(item => {
-        html += `
-          <div class="item">
-            <span class="cliente">${item.cliente}</span> - 
-            <span class="tipos">${item.tiposItens}</span> - 
-            <span class="cidade">${item.cidade}</span>
-          </div>
-        `;
-      });
-      
-      html += `</div>`;
-    });
-
-    html += `</body></html>`;
+          ${Object.keys(resultados).map(nome => `
+            <div class="grupo">
+              <div class="titulo">${nome}</div>
+              ${resultados[nome].map(item => `
+                <div class="linha">${item.cliente} - <span class="upper">${item.tiposItens}</span> - ${item.cidadeEstado}</div>
+              `).join('')}
+            </div>
+          `).join('')}
+        </body></html>`;
     return html;
   };
 
@@ -231,7 +264,7 @@ function RelatorioEnvios() {
                   style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
                   <Download size={16} />
-                  Imprimir
+                  Salvar PDF
                 </Button>
               )}
             </Col>
@@ -244,35 +277,19 @@ function RelatorioEnvios() {
           <div className="dashboard-card-header">
             <h5 className="dashboard-card-title">
               <FileText size={16} style={{ marginRight: '8px' }} />
-              Relatório Agrupado por Forma de Envio
+              Relatório por Forma de Envio
             </h5>
           </div>
           <div style={{ padding: 'var(--spacing-4)' }}>
-            {Object.keys(resultados).map(formaEnvio => (
-              <Card key={formaEnvio} className="mb-4">
-                <Card.Header className="bg-primary text-white">
-                  <h6 className="mb-0">
-                    <Truck size={16} className="me-2" />
-                    {formaEnvio} ({resultados[formaEnvio].length} pedidos)
-                  </h6>
+            {Object.keys(resultados).map(nome => (
+              <Card key={nome} className="mb-3">
+                <Card.Header className="bg-light">
+                  <strong>forma de envio: {nome}</strong>
                 </Card.Header>
                 <Card.Body>
-                  {resultados[formaEnvio].map((item, index) => (
-                    <div key={index} className="border-bottom pb-2 mb-2">
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div>
-                          <strong className="text-primary">{item.cliente}</strong>
-                          <div className="text-muted small">
-                            <em>{item.tiposItens}</em>
-                          </div>
-                        </div>
-                        <div className="text-end">
-                          <span className="badge bg-info">{item.cidade}</span>
-                          <div className="small text-muted">
-                            Entrega: {new Date(item.dataEntrega).toLocaleDateString('pt-BR')}
-                          </div>
-                        </div>
-                      </div>
+                  {resultados[nome].map((item, idx) => (
+                    <div key={idx} className="border-bottom py-1">
+                      {item.cliente} - <em>{item.tiposItens}</em> - <span className="text-muted">{item.cidadeEstado}</span>
                     </div>
                   ))}
                 </Card.Body>

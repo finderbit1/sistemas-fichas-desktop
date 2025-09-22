@@ -12,6 +12,8 @@ import Home from './pages/PageHome';
 import CreateClient from './pages/PageCreateClient';
 import CreateOrderPage from './pages/PageCreateOrder';
 import RelatorioPedidos from './pages/PageRelatorioPedidos';
+import PageRelatorios from './pages/PageRelatorios';
+import PageRelatoriosMatriz from './pages/PageRelatoriosMatriz';
 import Admin from './pages/Admin';
 import './App.css';
 
@@ -69,6 +71,22 @@ const AuthenticatedLayout = () => {
             <Route path="/orders" element={<CreateOrderPage />} />
             <Route path="/clientes" element={<CreateClient />} />
             <Route path="/relatorio" element={<RelatorioPedidos />} />
+            <Route 
+              path="/relatorios" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <PageRelatorios />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/relatorios-matriz" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <PageRelatoriosMatriz />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/admin" 
               element={

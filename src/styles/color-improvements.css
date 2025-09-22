@@ -77,6 +77,10 @@
   background-color: var(--color-neutral-100);
 }
 
+.table td {
+  font-size: 0.75rem; /* 12px */
+}
+
 /* Melhorar estilos de modais */
 .modal-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);

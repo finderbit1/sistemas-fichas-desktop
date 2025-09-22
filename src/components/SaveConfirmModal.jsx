@@ -25,17 +25,11 @@ function SaveConfirmModal({
   // Função utilitária para converter valores de forma segura
   const converterValor = (valor) => {
     try {
-      if (!valor) return 0;
-      
-      // Se for string, substitui vírgula por ponto
-      if (typeof valor === 'string') {
-        return parseFloat(valor.replace(',', '.'));
-      }
-      // Se for número, usa diretamente
-      if (typeof valor === 'number') {
-        return valor;
-      }
-      return 0;
+      if (!valor && valor !== 0) return 0;
+      if (typeof valor === 'number') return valor;
+      const normalizado = String(valor).replace(/\./g, '').replace(',', '.');
+      const num = parseFloat(normalizado);
+      return isNaN(num) ? 0 : num;
     } catch (error) {
       console.error('Erro ao converter valor:', error);
       return 0;
@@ -127,10 +121,16 @@ function SaveConfirmModal({
                         <div className="mb-2">
                           <strong>Data de Entrega:</strong> {formData?.dataEntrega || 'Não informado'}
                         </div>
+                        <div className="mb-2">
+                          <strong>Forma de Envio:</strong> {formData?.formaEnvio || formData?.forma_envio || 'Não informado'}
+                        </div>
                       </Col>
                       <Col md={6}>
                         <div className="mb-2">
                           <strong>Itens de Produção:</strong> {formData.items?.length || 0}
+                        </div>
+                        <div className="mb-2">
+                          <strong>Forma de Pagamento:</strong> {formData?.tipoPagamentoNome || formData?.tipoPagamento || formData?.tipo_pagamento || 'Não informado'}
                         </div>
                         <div className="mb-2">
                           <strong>Subtotal:</strong> R$ {formatarValor(valorTotal)}

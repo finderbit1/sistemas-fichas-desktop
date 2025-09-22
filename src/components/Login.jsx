@@ -173,31 +173,7 @@ const Login = () => {
               </button>
             </form>
 
-            <div className="login-help">
-              <div className="help-header">
-                <h4>Credenciais de teste</h4>
-              </div>
-              <div className="credentials-grid">
-                <div className="credential-card admin">
-                  <div className="credential-header">
-                    <span className="credential-role">👨‍💼 Admin</span>
-                  </div>
-                  <div className="credential-details">
-                    <p><strong>Email:</strong> admin@admin.com</p>
-                    <p><strong>Senha:</strong> 123456</p>
-                  </div>
-                </div>
-                <div className="credential-card user">
-                  <div className="credential-header">
-                    <span className="credential-role">👤 Usuário</span>
-                  </div>
-                  <div className="credential-details">
-                    <p><strong>Email:</strong> user@user.com</p>
-                    <p><strong>Senha:</strong> 123456</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Seção de credenciais removida da visão do usuário conforme solicitado */}
           </div>
 
           <div className="login-footer">

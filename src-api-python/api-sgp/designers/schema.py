@@ -20,3 +20,14 @@ class DesignerUpdate(SQLModel):
     active: Optional[bool] = None
 
 
+
+
+
+
+
+
+
+
+
+
+

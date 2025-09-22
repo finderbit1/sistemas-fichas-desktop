@@ -2,9 +2,10 @@
 
 /* Container principal do formulário */
 .create-order-container {
-  max-width: 1400px;
+  max-width: 95vw;
+  width: 95vw;
   margin: 0 auto;
-  padding: var(--spacing-6);
+  padding: clamp(12px, 1.8vw, 24px);
 }
 
 /* Seções de formulário */
@@ -31,6 +32,8 @@
   color: var(--color-neutral-700);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all var(--transition-normal);
+  height: 42px; /* padroniza altura */
+  line-height: 1.2;
 }
 
 .form-control:focus {
@@ -58,6 +61,9 @@
   color: var(--color-neutral-700);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  border: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 /* Textarea específico */
@@ -65,6 +71,7 @@
   min-height: 120px;
   resize: vertical;
   font-family: var(--font-family-primary);
+  height: auto;
 }
 
 /* Select customizado */
@@ -74,6 +81,8 @@
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
   padding-right: var(--spacing-12);
+  height: 42px; /* altura padronizada */
+  line-height: 1.2;
 }
 
 /* Typeahead customizado */
@@ -256,6 +265,16 @@
   color: var(--color-neutral-600);
   padding: var(--spacing-3) var(--spacing-4);
   font-size: var(--font-size-sm);
+  height: 42px; /* alinhar com inputs */
+  display: flex;
+  align-items: center;
+}
+
+/* Botões dentro dos formulários: altura padronizada e alinhamento vertical */
+.create-order-container .btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Checkboxes e radios customizados */
@@ -265,7 +284,7 @@
   border: 2px solid var(--color-neutral-300);
   background-color: var(--color-neutral-50);
   box-shadow: var(--shadow-xs);
-  margin-top: 0.125em;
+  margin-top: 0;
   vertical-align: top;
   background-repeat: no-repeat;
   background-position: center;
@@ -295,7 +314,7 @@
 }
 
 .form-check-input:focus {
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
   outline: none;
 }
 
@@ -310,21 +329,21 @@
 /* Container dos checkboxes e radios */
 .form-check {
   display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-3);
+  align-items: center;
+  gap: var(--spacing-4);
   margin-bottom: var(--spacing-2);
 }
 
 .form-check .form-check-input {
   margin: 0;
   flex-shrink: 0;
-  margin-top: 0.125em;
+  margin-top: 0;
 }
 
 .form-check .form-check-label {
-  margin-left: 0;
+  margin-left: var(--spacing-2);
   flex: 1;
-  padding-left: var(--spacing-1);
+  padding-left: 0;
 }
 
 /* Feedback de sucesso */
@@ -382,6 +401,11 @@
   .tab-content {
     padding: var(--spacing-4);
   }
+
+  /* Espaçamento vertical entre colunas quando empilhadas */
+  .create-order-container .row > [class*="col-"] {
+    margin-bottom: var(--spacing-3);
+  }
 }
 
 /* Estados de loading */
@@ -429,18 +453,57 @@
   border-width: 0.1em;
 }
 
+/* ===== Formulários compactos (uso local) ===== */
+.form-compact .form-group {
+  margin-bottom: var(--spacing-3);
+}
+
+.form-compact .form-label {
+  margin-bottom: var(--spacing-2);
+}
+
+.form-compact .form-control,
+.form-compact .form-select,
+.form-compact .input-group-text {
+  height: 36px;
+  padding: var(--spacing-2) var(--spacing-3);
+}
+
+.form-compact .form-textarea {
+  min-height: 80px;
+}
+
+.form-compact .row.mb-3 {
+  margin-bottom: var(--spacing-3) !important;
+}
+
+.form-compact .row.mb-2 {
+  margin-bottom: var(--spacing-2) !important;
+}
+
 /* Estilos para Typeahead normal */
 .typeahead-normal {
   position: relative;
 }
 
+.typeahead-normal.form-control {
+  padding: 0 !important;
+  height: 42px !important;
+  display: flex;
+  align-items: center;
+}
+
 .typeahead-normal .rbt-input-main {
   padding: 0;
-  height: auto;
+  height: 100%;
   border: none;
   box-shadow: none;
   background: transparent;
   font-size: var(--font-size-base);
+}
+
+.typeahead-normal .rbt-input-main::placeholder {
+  color: var(--color-neutral-500);
 }
 
 .typeahead-normal .rbt-input-main:focus {

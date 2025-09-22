@@ -73,6 +73,17 @@
   --transition-normal: 150ms ease-out;
   --transition-slow: 200ms ease-out;
   --transition-bounce: 250ms ease-out;
+  /* Larguras relativas para a sidebar */
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-collapsed: 70px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
 }
 
 /* Modo Escuro */
@@ -285,13 +296,27 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   min-width: 0;
 }
 
+/* Ajustes considerando a sidebar para maximizar área útil */
+.main-content.sidebar-expanded .content-area,
+.main-content.sidebar-expanded .home-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.main-content.sidebar-collapsed .content-area,
+.main-content.sidebar-collapsed .home-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 .main-header {
   background: white;
-  padding: var(--spacing-5) var(--spacing-6);
+  padding: clamp(12px, 1.8vw, 20px) clamp(16px, 2vw, 24px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -356,10 +381,12 @@
 }
 
 .content-area {
-  padding: var(--spacing-8);
+  padding: clamp(12px, 1.8vw, 24px);
   flex-grow: 1;
+  width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  min-height: calc(100vh - 64px);
+  overflow-x: hidden;
 }
 
 /* Cards Modernos */
@@ -451,7 +478,7 @@
   }
   
   .content-area {
-    padding: var(--spacing-4);
+    padding: clamp(8px, 2vw, 16px);
   }
   
   .main-header {

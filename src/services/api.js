@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // const API_LOCAL = "http://192.168.15.24:8080";  // IP do servidor na rede
-const API_LOCAL = "http://localhost:8000";  // IP do servidor na rede
-// const API_LOCAL = "http://127.0.0.1:8000";  // IP do servidor na rede
+// const API_LOCAL = "http://localhost:8000";  // IP do servidor na rede
+const API_LOCAL = "http://127.0.0.1:8000";  // IP do servidor na rede
 
 const api = axios.create({
   baseURL: API_LOCAL,
@@ -22,12 +22,13 @@ api.interceptors.response.use(
 );
 
 // ===== PEDIDOS =====
-export const getAllPedidos = () => api.get('/pedidos');
-export const getPedidoById = (id) => api.get(`/pedidos/${id}`);
-export const createPedido = (pedido) => api.post('/pedidos', pedido);
-export const updatePedido = (id, pedido) => api.patch(`/pedidos/${id}`, pedido);
-export const deletePedido = (id) => api.delete(`/pedidos/${id}`);
-export const getPedidosByStatus = (status) => api.get(`/pedidos/status/${status}`);
+export const getAllPedidos = () => api.get('/pedidos/');
+export const getPedidoById = (id) => api.get(`/pedidos/${id}/`);
+export const createPedido = (pedido) => api.post('/pedidos/', pedido);
+export const updatePedido = (id, pedido) => api.patch(`/pedidos/${id}/`, pedido);
+export const getProximoNumeroPedido = () => api.get('/pedidos/proximo-numero/');
+export const deletePedido = (id) => api.delete(`/pedidos/${id}/`);
+export const getPedidosByStatus = (status) => api.get(`/pedidos/status/${status}/`);
 
 // ===== CLIENTES =====
 export const getAllClientes = () => api.get('/clientes');
@@ -35,6 +36,15 @@ export const getClienteById = (id) => api.get(`/clientes/${id}`);
 export const createCliente = (cliente) => api.post('/clientes', cliente);
 export const updateCliente = (id, cliente) => api.put(`/clientes/${id}`, cliente);
 export const deleteCliente = (id) => api.delete(`/clientes/${id}`);
+export const importClientesCSV = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post('/clientes/import-csv', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
 
 // ===== FORMAS DE PAGAMENTO =====
 export const getAllFormasPagamentos = () => api.get('/pagamentos');
@@ -71,6 +81,95 @@ export const createDesconto = (desconto) => api.post('/descontos', desconto);
 export const updateDesconto = (id, desconto) => api.patch(`/descontos/${id}`, desconto);
 export const deleteDesconto = (id) => api.delete(`/descontos/${id}`);
 export const calcularDesconto = (valorTotal) => api.get(`/descontos/calcular/${valorTotal}`);
+
+// ===== RELATÓRIOS =====
+export const gerarRelatorioDiario = (data, filtroTipo = null, filtroNome = null) => {
+  const params = { data: data };
+  if (filtroTipo) params.filtro_tipo = filtroTipo;
+  if (filtroNome) params.filtro_nome = filtroNome;
+  
+  return api.post('/relatorios/diario', null, { params });
+};
+
+export const gerarRelatorioSemanal = (dataInicio) => {
+  return api.post('/relatorios/semanal', null, {
+    params: { data_inicio: dataInicio }
+  });
+};
+
+export const gerarRelatorioMensal = (mes, ano) => {
+  return api.post('/relatorios/mensal', null, {
+    params: { mes, ano }
+  });
+};
+
+export const obterRankingProdutos = (limite = 20) => {
+  return api.get('/relatorios/ranking-produtos', {
+    params: { limite }
+  });
+};
+
+export const obterRelatorioCancelamentos = () => {
+  return api.get('/relatorios/cancelamentos');
+};
+
+// ===== PRODUÇÕES (Tipos) =====
+export const getAllTiposProducao = () => api.get('/producoes/tipos');
+export const getTipoProducaoById = (id) => api.get(`/producoes/tipos/${id}`);
+export const createTipoProducao = (data) => api.post('/producoes/tipos', data);
+export const updateTipoProducao = (id, data) => api.patch(`/producoes/tipos/${id}`, data);
+export const deleteTipoProducao = (id) => api.delete(`/producoes/tipos/${id}`);
+
+// ===== TECIDOS =====
+export const getAllTecidos = () => api.get('/tecidos');
+export const getTecidoById = (id) => api.get(`/tecidos/${id}`);
+export const createTecido = (data) => api.post('/tecidos', data);
+export const updateTecido = (id, data) => api.patch(`/tecidos/${id}`, data);
+export const deleteTecido = (id) => api.delete(`/tecidos/${id}`);
+
+// Relatórios por Cliente, Vendedor e Designer
+export const gerarRelatorioCliente = (nomeCliente) => {
+  return api.post('/relatorios/cliente', null, {
+    params: { nome_cliente: nomeCliente }
+  });
+};
+
+export const gerarRelatorioVendedor = (nomeVendedor) => {
+  return api.post('/relatorios/vendedor', null, {
+    params: { nome_vendedor: nomeVendedor }
+  });
+};
+
+export const gerarRelatorioDesigner = (nomeDesigner) => {
+  return api.post('/relatorios/designer', null, {
+    params: { nome_designer: nomeDesigner }
+  });
+};
+
+export const obterListaClientes = () => {
+  return api.get('/relatorios/clientes-lista');
+};
+
+export const obterListaVendedores = () => {
+  return api.get('/relatorios/vendedores-lista');
+};
+
+export const obterListaDesigners = () => {
+  return api.get('/relatorios/designers-lista');
+};
+
+// ===== RELATÓRIOS DINÂMICOS =====
+export const gerarRelatorioMatriz = (payload) => {
+  return api.post('/relatorios/matriz', payload);
+};
+
+export const gerarRelatorioSintetico = (payload) => {
+  return api.post('/relatorios/sintetico', payload);
+};
+
+export const gerarRelatorioMatrizPDF = (payload) => {
+  return api.post('/relatorios/matriz/pdf', payload, { responseType: 'blob' });
+};
 
 // ===== FUNÇÕES DE COMPATIBILIDADE (mantidas para não quebrar código existente) =====
 export const postPedido = createPedido;

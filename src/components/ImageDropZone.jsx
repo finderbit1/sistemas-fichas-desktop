@@ -4,11 +4,12 @@ import { Container, Button, Form } from "react-bootstrap";
 export default function ImageDropZone({ onImageChange }) {
     const [image, setImage] = useState(null);
     const dropRef = useRef(null);
-    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB para permitir imagens de alta qualidade
 
     const processImage = (file) => {
         if (file.size > MAX_FILE_SIZE) {
             // Imagem excede o limite de 5 MB
+            alert(`Imagem muito grande! Tamanho máximo: ${MAX_FILE_SIZE / 1024 / 1024}MB`);
             return;
         }
 
@@ -18,22 +19,56 @@ export default function ImageDropZone({ onImageChange }) {
             img.onload = () => {
                 const canvas = document.createElement("canvas");
 
-                const maxWidth = 100; // limite de largura
-                const scale = maxWidth / img.width;
-                const newWidth = maxWidth;
-                const newHeight = img.height * scale;
+                // Preservar resolução original até um limite razoável
+                const maxWidth = 1920; // Full HD como máximo
+                const maxHeight = 1080; // Full HD como máximo
+                
+                let newWidth = img.width;
+                let newHeight = img.height;
+                
+                // Só redimensionar se a imagem for maior que Full HD
+                if (img.width > maxWidth || img.height > maxHeight) {
+                    const scaleWidth = maxWidth / img.width;
+                    const scaleHeight = maxHeight / img.height;
+                    const scale = Math.min(scaleWidth, scaleHeight);
+                    
+                    newWidth = img.width * scale;
+                    newHeight = img.height * scale;
+                } else {
+                    // Manter tamanho original se for menor que Full HD
+                    newWidth = img.width;
+                    newHeight = img.height;
+                }
 
                 canvas.width = newWidth;
                 canvas.height = newHeight;
 
                 const ctx = canvas.getContext("2d");
+                
+                // Configurações para máxima qualidade
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
                 ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-                // Qualidade 0.2 (20%)
-                const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+                // Usar PNG para preservar máxima qualidade (sem compressão)
+                // ou JPEG com 95% de qualidade se o arquivo original for JPEG
+                const originalFormat = file.type;
+                let highQualityDataUrl;
+                
+                if (originalFormat === 'image/png' || originalFormat === 'image/webp') {
+                    // PNG sem compressão para máxima qualidade
+                    highQualityDataUrl = canvas.toDataURL("image/png");
+                } else {
+                    // JPEG com 95% de qualidade
+                    highQualityDataUrl = canvas.toDataURL("image/jpeg", 0.95);
+                }
 
-                setImage(compressedDataUrl);
-                onImageChange?.(compressedDataUrl);
+                setImage(highQualityDataUrl);
+                onImageChange?.(highQualityDataUrl);
+                
+                // Log para debug da qualidade
+                console.log(`📸 Imagem processada: ${newWidth}x${newHeight}px, formato: ${originalFormat}, qualidade preservada!`);
             };
             img.src = e.target.result;
         };
@@ -87,7 +122,8 @@ export default function ImageDropZone({ onImageChange }) {
                         style={{ width: "100%", height: "100%", objectFit: "contain" }}
                     />
                 ) : (
-                    <p className="text-muted">Solte, cole ou selecione uma imagem (máx. 5 MB)</p>
+                    <p className="text-muted">Solte, cole ou selecione uma imagem (máx. 10 MB)<br/>
+                    <small>Alta qualidade preservada - até Full HD</small></p>
                 )}
             </div>
             <input

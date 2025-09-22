@@ -12,6 +12,9 @@ from pagamentos.router import router as pagamentos_router
 from envios.router import router as envios_router
 from admin.router import router as admin_router
 from descontos.router import router as descontos_router
+from relatorios.router import router as relatorios_router
+from producoes.router import router as producoes_router
+from tecidos.router import router as tecidos_router
 
 # Importar routers dinamicamente para evitar problemas de import circular
 try:
@@ -52,6 +55,9 @@ app.include_router(pagamentos_router, prefix=settings.API_V1_STR)
 app.include_router(envios_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(descontos_router, prefix=settings.API_V1_STR)
+app.include_router(relatorios_router, prefix=settings.API_V1_STR)
+app.include_router(producoes_router, prefix=settings.API_V1_STR)
+app.include_router(tecidos_router, prefix=settings.API_V1_STR)
 
 # Incluir routers opcionais se estiverem disponíveis
 if designers_router:

@@ -17,17 +17,11 @@ function ResumoModal({ show, onHide, formData = {} }) {
   // Função segura para converter valores
   const converterValor = (valor) => {
     try {
-      if (!valor) return 0;
-      
-      // Se for string, substitui vírgula por ponto
-      if (typeof valor === 'string') {
-        return parseFloat(valor.replace(',', '.'));
-      }
-      // Se for número, usa diretamente
-      if (typeof valor === 'number') {
-        return valor;
-      }
-      return 0;
+      if (!valor && valor !== 0) return 0;
+      if (typeof valor === 'number') return valor;
+      const normalizado = String(valor).replace(/\./g, '').replace(',', '.');
+      const num = parseFloat(normalizado);
+      return isNaN(num) ? 0 : num;
     } catch (error) {
       console.error('Erro ao converter valor:', error);
       return 0;
@@ -111,6 +105,9 @@ function ResumoModal({ show, onHide, formData = {} }) {
                     {formData.prioridade === '2' ? 'Alta' : 'Normal'}
                   </Badge>
                 </div>
+                <div className="mb-2">
+                  <strong>Forma de Envio:</strong> {formData.formaEnvio || formData.forma_envio || 'Não informado'}
+                </div>
               </Col>
             </Row>
             <Row>
@@ -122,6 +119,9 @@ function ResumoModal({ show, onHide, formData = {} }) {
               <Col md={6}>
                 <div className="mb-2">
                   <strong>Data de Entrega:</strong> {formData.dataEntrega || 'Não informado'}
+                </div>
+                <div className="mb-2">
+                  <strong>Forma de Pagamento:</strong> {formData.tipoPagamentoNome || formData.tipoPagamento || formData.tipo_pagamento || 'Não informado'}
                 </div>
               </Col>
             </Row>
@@ -164,6 +164,38 @@ function ResumoModal({ show, onHide, formData = {} }) {
                           <strong>Descrição:</strong>
                           <p className="mb-1">{item.descricao || 'Sem descrição'}</p>
                         </div>
+                        
+                        {item.imagem && (
+                          <div className="mb-3">
+                            <strong>Imagem:</strong>
+                            <div className="mt-2">
+                              <img 
+                                src={item.imagem} 
+                                alt={`Imagem do item ${item.descricao || 'item'}`}
+                                style={{
+                                  maxWidth: '100%',
+                                  maxHeight: '200px',
+                                  objectFit: 'cover',
+                                  borderRadius: '8px',
+                                  border: '2px solid #dee2e6',
+                                  cursor: 'pointer',
+                                  transition: 'transform 0.2s ease'
+                                }}
+                                onClick={() => {
+                                  // Abrir imagem em nova aba
+                                  window.open(item.imagem, '_blank');
+                                }}
+                                onMouseOver={(e) => {
+                                  e.target.style.transform = 'scale(1.02)';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.target.style.transform = 'scale(1)';
+                                }}
+                                title="Clique para ampliar"
+                              />
+                            </div>
+                          </div>
+                        )}
                         
                         {(item.largura || item.altura) && (
                           <div className="mb-2">

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Form, Button, Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Form, Button, Container, Row, Col, Card, Spinner } from 'react-bootstrap';
 import ImageDropZone from '../ImageDropZone';
 import InputValorReal from '../InputValorMoeda';
 import AreaCalculatorLinhaUnica from '../AreaCalculator';
 import ValidationModal from '../ValidationModal';
 import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
+import CustomRadio from '../CustomRadio';
+import useCustomAlert from '../../hooks/useCustomAlert';
+import CustomAlertModal from '../CustomAlertModal';
 
 function FormTotem(props) {
     const { vendedores, designers, loading, error } = useVendedoresDesigners();
@@ -23,12 +26,14 @@ function FormTotem(props) {
         },
         observacao: '',
         valorTotem: '',
+        valorAdicionais: '',
     });
 
     const [images, setImages] = useState([]);
     const [showValidationModal, setShowValidationModal] = useState(false);
     const [validationErrors, setValidationErrors] = useState([]);
     const [isSuccess, setIsSuccess] = useState(false);
+    const customAlert = useCustomAlert();
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -47,6 +52,29 @@ function FormTotem(props) {
                 [name]: value
             }));
         }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            descricao: '',
+            altura: '',
+            largura: '',
+            vendedor: '',
+            designer: '',
+            material: 'MDF 6MM',
+            acabamento: {
+                corteReto: false,
+                vinco: false,
+                baseMadeira: false,
+            },
+            observacao: '',
+            valorTotem: '',
+            comPe: undefined,
+        });
+        setImages([]);
+        setValidationErrors([]);
+        setShowValidationModal(false);
+        setIsSuccess(false);
     };
 
     const handleAreaChange = (areaData) => {
@@ -100,10 +128,21 @@ function FormTotem(props) {
         }
 
         // Se passou tudo:
+        const parseBR = (v) => {
+            if (!v) return 0;
+            if (typeof v === 'number') return v;
+            const normalized = String(v).replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        };
+
+        const total = (parseBR(formData.valorTotem) + parseBR(formData.valorAdicionais)).toFixed(2).replace('.', ',');
         const pedido = {
             ...formData,
-            imagens: images,
-            valor: formData.valorTotem
+            tipoProducao: 'totem',
+            tipo: 'totem',
+            imagem: images.length > 0 ? images[0] : null,
+            valor: total
         };
 
         // Ativar estado de sucesso
@@ -128,11 +167,7 @@ function FormTotem(props) {
 
     return (
         <>
-        {error && (
-            <Alert variant="warning" className="mb-3">
-                <strong>Atenção:</strong> {error}. Os campos de vendedor e designer podem não estar disponíveis.
-            </Alert>
-        )}
+        {error && customAlert.showWarning('Atenção', `${error}. Os campos de vendedor e designer podem não estar disponíveis.`)}
         <Form onSubmit={handleSubmit} className={isSuccess ? 'form-success form-success-animation' : ''}>
                 <Row className="mb-3">
                     <Col md={8}>
@@ -207,48 +242,16 @@ function FormTotem(props) {
                             </div>
                             <div className="p-3">
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type='radio'
-                                        label="Com Pé"
-                                        name='comPe'
-                                        value="com"
-                                        checked={formData.comPe === 'com'}
-                                        onChange={handleChange}
-                                        className="form-check-input"
-                                    />
+                                    <CustomRadio id="totem-pe-com" label="Com Pé" name='comPe' value="com" checked={formData.comPe === 'com'} onChange={handleChange} />
                                 </div>
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type='radio'
-                                        label="Sem Pé"
-                                        name='comPe'
-                                        value="sem"
-                                        checked={formData.comPe === 'sem'}
-                                        onChange={handleChange}
-                                        className="form-check-input"
-                                    />
+                                    <CustomRadio id="totem-pe-sem" label="Sem Pé" name='comPe' value="sem" checked={formData.comPe === 'sem'} onChange={handleChange} />
                                 </div>
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type='radio'
-                                        label="Com Base"
-                                        name='comPe'
-                                        value="base"
-                                        checked={formData.comPe === 'base'}
-                                        onChange={handleChange}
-                                        className="form-check-input"
-                                    />
+                                    <CustomRadio id="totem-base" label="Com Base" name='comPe' value="base" checked={formData.comPe === 'base'} onChange={handleChange} />
                                 </div>
                                 <div className="form-check mb-2">
-                                    <Form.Check
-                                        type='radio'
-                                        label="Sem Acabamento"
-                                        name='comPe'
-                                        value="semAcabamento"
-                                        checked={formData.comPe === 'semAcabamento'}
-                                        onChange={handleChange}
-                                        className="form-check-input"
-                                    />
+                                    <CustomRadio id="totem-sem-acab" label="Sem Acabamento" name='comPe' value="semAcabamento" checked={formData.comPe === 'semAcabamento'} onChange={handleChange} />
                                 </div>
                             </div>
                         </Card>
@@ -267,7 +270,7 @@ function FormTotem(props) {
                         </div>
                     </Col>
                     <Col md={6}>
-                        <ImageDropZone />
+                        <ImageDropZone onImageChange={(image) => setImages([image])} />
                     </Col>
                 </Row>
                 <Row className="align-items-center mb-3">
@@ -280,13 +283,37 @@ function FormTotem(props) {
                             required
                         />
                     </Col>
+                    <Col md={4}>
+                        <div className="form-group mb-2">
+                            <label className="form-label">Valores adicionais (opcional)</label>
+                            <Form.Control
+                                type="text"
+                                name="valorAdicionais"
+                                value={formData.valorAdicionais}
+                                onChange={handleChange}
+                                placeholder="Ex.: 10,00"
+                                className="form-control"
+                            />
+                        </div>
+                    </Col>
                     <Col md={4} className="d-flex justify-content-end gap-2">
-                        <Button variant="danger" type="button" onClick={function () { }} className="btn btn-error">Limpar</Button>
+                        <Button variant="danger" type="button" onClick={resetForm} className="btn btn-error">Limpar</Button>
                         <Button variant="success" type="button" onClick={saveOrder} className="btn btn-success">Salvar</Button>
                     </Col>
                 </Row>
 
         </Form>
+        <CustomAlertModal
+            isOpen={customAlert.alertState.isOpen}
+            onClose={customAlert.hideAlert}
+            type={customAlert.alertState.type}
+            title={customAlert.alertState.title}
+            message={customAlert.alertState.message}
+            confirmText={customAlert.alertState.confirmText}
+            onConfirm={customAlert.alertState.onConfirm}
+            showCancel={customAlert.alertState.showCancel}
+            cancelText={customAlert.alertState.cancelText}
+        />
         
         <ValidationModal
             show={showValidationModal}

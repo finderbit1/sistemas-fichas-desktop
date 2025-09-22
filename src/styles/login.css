@@ -40,8 +40,8 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 400px;
-  padding: var(--spacing-6);
+  max-width: min(95vw, 520px);
+  padding: clamp(16px, 2vw, 24px);
 }
 
 .login-card {
@@ -65,7 +65,7 @@
 
 .login-header {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  padding: var(--spacing-8) var(--spacing-6);
+  padding: clamp(16px, 2vw, 24px) clamp(16px, 2vw, 24px);
   text-align: center;
   color: white;
 }
@@ -103,7 +103,7 @@
 }
 
 .login-body {
-  padding: var(--spacing-8) var(--spacing-6);
+  padding: var(--spacing-6) var(--spacing-6); /* reduzir altura total */
 }
 
 .welcome-section {
