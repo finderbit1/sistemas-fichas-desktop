@@ -1,0 +1,27 @@
+{
+  "version": "0.1.1",
+  "notes": "Correções de bugs e melhorias de performance",
+  "pub_date": "2024-01-15T10:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NDQzRkY4M0ZDRkY2RkEKUldUM0J5eW1GZk9FQnB2VGJ0QjRGUWx6Wk5yTmFjT0VjQWt5Z2h0c1V4eWZ2",
+      "url": "https://github.com/finderbit1/sistemas-fichas-desktop/releases/download/v0.1.1/SGP-Sistema-de-Gestao-de-Pedidos_0.1.1_x64_en-US.msi"
+    },
+    "windows-i686": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NDQzRkY4M0ZDRkY2RkEKUldUM0J5eW1GZk9FQnB2VGJ0QjRGUWx6Wk5yTmFjT0VjQWt5Z2h0c1V4eWZ2",
+      "url": "https://github.com/finderbit1/sistemas-fichas-desktop/releases/download/v0.1.1/SGP-Sistema-de-Gestao-de-Pedidos_0.1.1_x86_en-US.msi"
+    },
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NDQzRkY4M0ZDRkY2RkEKUldUM0J5eW1GZk9FQnB2VGJ0QjRGUWx6Wk5yTmFjT0VjQWt5Z2h0c1V4eWZ2",
+      "url": "https://github.com/finderbit1/sistemas-fichas-desktop/releases/download/v0.1.1/sgp-sistema-de-gestao-de-pedidos_0.1.1_amd64.deb"
+    },
+    "darwin-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NDQzRkY4M0ZDRkY2RkEKUldUM0J5eW1GZk9FQnB2VGJ0QjRGUWx6Wk5yTmFjT0VjQWt5Z2h0c1V4eWZ2",
+      "url": "https://github.com/finderbit1/sistemas-fichas-desktop/releases/download/v0.1.1/SGP-Sistema-de-Gestao-de-Pedidos_0.1.1_x64.dmg"
+    },
+    "darwin-aarch64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY5NDQzRkY4M0ZDRkY2RkEKUldUM0J5eW1GZk9FQnB2VGJ0QjRGUWx6Wk5yTmFjT0VjQWt5Z2h0c1V4eWZ2",
+      "url": "https://github.com/finderbit1/sistemas-fichas-desktop/releases/download/v0.1.1/SGP-Sistema-de-Gestao-de-Pedidos_0.1.1_aarch64.dmg"
+    }
+  }
+}

@@ -5,50 +5,77 @@ from .schema import Pedido, PedidoCreate, PedidoUpdate, PedidoResponse, ItemPedi
 from datetime import datetime
 from typing import List
 import json
+import logging
+from functools import lru_cache
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
+@lru_cache(maxsize=128)
+def _serialize_item(item_data: dict) -> dict:
+    """Serializa um item de forma otimizada"""
+    if 'acabamento' in item_data and hasattr(item_data['acabamento'], 'model_dump'):
+        item_data['acabamento'] = item_data['acabamento'].model_dump()
+    return item_data
+
 def items_to_json_string(items) -> str:
-    """Converte lista de items para string JSON"""
-    items_data = []
-    for item in items:
-        if hasattr(item, 'model_dump'):
-            # Se for um objeto SQLModel
-            item_dict = item.model_dump()
-            # Converter acabamento para dict
+    """Converte lista de items para string JSON de forma otimizada"""
+    if not items:
+        return "[]"
+    
+    try:
+        items_data = []
+        for item in items:
+            if hasattr(item, 'model_dump'):
+                item_dict = item.model_dump()
+            else:
+                item_dict = item.copy()
+            
+            # Serializar acabamento se necessário
             if hasattr(item, 'acabamento') and item.acabamento:
                 item_dict['acabamento'] = item.acabamento.model_dump()
-        else:
-            # Se já for um dict
-            item_dict = item.copy()
-            # Converter acabamento para dict se existir
-            if 'acabamento' in item_dict and hasattr(item_dict['acabamento'], 'model_dump'):
-                item_dict['acabamento'] = item_dict['acabamento'].model_dump()
-        items_data.append(item_dict)
-    return json.dumps(items_data, ensure_ascii=False)
+            
+            items_data.append(item_dict)
+        
+        return json.dumps(items_data, ensure_ascii=False, separators=(',', ':'))
+    except Exception as e:
+        logger.error(f"❌ Erro ao serializar items: {e}")
+        return "[]"
 
 def json_string_to_items(items_json: str) -> List[ItemPedido]:
-    """Converte string JSON para lista de items"""
-    if not items_json:
+    """Converte string JSON para lista de items de forma otimizada"""
+    if not items_json or items_json.strip() == "[]":
         return []
     
     try:
         items_data = json.loads(items_json)
+        if not items_data:
+            return []
+        
         items = []
         for item_data in items_data:
-            # Criar objeto Acabamento
-            acabamento_data = item_data.get('acabamento', {})
-            acabamento = Acabamento(**acabamento_data)
-            
-            # Criar objeto ItemPedido
-            item = ItemPedido(
-                **{k: v for k, v in item_data.items() if k != 'acabamento'},
-                acabamento=acabamento
-            )
-            items.append(item)
+            try:
+                # Criar objeto Acabamento com valores padrão
+                acabamento_data = item_data.get('acabamento', {})
+                acabamento = Acabamento(**acabamento_data)
+                
+                # Criar objeto ItemPedido
+                item = ItemPedido(
+                    **{k: v for k, v in item_data.items() if k != 'acabamento'},
+                    acabamento=acabamento
+                )
+                items.append(item)
+            except Exception as item_error:
+                logger.warning(f"⚠️ Erro ao processar item: {item_error}")
+                continue
+        
         return items
-    except (json.JSONDecodeError, Exception) as e:
-        print(f"Erro ao converter JSON para items: {e}")
+    except json.JSONDecodeError as e:
+        logger.error(f"❌ Erro de JSON ao converter items: {e}")
+        return []
+    except Exception as e:
+        logger.error(f"❌ Erro inesperado ao converter JSON para items: {e}")
         return []
 
 @router.post("/", response_model=PedidoResponse)
@@ -58,6 +85,10 @@ def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
     Aceita o JSON completo com items, dados do cliente, valores, etc.
     """
     try:
+        # Validar dados do pedido
+        if not pedido.items:
+            raise HTTPException(status_code=400, detail="Pedido deve conter pelo menos um item")
+        
         # Converter o pedido para dict e preparar para o banco
         pedido_data = pedido.model_dump()
         
@@ -84,11 +115,14 @@ def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
         if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
             pedido_dict['prioridade'] = 'NORMAL'
         
+        logger.info(f"✅ Pedido criado: {db_pedido.numero}")
         return PedidoResponse(**pedido_dict)
         
+    except HTTPException:
+        raise
     except Exception as e:
-        session.rollback()
-        raise HTTPException(status_code=400, detail=f"Erro ao criar pedido: {str(e)}")
+        logger.error(f"❌ Erro ao criar pedido: {e}")
+        raise HTTPException(status_code=500, detail="Erro interno ao criar pedido")
 
 @router.get("/", response_model=List[PedidoResponse])
 def listar_pedidos(session: Session = Depends(get_session)):

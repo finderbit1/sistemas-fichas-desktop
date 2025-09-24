@@ -83,12 +83,14 @@ function FormBolsinha({ onAdicionarItem }) {
 
         const item = {
             ...formData,
+            tipoProducao: 'bolsinha',
+            tipo: 'bolsinha',
             valor: parseBR(formData.valorBolsinha) + parseBR(formData.valorAdicionais),
             imagem: images.length > 0 ? images[0] : null,
         };
 
-        if (adicionarItem) {
-            adicionarItem(item);
+        if (onAdicionarItem) {
+            onAdicionarItem(item);
         }
 
         resetForm();

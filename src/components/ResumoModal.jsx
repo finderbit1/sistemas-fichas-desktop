@@ -14,6 +14,10 @@ import {
 } from 'react-bootstrap-icons';
 
 function ResumoModal({ show, onHide, formData = {} }) {
+  // Debug: verificar dados recebidos
+  console.log('ResumoModal - formData recebido:', formData);
+  console.log('ResumoModal - items:', formData.items);
+  
   // Função segura para converter valores
   const converterValor = (valor) => {
     try {
@@ -145,7 +149,9 @@ function ResumoModal({ show, onHide, formData = {} }) {
           <Card.Body>
             {formData.items && formData.items.length > 0 ? (
               <div className="row">
-                {formData.items.map((item, index) => (
+                {formData.items.map((item, index) => {
+                  console.log(`ResumoModal - Item ${index}:`, item);
+                  return (
                   <div key={index} className="col-md-6 mb-3">
                     <Card className="h-100 border">
                       <Card.Header className="bg-primary text-white py-2">
@@ -163,6 +169,30 @@ function ResumoModal({ show, onHide, formData = {} }) {
                         <div className="mb-2">
                           <strong>Descrição:</strong>
                           <p className="mb-1">{item.descricao || 'Sem descrição'}</p>
+                        </div>
+
+                        {/* Resumo de Valores Detalhado */}
+                        <div className="mb-2">
+                          <strong>Resumo de Valores:</strong>
+                          <div className="mt-1">
+                            {(item.valorPainel || item.valorAlmofada || item.valorLona || item.valorTotem || item.valorBolsinha) && (
+                              <div className="d-flex justify-content-between">
+                                <span>Valor Base:</span>
+                                <span>R$ {item.valorPainel || item.valorAlmofada || item.valorLona || item.valorTotem || item.valorBolsinha}</span>
+                              </div>
+                            )}
+                            {item.valorAdicionais && parseFloat(item.valorAdicionais.replace(',', '.')) > 0 && (
+                              <div className="d-flex justify-content-between">
+                                <span>Valores Adicionais:</span>
+                                <span className="text-success">R$ {item.valorAdicionais}</span>
+                              </div>
+                            )}
+                            <hr className="my-1" />
+                            <div className="d-flex justify-content-between fw-bold">
+                              <span>Total:</span>
+                              <span className="text-primary">R$ {formatarValor(converterValor(item?.valor))}</span>
+                            </div>
+                          </div>
                         </div>
                         
                         {item.imagem && (
@@ -230,6 +260,7 @@ function ResumoModal({ show, onHide, formData = {} }) {
                           </div>
                         )}
 
+
                         {item.tecido && (
                           <div className="mb-2">
                             <strong>Tecido:</strong>
@@ -245,7 +276,15 @@ function ResumoModal({ show, onHide, formData = {} }) {
                               {Object.entries(item.acabamento).map(([key, value]) => 
                                 value && (
                                   <Badge key={key} bg="secondary" className="me-1">
-                                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                                    {key === 'overloque' ? 'Overloque' :
+                                     key === 'elastico' ? 'Elástico' :
+                                     key === 'ilhos' ? 'Ilhós' :
+                                     key === 'solda' ? 'Solda' :
+                                     key === 'bastao' ? 'Bastão' :
+                                     key === 'corteReto' ? 'Corte Reto' :
+                                     key === 'vinco' ? 'Vinco' :
+                                     key === 'baseMadeira' ? 'Base Madeira' :
+                                     key.charAt(0).toUpperCase() + key.slice(1)}
                                   </Badge>
                                 )
                               )}
@@ -254,32 +293,82 @@ function ResumoModal({ show, onHide, formData = {} }) {
                         )}
 
                         {/* Configurações específicas do Painel */}
-                        {item.tipoProducao === 'painel' && item.acabamento?.ilhos && (
+                        {item.tipoProducao === 'painel' && (
                           <div className="mb-2">
-                            <strong>Ilhós:</strong>
-                            <div className="mt-1">
-                              {item.ilhosQtd && (
-                                <span className="me-2">Qtd: {item.ilhosQtd}</span>
-                              )}
-                              {item.ilhosValorUnitario && (
-                                <span className="me-2">Valor: R$ {item.ilhosValorUnitario}</span>
-                              )}
-                              {item.ilhosDistancia && (
-                                <span>Distância: {item.ilhosDistancia}cm</span>
-                              )}
-                            </div>
+                            {item.emenda && (
+                              <div className="mb-1">
+                                <strong>Tipo de Emenda:</strong>
+                                <span className="ms-1">
+                                  {item.emenda === 'sem-emenda' ? 'Sem emenda' :
+                                   item.emenda === 'vertical' ? 'Vertical' :
+                                   item.emenda === 'horizontal' ? 'Horizontal' : item.emenda}
+                                </span>
+                              </div>
+                            )}
+                            {item.acabamento?.ilhos && (
+                              <div className="mb-1">
+                                <strong>Ilhós:</strong>
+                                <div className="mt-1">
+                                  {item.ilhosQtd && (
+                                    <span className="me-2">Qtd: {item.ilhosQtd}</span>
+                                  )}
+                                  {item.ilhosValorUnitario && (
+                                    <span className="me-2">Valor: R$ {item.ilhosValorUnitario}</span>
+                                  )}
+                                  {item.ilhosDistancia && (
+                                    <span>Distância: {item.ilhosDistancia}cm</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
 
                         {/* Configurações específicas do Totem */}
-                        {item.tipoProducao === 'totem' && item.comPe && (
+                        {item.tipoProducao === 'totem' && (
                           <div className="mb-2">
-                            <strong>Acabamento:</strong>
-                            <span className="ms-2">
-                              {item.comPe === 'com' ? 'Com Pé' : 
-                               item.comPe === 'sem' ? 'Sem Pé' :
-                               item.comPe === 'base' ? 'Com Base' : 'Sem Acabamento'}
-                            </span>
+                            {item.material && (
+                              <div className="mb-1">
+                                <strong>Material:</strong>
+                                <span className="ms-1">{item.material}</span>
+                              </div>
+                            )}
+                            {item.comPe && (
+                              <div className="mb-1">
+                                <strong>Acabamento:</strong>
+                                <span className="ms-1">
+                                  {item.comPe === 'com' ? 'Com Pé' : 
+                                   item.comPe === 'sem' ? 'Sem Pé' :
+                                   item.comPe === 'base' ? 'Com Base' : 'Sem Acabamento'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Configurações específicas da Almofada */}
+                        {item.tipoProducao === 'almofada' && (
+                          <div className="mb-2">
+                            <div className="row">
+                              {item.quantidade && (
+                                <div className="col-6">
+                                  <strong>Quantidade:</strong>
+                                  <span className="ms-1">{item.quantidade}</span>
+                                </div>
+                              )}
+                              {item.enchimento && (
+                                <div className="col-6">
+                                  <strong>Enchimento:</strong>
+                                  <span className="ms-1">{item.enchimento === 'com' ? 'Com enchimento' : 'Sem enchimento'}</span>
+                                </div>
+                              )}
+                              {item.legenda && (
+                                <div className="col-12">
+                                  <strong>Legenda da Imagem:</strong>
+                                  <span className="ms-1">{item.legenda}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
 
@@ -311,6 +400,12 @@ function ResumoModal({ show, onHide, formData = {} }) {
                                   <span className="ms-1">{item.fecho}</span>
                                 </div>
                               )}
+                              {item.alcaAjustavel && (
+                                <div className="col-12">
+                                  <strong>Alça Ajustável:</strong>
+                                  <Badge bg="success" className="ms-1">Sim</Badge>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
@@ -328,10 +423,21 @@ function ResumoModal({ show, onHide, formData = {} }) {
                             <span className="ms-2 text-success">✓ Anexada</span>
                           </div>
                         )}
+
+                        {/* Debug: Mostrar todos os dados disponíveis */}
+                        {process.env.NODE_ENV === 'development' && (
+                          <div className="mb-2 mt-3 p-2" style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+                            <strong className="text-muted">Debug - Todos os dados:</strong>
+                            <pre className="mb-0 small text-muted" style={{ fontSize: '10px', maxHeight: '100px', overflow: 'auto' }}>
+                              {JSON.stringify(item, null, 2)}
+                            </pre>
+                          </div>
+                        )}
                       </Card.Body>
                     </Card>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center text-muted py-4">
