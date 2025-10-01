@@ -4,19 +4,28 @@
   "version": "0.1.0",
   "identifier": "com.finderbit.sistema",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "pnpm run build",
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
         "title": "S.G.P V:0.0.4b",
-        "width": 800,
-        "height": 600,
+        "width": 1200,
+        "height": 800,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "visible": true,
+        "center": true,
+        "decorations": true,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "minWidth": 800,
+        "minHeight": 600,
+        "maxWidth": 1920,
+        "maxHeight": 1080
       }
     ],
     "security": {

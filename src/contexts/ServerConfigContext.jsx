@@ -11,6 +11,9 @@ export const useServerConfig = () => {
 };
 
 export const ServerConfigProvider = ({ children }) => {
+  // Detectar se estamos no Tauri
+  const isTauri = typeof window !== 'undefined' && window.__TAURI__;
+  
   const [serverConfig, setServerConfig] = useState(() => {
     // Verificar se há configuração salva no localStorage
     const savedConfig = localStorage.getItem('serverConfig');
@@ -19,14 +22,15 @@ export const ServerConfigProvider = ({ children }) => {
     }
     // Configuração padrão
     return {
-      baseURL: 'http://localhost:8000',
+      baseURL: 'tauri://local',
       timeout: 10000,
-      retries: 3
+      retries: 3,
+      isTauri: isTauri
     };
   });
 
-  const [isConnected, setIsConnected] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [isConnected, setIsConnected] = useState(isTauri); // Tauri sempre conectado
+  const [connectionStatus, setConnectionStatus] = useState(isTauri ? 'connected' : 'checking');
 
   const updateServerConfig = (newConfig) => {
     const updatedConfig = { ...serverConfig, ...newConfig };
@@ -38,39 +42,15 @@ export const ServerConfigProvider = ({ children }) => {
   };
 
   const testConnection = async (url = serverConfig.baseURL) => {
-    setConnectionStatus('checking');
-    
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(`${url}/health`, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        setIsConnected(true);
-        setConnectionStatus('connected');
-      } else {
-        setIsConnected(false);
-        setConnectionStatus('error');
-      }
-    } catch (error) {
-      setIsConnected(false);
-      setConnectionStatus('error');
-      console.error('Erro ao testar conexão:', error);
-    }
+    // Sempre usar Tauri - sem HTTP
+    setIsConnected(true);
+    setConnectionStatus('connected');
+    console.log('✅ Usando backend Rust (Tauri) - Sempre conectado');
   };
 
   const resetToDefault = () => {
     const defaultConfig = {
-      baseURL: 'http://localhost:8000',
+      baseURL: 'tauri://local',
       timeout: 10000,
       retries: 3
     };
