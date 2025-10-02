@@ -25,3 +25,4 @@ pub struct PagamentoUpdate {
     pub ativo: Option<bool>,
 }
 
+

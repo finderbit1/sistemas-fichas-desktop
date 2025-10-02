@@ -43,3 +43,4 @@ pub struct ClienteUpdate {
     pub observacoes: Option<String>,
 }
 
+

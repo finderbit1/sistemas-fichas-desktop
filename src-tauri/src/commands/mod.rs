@@ -8,6 +8,8 @@ pub mod tecido;
 pub mod designer;
 pub mod vendedor;
 pub mod relatorio;
+pub mod limpeza;
 
 // Imports específicos serão adicionados conforme necessário
+
 

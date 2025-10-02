@@ -36,3 +36,4 @@ timeout 5s "$EXECUTABLE" --help 2>&1 || echo "Não suporta --help"
 echo ""
 echo "✅ Testes concluídos!"
 
+

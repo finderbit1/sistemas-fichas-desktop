@@ -98,3 +98,4 @@ trap 'echo ""; echo "🛑 Finalizando aplicação..."; kill $FRONTEND_PID $TAURI
 # Manter script rodando
 wait
 
+

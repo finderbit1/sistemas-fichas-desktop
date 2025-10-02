@@ -189,3 +189,4 @@ npm run tauri dev
 
 Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
 
+

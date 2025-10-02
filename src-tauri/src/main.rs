@@ -71,6 +71,7 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Comandos de Envios
             commands::envio::get_all_envios,
+            commands::envio::get_envio_by_id,
             commands::envio::create_envio,
             commands::envio::update_envio,
             commands::envio::delete_envio,
@@ -88,7 +89,9 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Comandos de Tecidos
             commands::tecido::get_all_tecidos,
+            commands::tecido::get_tecido_by_id,
             commands::tecido::create_tecido,
+            commands::tecido::update_tecido,
             commands::tecido::delete_tecido,
 
             // Comandos de Designers
@@ -98,8 +101,23 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Comandos de Vendedores
             commands::vendedor::get_all_vendedores,
+            commands::vendedor::get_vendedor_by_id,
             commands::vendedor::create_vendedor,
+            commands::vendedor::update_vendedor,
             commands::vendedor::delete_vendedor,
+
+            // Comandos de Descontos
+            commands::desconto::get_all_descontos,
+            commands::desconto::get_desconto_by_id,
+            commands::desconto::calcular_desconto,
+            commands::desconto::create_desconto,
+            commands::desconto::update_desconto,
+            commands::desconto::delete_desconto,
+
+            // Comandos de Limpeza do Banco
+            commands::limpeza::limpar_banco_dados,
+            commands::limpeza::verificar_status_banco,
+            commands::limpeza::inserir_dados_padrao,
 
             // Comandos de Relatórios
             commands::relatorio::gerar_relatorio_diario,

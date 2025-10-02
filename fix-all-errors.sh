@@ -13,3 +13,4 @@ find src-tauri/src/commands -name "*.rs" -exec sed -i 's/let mut db = state.get_
 
 echo "✅ Todas as correções aplicadas!"
 
+

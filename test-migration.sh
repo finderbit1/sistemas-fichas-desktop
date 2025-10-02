@@ -102,3 +102,4 @@ echo "Para voltar ao Python:"
 echo "  npm run dev          # Modo desenvolvimento web"
 echo ""
 
+

@@ -46,3 +46,4 @@ sed -i "s/std::sync::MutexGuard<Connection>/std::sync::MutexGuard<'_, Connection
 echo "✅ Imports limpos!"
 echo "🔧 Compilando para verificar..."
 
+

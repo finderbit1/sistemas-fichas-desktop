@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, Result};
+use rusqlite::{Connection, Result};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -99,6 +99,13 @@ impl Database {
             )?;
             println!("   ▶ Tabela 'formas_envio' pronta");
 
+            // Migração: adicionar coluna valor se não existir
+            let _ = conn.execute(
+                "ALTER TABLE formas_envio ADD COLUMN valor REAL DEFAULT 0.0",
+                [],
+            );
+            println!("   ▶ Migração: coluna 'valor' adicionada à tabela 'formas_envio'");
+
             // Tabelas adicionais necessárias
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS designers (
@@ -121,7 +128,6 @@ impl Database {
                     nome TEXT NOT NULL,
                     email TEXT,
                     telefone TEXT,
-                    comissao REAL DEFAULT 0.0,
                     ativo BOOLEAN DEFAULT 1,
                     created_at TEXT,
                     updated_at TEXT
@@ -130,17 +136,50 @@ impl Database {
             )?;
             println!("   ▶ Tabela 'vendedores' pronta");
 
+            // Migração: adicionar coluna comissao_percentual se não existir
+            let _ = conn.execute(
+                "ALTER TABLE vendedores ADD COLUMN comissao_percentual REAL DEFAULT 0.0",
+                [],
+            );
+            println!("   ▶ Migração: coluna 'comissao_percentual' adicionada à tabela 'vendedores'");
+
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS descontos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    tipo TEXT,
+                    nome TEXT NOT NULL,
+                    tipo TEXT NOT NULL,
+                    valor REAL NOT NULL,
                     valor_minimo REAL,
-                    percentual REAL,
-                    criado_em TEXT
+                    ativo BOOLEAN DEFAULT 1,
+                    created_at TEXT,
+                    updated_at TEXT
                 )",
                 [],
             )?;
             println!("   ▶ Tabela 'descontos' pronta");
+
+            // Migração: adicionar colunas se não existirem
+            let _ = conn.execute(
+                "ALTER TABLE descontos ADD COLUMN nome TEXT",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE descontos ADD COLUMN valor REAL",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE descontos ADD COLUMN ativo BOOLEAN DEFAULT 1",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE descontos ADD COLUMN created_at TEXT",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE descontos ADD COLUMN updated_at TEXT",
+                [],
+            );
+            println!("   ▶ Migração: colunas adicionadas à tabela 'descontos'");
 
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS tipos_producao (
@@ -156,9 +195,11 @@ impl Database {
                 "CREATE TABLE IF NOT EXISTS tecidos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     nome TEXT NOT NULL,
-                    tipo TEXT,
+                    descricao TEXT,
                     cor TEXT,
-                    preco_metro REAL DEFAULT 0.0,
+                    material TEXT,
+                    largura REAL,
+                    valor_metro REAL,
                     ativo BOOLEAN DEFAULT 1,
                     created_at TEXT,
                     updated_at TEXT
@@ -166,15 +207,50 @@ impl Database {
                 [],
             )?;
             println!("   ▶ Tabela 'tecidos' pronta");
+
+            // Migração: adicionar colunas se não existirem
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN descricao TEXT",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN material TEXT",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN largura REAL",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN valor_metro REAL",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN ativo BOOLEAN DEFAULT 1",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN created_at TEXT",
+                [],
+            );
+            let _ = conn.execute(
+                "ALTER TABLE tecidos ADD COLUMN updated_at TEXT",
+                [],
+            );
+            println!("   ▶ Migração: colunas adicionadas à tabela 'tecidos'");
         } // <- Aqui o lock é liberado
 
-        // Agora podemos inserir os dados padrão sem travar
-        self.insert_default_data()?;
+        // Dados padrão não são inseridos automaticamente
+        // Use o comando 'limpar_banco_dados' se precisar inserir dados padrão
+        // self.insert_default_data()?;
 
         println!("✅ Tabelas inicializadas com sucesso!");
         Ok(())
     }
 
+    // Função comentada - dados padrão não são inseridos automaticamente
+    // Use o comando 'limpar_banco_dados' se precisar inserir dados padrão
+    /*
     fn insert_default_data(&self) -> Result<()> {
         println!("   ▶ Inserindo dados padrão...");
         let conn = self.get_connection()?;
@@ -210,4 +286,5 @@ impl Database {
 
         Ok(())
     }
+    */
 }

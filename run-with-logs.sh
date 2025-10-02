@@ -57,3 +57,4 @@ timeout 10s "$EXECUTABLE" 2>&1 || {
     echo "🎯 A migração Python → Rust foi concluída com sucesso!"
 }
 
+

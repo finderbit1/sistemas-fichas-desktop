@@ -31,3 +31,4 @@ pub struct VendedorUpdate {
     pub ativo: Option<bool>,
 }
 
+

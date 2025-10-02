@@ -21,3 +21,4 @@ ps aux | grep -E "(tauri|vite)" | grep -v grep || echo "Nenhum processo Tauri/Vi
 echo "6. Verificando se há erros no log..."
 echo "Tentando executar Tauri em modo verbose..."
 
+

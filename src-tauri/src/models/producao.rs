@@ -28,3 +28,4 @@ pub struct ProducaoTipoUpdate {
     pub ativo: Option<bool>,
 }
 
+

@@ -1,15 +1,34 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "react_tauri_app",
-  "version": "0.1.0",
-  "identifier": "com.finderbit.sistema",
-  "build": {
-    "beforeDevCommand": "pnpm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm run build",
-    "frontendDist": "../dist"
+  "$schema": "https://schema.tauri.app/config/1",
+  "package": {
+    "productName": "react_tauri_app",
+    "version": "0.1.0"
   },
-  "app": {
+  "build": {
+    "distDir": "../dist",
+    "devPath": "http://localhost:1420",
+    "beforeDevCommand": "pnpm run dev",
+    "beforeBuildCommand": "pnpm run build"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.finderbit.sistema",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
     "windows": [
       {
         "title": "S.G.P V:0.0.4b",
@@ -27,20 +46,6 @@
         "maxWidth": 1920,
         "maxHeight": 1080
       }
-    ],
-    "security": {
-      "csp": null
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": ["msi"],
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
     ]
   }
 }

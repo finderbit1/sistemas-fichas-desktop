@@ -28,3 +28,4 @@ pub struct EnvioUpdate {
     pub ativo: Option<bool>,
 }
 
+
