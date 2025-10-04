@@ -49,11 +49,28 @@ impl Database {
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS pedidos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    cliente_id INTEGER,
-                    forma_envio TEXT,
-                    forma_pagamento TEXT,
-                    frete REAL,
-                    FOREIGN KEY(cliente_id) REFERENCES clientes(id)
+                    numero INTEGER NOT NULL,
+                    cliente_id INTEGER NOT NULL,
+                    cliente_nome TEXT,
+                    data_pedido TEXT NOT NULL,
+                    data_entrega TEXT,
+                    status TEXT NOT NULL DEFAULT 'pendente',
+                    valor_total REAL NOT NULL DEFAULT 0.0,
+                    observacoes TEXT,
+                    vendedor_id INTEGER,
+                    designer_id INTEGER,
+                    forma_pagamento_id INTEGER,
+                    forma_envio_id INTEGER,
+                    desconto_id INTEGER,
+                    items TEXT,
+                    created_at TEXT,
+                    updated_at TEXT,
+                    FOREIGN KEY(cliente_id) REFERENCES clientes(id),
+                    FOREIGN KEY(vendedor_id) REFERENCES vendedores(id),
+                    FOREIGN KEY(designer_id) REFERENCES designers(id),
+                    FOREIGN KEY(forma_pagamento_id) REFERENCES formas_pagamento(id),
+                    FOREIGN KEY(forma_envio_id) REFERENCES formas_envio(id),
+                    FOREIGN KEY(desconto_id) REFERENCES descontos(id)
                 )",
                 [],
             )?;
@@ -98,6 +115,19 @@ impl Database {
                 [],
             )?;
             println!("   ▶ Tabela 'formas_envio' pronta");
+
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS formas_pagamento (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    descricao TEXT,
+                    ativo BOOLEAN NOT NULL DEFAULT 1,
+                    created_at TEXT,
+                    updated_at TEXT
+                )",
+                [],
+            )?;
+            println!("   ▶ Tabela 'formas_pagamento' pronta");
 
             // Migração: adicionar coluna valor se não existir
             let _ = conn.execute(

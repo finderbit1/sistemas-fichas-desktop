@@ -1,52 +1,26 @@
 {
-  "$schema": "https://schema.tauri.app/config/1",
-  "package": {
-    "productName": "react_tauri_app",
-    "version": "0.1.0"
-  },
-  "build": {
-    "distDir": "../dist",
-    "devPath": "http://localhost:1420",
-    "beforeDevCommand": "pnpm run dev",
-    "beforeBuildCommand": "pnpm run build"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false
+    "$schema": "https://schema.tauri.app/config/2",
+    "identifier": "com.finderbit.fichas",
+    "productName": "Sistemas de Fichas",
+    "version": "0.1.0",
+    "build": {
+      "beforeDevCommand": "pnpm run dev",
+      "beforeBuildCommand": "pnpm run build",
+      "frontendDist": "../dist",
+      "devUrl": "http://localhost:1420"
+    },
+    "app": {
+      "windows": [
+        {
+          "title": "Sistemas de Fichas",
+          "width": 1024,
+          "height": 768
+        }
+      ]
     },
     "bundle": {
       "active": true,
-      "targets": "all",
-      "identifier": "com.finderbit.sistema",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    },
-    "security": {
-      "csp": null
-    },
-    "windows": [
-      {
-        "title": "S.G.P V:0.0.4b",
-        "width": 1200,
-        "height": 800,
-        "resizable": true,
-        "fullscreen": false,
-        "visible": true,
-        "center": true,
-        "decorations": true,
-        "alwaysOnTop": false,
-        "skipTaskbar": false,
-        "minWidth": 800,
-        "minHeight": 600,
-        "maxWidth": 1920,
-        "maxHeight": 1080
-      }
-    ]
+      "targets": ["deb", "appimage"]
+    }
   }
-}
-
+  

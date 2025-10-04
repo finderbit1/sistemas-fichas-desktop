@@ -84,6 +84,7 @@ const SystemSettings = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [databaseStatus, setDatabaseStatus] = useState('');
   const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState('company');
 
@@ -164,6 +165,40 @@ const SystemSettings = () => {
       setSuccess(`Conexão ${type} testada com sucesso!`);
     } catch (err) {
       setError(`Erro ao testar conexão ${type}: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funções para gerenciamento do banco de dados
+  const handleRecreatePedidosTable = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const { recriarTabelaPedidos } = await import('../../services/api-tauri');
+      const result = await recriarTabelaPedidos();
+      setSuccess(result.data);
+      setDatabaseStatus('');
+    } catch (err) {
+      setError(`Erro ao recriar tabela pedidos: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckDatabaseStatus = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const { verificarStatusBanco } = await import('../../services/api-tauri');
+      const result = await verificarStatusBanco();
+      setDatabaseStatus(result.data);
+    } catch (err) {
+      setError(`Erro ao verificar status do banco: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -811,7 +846,81 @@ const SystemSettings = () => {
                 {loading ? 'Salvando...' : 'Salvar Configurações'}
               </Button>
             </Tab>
-          </Tabs>
+
+            <Tab eventKey="database" title={
+              <span>
+                <Server size={16} className="me-2" />
+                Banco de Dados
+              </span>
+            }>
+              <Row className="mb-4">
+                <Col>
+                  <h5>Gerenciamento do Banco de Dados</h5>
+                  <p className="text-muted">
+                    Ferramentas para gerenciar a estrutura e dados do banco de dados.
+                  </p>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Card className="h-100">
+                    <Card.Header>
+                      <h6 className="mb-0">Recriar Tabela Pedidos</h6>
+                    </Card.Header>
+                    <Card.Body>
+                      <p className="text-muted small">
+                        Recria a tabela 'pedidos' com a estrutura atualizada para corrigir problemas de compatibilidade.
+                      </p>
+                      <Button 
+                        variant="warning" 
+                        onClick={handleRecreatePedidosTable}
+                        disabled={loading}
+                        className="w-100"
+                      >
+                        <ArrowClockwise size={16} className="me-2" />
+                        {loading ? 'Recriando...' : 'Recriar Tabela Pedidos'}
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                <Col md={6}>
+                  <Card className="h-100">
+                    <Card.Header>
+                      <h6 className="mb-0">Verificar Status</h6>
+                    </Card.Header>
+                    <Card.Body>
+                      <p className="text-muted small">
+                        Verifica o status atual do banco de dados e mostra informações sobre as tabelas.
+                      </p>
+                      <Button 
+                        variant="info" 
+                        onClick={handleCheckDatabaseStatus}
+                        disabled={loading}
+                        className="w-100"
+                      >
+                        <CheckCircle size={16} className="me-2" />
+                        {loading ? 'Verificando...' : 'Verificar Status'}
+                      </Button>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
+
+              {databaseStatus && (
+                <Row className="mb-3">
+                  <Col>
+                    <Alert variant="info">
+                      <h6>Status do Banco de Dados:</h6>
+                      <pre style={{ fontSize: '12px', margin: 0 }}>
+                        {databaseStatus}
+                      </pre>
+                    </Alert>
+                  </Col>
+                </Row>
+              )}
+            </Tab>
         </Card.Body>
       </Card>
     </div>

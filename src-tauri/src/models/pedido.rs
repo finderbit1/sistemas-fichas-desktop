@@ -55,6 +55,22 @@ pub struct PedidoUpdate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PedidoUpdateFromFrontend {
+    pub cliente_id: Option<i64>,
+    pub data_pedido: Option<String>, // ISO string
+    pub data_entrega: Option<String>, // ISO string
+    pub status: Option<String>,
+    pub valor_total: Option<f64>,
+    pub observacoes: Option<String>,
+    pub vendedor_id: Option<i64>,
+    pub designer_id: Option<i64>,
+    pub forma_pagamento_id: Option<i64>,
+    pub forma_envio_id: Option<i64>,
+    pub desconto_id: Option<i64>,
+    pub items: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemPedido {
     pub id: Option<i64>,
     pub pedido_id: i64,
@@ -74,5 +90,6 @@ pub struct Acabamento {
     pub valor: f64,
     pub observacoes: Option<String>,
 }
+
 
 

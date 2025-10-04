@@ -89,6 +89,54 @@ pub async fn verificar_status_banco(state: AppState<'_>) -> Result<String, Strin
 }
 
 #[tauri::command]
+pub async fn recriar_tabela_pedidos(state: AppState<'_>) -> Result<String, String> {
+    let db = state.get_connection().map_err(|e| e.to_string())?;
+    
+    // Desabilitar verificações de chave estrangeira temporariamente
+    db.execute("PRAGMA foreign_keys = OFF", [])
+        .map_err(|e| e.to_string())?;
+    
+    // Dropar tabela pedidos existente
+    let _ = db.execute("DROP TABLE IF EXISTS pedidos", []);
+    
+    // Criar nova tabela pedidos com estrutura completa
+    db.execute(
+        "CREATE TABLE pedidos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            numero INTEGER NOT NULL,
+            cliente_id INTEGER NOT NULL,
+            cliente_nome TEXT,
+            data_pedido TEXT NOT NULL,
+            data_entrega TEXT,
+            status TEXT NOT NULL DEFAULT 'pendente',
+            valor_total REAL NOT NULL DEFAULT 0.0,
+            observacoes TEXT,
+            vendedor_id INTEGER,
+            designer_id INTEGER,
+            forma_pagamento_id INTEGER,
+            forma_envio_id INTEGER,
+            desconto_id INTEGER,
+            items TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            FOREIGN KEY(cliente_id) REFERENCES clientes(id),
+            FOREIGN KEY(vendedor_id) REFERENCES vendedores(id),
+            FOREIGN KEY(designer_id) REFERENCES designers(id),
+            FOREIGN KEY(forma_pagamento_id) REFERENCES formas_pagamento(id),
+            FOREIGN KEY(forma_envio_id) REFERENCES formas_envio(id),
+            FOREIGN KEY(desconto_id) REFERENCES descontos(id)
+        )",
+        [],
+    ).map_err(|e| e.to_string())?;
+    
+    // Reabilitar verificações de chave estrangeira
+    db.execute("PRAGMA foreign_keys = ON", [])
+        .map_err(|e| e.to_string())?;
+    
+    Ok("Tabela 'pedidos' recriada com sucesso com a nova estrutura!".to_string())
+}
+
+#[tauri::command]
 pub async fn inserir_dados_padrao(state: AppState<'_>) -> Result<String, String> {
     let db = state.get_connection().map_err(|e| e.to_string())?;
     

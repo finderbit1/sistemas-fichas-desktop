@@ -11,3 +11,4 @@ find src-tauri/src/commands -name "*.rs" -exec sed -i 's/chrono::DateTime::parse
 echo "✅ Correções aplicadas!"
 
 
+

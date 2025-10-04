@@ -12,7 +12,7 @@ const TecidosManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
-  const [formData, setFormData] = useState({ name: '', description: '', gsm: '', composition: '', active: true });
+  const [formData, setFormData] = useState({ nome: '', descricao: '', cor: '', material: '', largura: '', valor_metro: '', ativo: true });
 
   useEffect(() => {
     if (isConnected) loadTecidos();
@@ -33,26 +33,28 @@ const TecidosManagement = () => {
 
   const filteredTecidos = tecidos.filter((t) => {
     const text = filters.q.trim().toLowerCase();
-    const matchText = !text || (t.name?.toLowerCase().includes(text) || t.description?.toLowerCase().includes(text));
-    const matchActive = filters.active === 'all' || (filters.active === 'active' ? t.active : !t.active);
-    const matchComp = filters.composition === 'all' || ((t.composition || '').toLowerCase().includes(filters.composition.toLowerCase()));
+    const matchText = !text || (t.nome?.toLowerCase().includes(text) || t.descricao?.toLowerCase().includes(text));
+    const matchActive = filters.active === 'all' || (filters.active === 'active' ? t.ativo : !t.ativo);
+    const matchComp = filters.composition === 'all' || ((t.material || '').toLowerCase().includes(filters.composition.toLowerCase()));
     return matchText && matchActive && matchComp;
   });
 
   const handleNew = () => {
     setEditingItem(null);
-    setFormData({ name: '', description: '', gsm: '', composition: '', active: true });
+    setFormData({ nome: '', descricao: '', cor: '', material: '', largura: '', valor_metro: '', ativo: true });
     setShowModal(true);
   };
 
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
-      name: item.name || '',
-      description: item.description || '',
-      gsm: item.gsm || '',
-      composition: item.composition || '',
-      active: item.active !== false
+      nome: item.nome || '',
+      descricao: item.descricao || '',
+      cor: item.cor || '',
+      material: item.material || '',
+      largura: item.largura || '',
+      valor_metro: item.valor_metro || '',
+      ativo: item.ativo !== false
     });
     setShowModal(true);
   };
@@ -73,11 +75,13 @@ const TecidosManagement = () => {
     e.preventDefault();
     try {
       const payload = {
-        name: formData.name,
-        description: formData.description || null,
-        gsm: formData.gsm ? parseInt(formData.gsm, 10) : null,
-        composition: formData.composition || null,
-        active: !!formData.active
+        nome: formData.nome,
+        descricao: formData.descricao || null,
+        cor: formData.cor || null,
+        material: formData.material || null,
+        largura: formData.largura ? parseFloat(formData.largura) : null,
+        valor_metro: formData.valor_metro ? parseFloat(formData.valor_metro) : null,
+        ativo: !!formData.ativo
       };
       if (editingItem) {
         await updateTecido(editingItem.id, payload);
@@ -88,7 +92,7 @@ const TecidosManagement = () => {
       }
       setShowModal(false);
       setEditingItem(null);
-      setFormData({ name: '', description: '', gsm: '', composition: '', active: true });
+      setFormData({ nome: '', descricao: '', cor: '', material: '', largura: '', valor_metro: '', ativo: true });
       loadTecidos();
     } catch (e) {
       console.error('Erro ao salvar tecido:', e);
@@ -154,7 +158,7 @@ const TecidosManagement = () => {
             </Col>
             <Col md={4}>
               <Form.Control
-                placeholder="Filtrar por composição (ex.: poliéster)"
+                placeholder="Filtrar por material (ex.: poliéster)"
                 value={filters.composition === 'all' ? '' : filters.composition}
                 onChange={(e) => setFilters({ ...filters, composition: e.target.value || 'all' })}
               />
@@ -168,8 +172,10 @@ const TecidosManagement = () => {
                 <tr>
                   <th>Nome</th>
                   <th>Descrição</th>
-                  <th>GSM</th>
-                  <th>Composição</th>
+                  <th>Cor</th>
+                  <th>Material</th>
+                  <th>Largura</th>
+                  <th>Valor/Metro</th>
                   <th>Status</th>
                   <th className="text-end">Ações</th>
                 </tr>
@@ -177,11 +183,13 @@ const TecidosManagement = () => {
               <tbody>
                 {filteredTecidos.map((t) => (
                   <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td>{t.description || '-'}</td>
-                    <td>{t.gsm || '-'}</td>
-                    <td>{t.composition || '-'}</td>
-                    <td>{t.active ? <Badge bg="primary">Ativo</Badge> : <Badge bg="secondary">Inativo</Badge>}</td>
+                    <td>{t.nome}</td>
+                    <td>{t.descricao || '-'}</td>
+                    <td>{t.cor || '-'}</td>
+                    <td>{t.material || '-'}</td>
+                    <td>{t.largura ? `${t.largura}cm` : '-'}</td>
+                    <td>{t.valor_metro ? `R$ ${t.valor_metro.toFixed(2)}` : '-'}</td>
+                    <td>{t.ativo ? <Badge bg="primary">Ativo</Badge> : <Badge bg="secondary">Inativo</Badge>}</td>
                     <td className="text-end">
                       <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(t)}>
                         <Pencil size={14} />
@@ -210,8 +218,8 @@ const TecidosManagement = () => {
                   <Form.Label>Nome</Form.Label>
                   <Form.Control
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex.: Oxford, Algodão, Tactel"
                     required
                   />
@@ -223,32 +231,55 @@ const TecidosManagement = () => {
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                     placeholder="Breve descrição"
                   />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>GSM (gramatura)</Form.Label>
+                  <Form.Label>Cor</Form.Label>
                   <Form.Control
-                    type="number"
-                    inputMode="numeric"
-                    value={formData.gsm}
-                    onChange={(e) => setFormData({ ...formData, gsm: e.target.value })}
-                    placeholder="Ex.: 180"
+                    type="text"
+                    value={formData.cor}
+                    onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                    placeholder="Ex.: Azul, Vermelho, Branco"
                   />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Composição</Form.Label>
+                  <Form.Label>Material</Form.Label>
                   <Form.Control
                     type="text"
-                    value={formData.composition}
-                    onChange={(e) => setFormData({ ...formData, composition: e.target.value })}
+                    value={formData.material}
+                    onChange={(e) => setFormData({ ...formData, material: e.target.value })}
                     placeholder="Ex.: 100% poliéster"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Largura (cm)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.1"
+                    value={formData.largura}
+                    onChange={(e) => setFormData({ ...formData, largura: e.target.value })}
+                    placeholder="Ex.: 150.0"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Valor por Metro (R$)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={formData.valor_metro}
+                    onChange={(e) => setFormData({ ...formData, valor_metro: e.target.value })}
+                    placeholder="Ex.: 25.50"
                   />
                 </Form.Group>
               </Col>
@@ -257,8 +288,8 @@ const TecidosManagement = () => {
                   type="switch"
                   id="tecido-active"
                   label="Ativo"
-                  checked={formData.active}
-                  onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                  checked={formData.ativo}
+                  onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
                 />
               </Col>
             </Row>

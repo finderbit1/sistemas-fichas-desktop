@@ -253,7 +253,7 @@ function FormPainel({ onAdicionarItem }) {
                                 <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} required className="form-control">
                                     <option value="">Selecione um Vendedor</option>
                                     {vendedores.map(vendedor => (
-                                        <option key={vendedor.id} value={vendedor.name}>
+                                        <option key={vendedor.id} value={vendedor.id}>
                                             {vendedor.name}
                                         </option>
                                     ))}
@@ -276,7 +276,7 @@ function FormPainel({ onAdicionarItem }) {
                                 <Form.Select name="designer" value={formData.designer} onChange={handleChange} required className="form-control">
                                     <option value="">Selecione um Designer</option>
                                     {designers.map(designer => (
-                                        <option key={designer.id} value={designer.name}>
+                                        <option key={designer.id} value={designer.id}>
                                             {designer.name}
                                         </option>
                                     ))}

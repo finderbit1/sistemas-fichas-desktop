@@ -16,6 +16,7 @@ const parseBRLMoney = (value) => {
   const num = parseFloat(normalized);
   return isNaN(num) ? '0' : String(num);
 };
+// Converter para o formato da API Python (mantido para compatibilidade)
 export const convertFormDataToApiPedido = (formData) => {
   // Converter items para o formato da API
   const items = formData.items.map(item => ({
@@ -88,6 +89,163 @@ export const convertFormDataToApiPedido = (formData) => {
     // Items
     items: items
   };
+};
+
+// Converter para o formato da API Rust/Tauri
+export const convertFormDataToRustPedido = (formData) => {
+  // Converter items para JSON string
+  const items = formData.items.map(item => ({
+    tipo_producao: item.tipoProducao || item.tipo || 'painel',
+    descricao: item.descricao || '',
+    largura: parseFloat(item.largura || '0'),
+    altura: parseFloat(item.altura || '0'),
+    metro_quadrado: parseFloat(item.metro_quadrado || item.metroQuadrado || '0'),
+    vendedor: item.vendedor || '',
+    designer: item.designer || '',
+    tecido: item.tecido || '',
+    acabamento: {
+      overloque: item.acabamento?.overloque || false,
+      elastico: item.acabamento?.elastico || false,
+      ilhos: item.acabamento?.ilhos || false
+    },
+    emenda: item.emenda || 'sem-emenda',
+    observacao: item.observacao || null,
+    valor_unitario: parseFloat(parseBRLMoney(item.valor)),
+    imagem: item.imagem || null,
+    // Campos específicos para totem
+    ilhos_qtd: item.ilhos_qtd ? parseInt(item.ilhos_qtd) : null,
+    ilhos_valor_unitario: item.ilhos_valor_unitario ? parseFloat(item.ilhos_valor_unitario) : null,
+    ilhos_distancia: item.ilhos_distancia ? parseFloat(item.ilhos_distancia) : null
+  }));
+
+  // Converter datas
+  const dataPedido = formData.dataEntrada ? new Date(formData.dataEntrada) : new Date();
+  const dataEntrega = formData.dataEntrega ? new Date(formData.dataEntrega) : null;
+
+  return {
+    cliente_id: formData.clienteId || 1, // ID do cliente selecionado
+    data_pedido: dataPedido.toISOString(),
+    data_entrega: dataEntrega ? dataEntrega.toISOString() : null,
+    status: convertStatusToApi(formData.status || 'Pendente'),
+    valor_total: parseFloat(parseBRLMoney(formData.valorTotal)),
+    observacoes: formData.observacao || null,
+    vendedor_id: formData.vendedorId || (formData.items && formData.items[0]?.vendedor ? parseInt(formData.items[0].vendedor) : null),
+    designer_id: formData.designerId || (formData.items && formData.items[0]?.designer ? parseInt(formData.items[0].designer) : null),
+    forma_pagamento_id: formData.formaPagamentoId || null,
+    forma_envio_id: formData.formaEnvioId || null,
+    desconto_id: formData.descontoId || null,
+    items: JSON.stringify(items)
+  };
+};
+
+// Converter para o formato de atualização da API Rust/Tauri (PedidoUpdate)
+export const convertFormDataToRustPedidoUpdate = (formData) => {
+  // Converter items para JSON string
+  const items = (formData.items || []).map(item => ({
+    tipo_producao: item.tipoProducao || item.tipo || 'painel',
+    descricao: item.descricao || '',
+    largura: parseFloat(item.largura || '0'),
+    altura: parseFloat(item.altura || '0'),
+    metro_quadrado: parseFloat(item.metro_quadrado || item.metroQuadrado || '0'),
+    vendedor: item.vendedor || '',
+    designer: item.designer || '',
+    tecido: item.tecido || '',
+    acabamento: {
+      overloque: item.acabamento?.overloque || false,
+      elastico: item.acabamento?.elastico || false,
+      ilhos: item.acabamento?.ilhos || false
+    },
+    emenda: item.emenda || 'sem-emenda',
+    observacao: item.observacao || null,
+    valor_unitario: parseFloat(parseBRLMoney(item.valor)),
+    imagem: item.imagem || null,
+    // Campos específicos para totem
+    ilhos_qtd: item.ilhos_qtd ? parseInt(item.ilhos_qtd) : null,
+    ilhos_valor_unitario: item.ilhos_valor_unitario ? parseFloat(item.ilhos_valor_unitario) : null,
+    ilhos_distancia: item.ilhos_distancia ? parseFloat(item.ilhos_distancia) : null
+  }));
+
+  // Converter datas de forma mais segura
+  let dataPedido = null;
+  let dataEntrega = null;
+  
+  if (formData.dataEntrada) {
+    try {
+      const date = new Date(formData.dataEntrada);
+      if (!isNaN(date.getTime())) {
+        dataPedido = date.toISOString();
+      }
+    } catch (e) {
+      console.warn('Erro ao converter data de entrada:', e);
+    }
+  }
+  
+  if (formData.dataEntrega) {
+    try {
+      const date = new Date(formData.dataEntrega);
+      if (!isNaN(date.getTime())) {
+        dataEntrega = date.toISOString();
+      }
+    } catch (e) {
+      console.warn('Erro ao converter data de entrega:', e);
+    }
+  }
+
+  // Converter status de forma mais segura
+  let status = null;
+  if (formData.status) {
+    try {
+      status = convertStatusToApi(formData.status);
+    } catch (e) {
+      console.warn('Erro ao converter status:', e);
+      status = 'pendente';
+    }
+  }
+
+  // Converter valor total de forma mais segura
+  let valorTotal = null;
+  if (formData.valorTotal) {
+    try {
+      valorTotal = parseFloat(parseBRLMoney(formData.valorTotal));
+      if (isNaN(valorTotal)) {
+        valorTotal = null;
+      }
+    } catch (e) {
+      console.warn('Erro ao converter valor total:', e);
+    }
+  }
+
+  // Converter IDs de forma mais segura
+  const clienteId = formData.clienteId ? parseInt(formData.clienteId) : null;
+  const vendedorId = formData.vendedorId ? parseInt(formData.vendedorId) : null;
+  const designerId = formData.designerId ? parseInt(formData.designerId) : null;
+  const formaPagamentoId = formData.formaPagamentoId ? parseInt(formData.formaPagamentoId) : null;
+  const formaEnvioId = formData.formaEnvioId ? parseInt(formData.formaEnvioId) : null;
+  const descontoId = formData.descontoId ? parseInt(formData.descontoId) : null;
+
+  const result = {
+    cliente_id: clienteId,
+    data_pedido: dataPedido,
+    data_entrega: dataEntrega,
+    status: status,
+    valor_total: valorTotal,
+    observacoes: formData.observacao || null,
+    vendedor_id: vendedorId,
+    designer_id: designerId,
+    forma_pagamento_id: formaPagamentoId,
+    forma_envio_id: formaEnvioId,
+    desconto_id: descontoId,
+    items: JSON.stringify(items)
+  };
+
+  // Remover campos null/undefined para evitar problemas de serialização
+  Object.keys(result).forEach(key => {
+    if (result[key] === null || result[key] === undefined) {
+      delete result[key];
+    }
+  });
+
+  return result;
 };
 
 // Converter dados da API para o formato do frontend
@@ -168,7 +326,7 @@ export const convertApiPedidosToList = (apiPedidos) => {
   return apiPedidos.map(convertApiPedidoToFormData);
 };
 
-// Validar se os dados estão no formato correto para a API
+// Validar se os dados estão no formato correto para a API Python (mantido para compatibilidade)
 export const validatePedidoForApi = (pedido) => {
   const errors = [];
   
@@ -179,6 +337,21 @@ export const validatePedidoForApi = (pedido) => {
   if (!pedido.telefone_cliente) errors.push('Telefone do cliente é obrigatório');
   if (!pedido.cidade_cliente) errors.push('Cidade do cliente é obrigatória');
   if (!pedido.items || pedido.items.length === 0) errors.push('Pelo menos um item é obrigatório');
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Validar se os dados estão no formato correto para a API Rust
+export const validateRustPedidoForApi = (pedido) => {
+  const errors = [];
+  
+  if (!pedido.cliente_id) errors.push('ID do cliente é obrigatório');
+  if (!pedido.data_pedido) errors.push('Data do pedido é obrigatória');
+  if (!pedido.valor_total || pedido.valor_total <= 0) errors.push('Valor total deve ser maior que zero');
+  if (!pedido.items || pedido.items === '[]') errors.push('Pelo menos um item é obrigatório');
   
   return {
     isValid: errors.length === 0,

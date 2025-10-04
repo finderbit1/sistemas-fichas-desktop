@@ -59,6 +59,7 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
 
             // Comandos de Pedidos
             commands::pedido::create_pedido,
+            commands::pedido::update_pedido,
             commands::pedido::get_all_pedidos,
             commands::pedido::get_proximo_numero_pedido,
             commands::pedido::delete_pedido,
@@ -117,6 +118,7 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
             // Comandos de Limpeza do Banco
             commands::limpeza::limpar_banco_dados,
             commands::limpeza::verificar_status_banco,
+            commands::limpeza::recriar_tabela_pedidos,
             commands::limpeza::inserir_dados_padrao,
 
             // Comandos de Relatórios

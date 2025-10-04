@@ -31,7 +31,7 @@ import { validarPedido, normalizarDecimais } from "../utils/validador"
 import { validateOrderDates } from "../utils/dateValidator"
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import { getAllClientes, getAllFormasPagamentos, getAllFormasEnvios, getAllDescontos, calcularDesconto, createPedido, getProximoNumeroPedido } from '../services/api';
-import { convertFormDataToApiPedido, validatePedidoForApi } from '../utils/apiConverter';
+import { convertFormDataToApiPedido, convertFormDataToRustPedido, validateRustPedidoForApi } from '../utils/apiConverter';
 import logger from '../utils/logger';
 import '../styles/forms.css';
 
@@ -314,6 +314,7 @@ const CreateOrder = () => {
         nomeCliente: cliente.nome,
         telefoneCliente: cliente.telefone || '',
         cidadeCliente: cliente.cidade || '',
+        clienteId: cliente.id, // Incluir o ID do cliente
       }));
       setSelectedCliente([cliente]);
     } else {
@@ -445,11 +446,11 @@ const CreateOrder = () => {
     try {
       const payload = normalizarDecimais(formData);
       
-      // Converter para formato da API
-      const apiPedido = convertFormDataToApiPedido(payload);
+      // Converter para formato da API Rust
+      const rustPedido = convertFormDataToRustPedido(payload);
       
       // Validar dados para API
-      const validation = validatePedidoForApi(apiPedido);
+      const validation = validateRustPedidoForApi(rustPedido);
       if (!validation.isValid) {
         setSaveValidationErrors(validation.errors);
         setIsSaving(false);
@@ -458,7 +459,7 @@ const CreateOrder = () => {
       
       // Salvar apenas na API
       try {
-        const response = await createPedido(apiPedido);
+        const response = await createPedido(rustPedido);
         console.log('Pedido salvo na API com sucesso:', response.data);
         
         // Adicionar ao cache local

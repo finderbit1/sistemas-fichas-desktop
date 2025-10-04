@@ -3,7 +3,7 @@ import { Modal, Button, Form, Row, Col, Alert } from 'react-bootstrap';
 import { PencilSquare, Save, X } from 'react-bootstrap-icons';
 import { updatePedido, deletePedido } from '../services/api';
 import { salvarPedidoStorage, obterPedidos, removerPedidoStorage } from '../utils/localStorageHelper';
-import { convertFormDataToApiPedido, validatePedidoForApi } from '../utils/apiConverter';
+import { convertFormDataToRustPedidoUpdate, validateRustPedidoForApi } from '../utils/apiConverter';
 import { validateOrderDates } from '../utils/dateValidator';
 import logger from '../utils/logger';
 
@@ -74,11 +74,11 @@ export default function EditOrderModal({
     setErrors([]);
 
     try {
-      // Converter para formato da API
-      const apiPedido = convertFormDataToApiPedido(formData);
+      // Converter para formato da API Rust (PedidoUpdate)
+      const rustPedido = convertFormDataToRustPedidoUpdate(formData);
       
-      // Validar para API
-      const validation = validatePedidoForApi(apiPedido);
+      // Validar para API Rust
+      const validation = validateRustPedidoForApi(rustPedido);
       if (!validation.isValid) {
         setErrors(validation.errors);
         setLoading(false);
@@ -87,7 +87,7 @@ export default function EditOrderModal({
 
       // Tentar salvar na API primeiro
       try {
-        const response = await updatePedido(pedido.id, apiPedido);
+        const response = await updatePedido(pedido.id, rustPedido);
         console.log('Pedido atualizado na API com sucesso:', response.data);
         
         // Atualizar no localStorage

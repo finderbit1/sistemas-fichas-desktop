@@ -14,8 +14,11 @@ const VendedoresManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({ 
-    name: '', 
-    active: true 
+    nome: '', 
+    email: '',
+    telefone: '',
+    comissao_percentual: '',
+    ativo: true 
   });
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
 
@@ -40,8 +43,11 @@ const VendedoresManagement = () => {
     e.preventDefault();
     try {
       const data = {
-        name: formData.name,
-        active: formData.active
+        nome: formData.nome,
+        email: formData.email || null,
+        telefone: formData.telefone || null,
+        comissao_percentual: formData.comissao_percentual ? parseFloat(formData.comissao_percentual) : null,
+        ativo: formData.ativo
       };
 
       if (editingItem) {
@@ -53,7 +59,7 @@ const VendedoresManagement = () => {
       }
 
       setShowModal(false);
-      setFormData({ name: '', active: true });
+      setFormData({ nome: '', email: '', telefone: '', comissao_percentual: '', ativo: true });
       setEditingItem(null);
       loadVendedores();
     } catch (error) {
@@ -65,8 +71,11 @@ const VendedoresManagement = () => {
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({ 
-      name: item.name, 
-      active: item.active 
+      nome: item.nome || '', 
+      email: item.email || '',
+      telefone: item.telefone || '',
+      comissao_percentual: item.comissao_percentual || '',
+      ativo: item.ativo !== false
     });
     setShowModal(true);
   };
@@ -86,7 +95,7 @@ const VendedoresManagement = () => {
 
   const handleNew = () => {
     setEditingItem(null);
-    setFormData({ name: '', active: true });
+    setFormData({ nome: '', email: '', telefone: '', comissao_percentual: '', ativo: true });
     setShowModal(true);
   };
 
@@ -119,6 +128,9 @@ const VendedoresManagement = () => {
               <thead>
                 <tr>
                   <th>Nome</th>
+                  <th>Email</th>
+                  <th>Telefone</th>
+                  <th>Comissão (%)</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -129,12 +141,15 @@ const VendedoresManagement = () => {
                     <td>
                       <div className="d-flex align-items-center">
                         <Person size={16} className="me-2 text-muted" />
-                        {item.name}
+                        {item.nome}
                       </div>
                     </td>
+                    <td>{item.email || '-'}</td>
+                    <td>{item.telefone || '-'}</td>
+                    <td>{item.comissao_percentual ? `${item.comissao_percentual}%` : '-'}</td>
                     <td>
-                      <Badge bg={item.active ? 'success' : 'secondary'}>
-                        {item.active ? 'Ativo' : 'Inativo'}
+                      <Badge bg={item.ativo ? 'success' : 'secondary'}>
+                        {item.ativo ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </td>
                     <td>
@@ -176,20 +191,56 @@ const VendedoresManagement = () => {
                   <Form.Label>Nome do Vendedor *</Form.Label>
                   <Form.Control
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Ex: Maria Santos"
                     required
                   />
                 </Form.Group>
               </Col>
-              <Col md={12}>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Ex: maria@empresa.com"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Telefone</Form.Label>
+                  <Form.Control
+                    type="tel"
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                    placeholder="Ex: (11) 99999-9999"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Comissão (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.comissao_percentual}
+                    onChange={(e) => setFormData({ ...formData, comissao_percentual: e.target.value })}
+                    placeholder="Ex: 5.00"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Check
                     type="checkbox"
                     label="Vendedor ativo"
-                    checked={formData.active}
-                    onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                    checked={formData.ativo}
+                    onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
                   />
                 </Form.Group>
               </Col>

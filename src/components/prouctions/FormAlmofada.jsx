@@ -268,7 +268,7 @@ function FormAlmofada({ onAdicionarItem }) {
                     <Form.Select name="vendedor" value={formData.vendedor} onChange={handleChange} className="form-control">
                       <option value="">Selecione</option>
                       {vendedores.map((v) => (
-                        <option key={v.id} value={v.name}>{v.name}</option>
+                        <option key={v.id} value={v.id}>{v.name}</option>
                       ))}
                     </Form.Select>
                   )}
@@ -283,7 +283,7 @@ function FormAlmofada({ onAdicionarItem }) {
                     <Form.Select name="designer" value={formData.designer} onChange={handleChange} className="form-control">
                       <option value="">Selecione</option>
                       {designers.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
+                        <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
                     </Form.Select>
                   )}

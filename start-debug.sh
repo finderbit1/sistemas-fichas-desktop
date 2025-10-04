@@ -99,3 +99,4 @@ trap 'echo ""; echo "🛑 Finalizando aplicação..."; kill $FRONTEND_PID $TAURI
 wait
 
 
+

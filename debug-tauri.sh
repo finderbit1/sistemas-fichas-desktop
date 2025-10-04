@@ -22,3 +22,4 @@ echo "6. Verificando se há erros no log..."
 echo "Tentando executar Tauri em modo verbose..."
 
 
+

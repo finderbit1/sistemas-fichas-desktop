@@ -545,7 +545,22 @@ export const deleteTipoProducao = async (id) => {
 export const getAllTecidos = async () => {
   try {
     const tecidos = await invoke('get_all_tecidos');
-    return { data: tecidos };
+    
+    // Converter dados do Rust para o formato esperado pelo frontend
+    const tecidosConvertidos = tecidos.map(tecido => ({
+      id: tecido.id,
+      name: tecido.nome,  // nome -> name
+      description: tecido.descricao,  // descricao -> description
+      cor: tecido.cor,
+      material: tecido.material,
+      largura: tecido.largura,
+      valor_metro: tecido.valor_metro,
+      active: tecido.ativo,  // ativo -> active
+      created_at: tecido.created_at,
+      updated_at: tecido.updated_at
+    }));
+    
+    return { data: tecidosConvertidos };
   } catch (error) {
     console.error('Erro ao buscar tecidos:', error);
     throw error;
@@ -683,7 +698,20 @@ export const deleteDesigner = async (id) => {
 export const getAllVendedores = async () => {
   try {
     const vendedores = await invoke('get_all_vendedores');
-    return { data: vendedores };
+    
+    // Converter dados do Rust para o formato esperado pelo frontend
+    const vendedoresConvertidos = vendedores.map(vendedor => ({
+      id: vendedor.id,
+      name: vendedor.nome,  // nome -> name
+      email: vendedor.email,
+      telefone: vendedor.telefone,
+      comissao_percentual: vendedor.comissao_percentual,
+      ativo: vendedor.ativo,
+      created_at: vendedor.created_at,
+      updated_at: vendedor.updated_at
+    }));
+    
+    return { data: vendedoresConvertidos };
   } catch (error) {
     console.error('Erro ao buscar vendedores:', error);
     throw error;
@@ -803,6 +831,37 @@ export const obterListaDesigners = async () => {
     return { data: designers };
   } catch (error) {
     console.error('Erro ao obter lista de designers:', error);
+    throw error;
+  }
+};
+
+// ===== COMANDOS DE LIMPEZA =====
+export const recriarTabelaPedidos = async () => {
+  try {
+    const resultado = await invoke('recriar_tabela_pedidos');
+    return { data: resultado };
+  } catch (error) {
+    console.error('Erro ao recriar tabela pedidos:', error);
+    throw error;
+  }
+};
+
+export const limparBancoDados = async () => {
+  try {
+    const resultado = await invoke('limpar_banco_dados');
+    return { data: resultado };
+  } catch (error) {
+    console.error('Erro ao limpar banco de dados:', error);
+    throw error;
+  }
+};
+
+export const verificarStatusBanco = async () => {
+  try {
+    const resultado = await invoke('verificar_status_banco');
+    return { data: resultado };
+  } catch (error) {
+    console.error('Erro ao verificar status do banco:', error);
     throw error;
   }
 };
