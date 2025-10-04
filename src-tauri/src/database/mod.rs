@@ -280,11 +280,11 @@ impl Database {
             println!("   ▶ Índices de performance criados");
 
             // Configurar pragmas do SQLite para otimização
-            conn.execute("PRAGMA journal_mode = WAL", [])?;
-            conn.execute("PRAGMA synchronous = NORMAL", [])?;
-            conn.execute("PRAGMA cache_size = -64000", [])?; // 64MB cache
-            conn.execute("PRAGMA temp_store = MEMORY", [])?;
-            conn.execute("PRAGMA mmap_size = 268435456", [])?; // 256MB mmap
+            let _ = conn.execute("PRAGMA journal_mode = WAL", []);
+            let _ = conn.execute("PRAGMA synchronous = NORMAL", []);
+            let _ = conn.execute("PRAGMA cache_size = -64000", []); // 64MB cache
+            let _ = conn.execute("PRAGMA temp_store = MEMORY", []);
+            let _ = conn.execute("PRAGMA mmap_size = 268435456", []); // 256MB mmap
             println!("   ▶ Configurações de performance aplicadas");
         } // <- Aqui o lock é liberado
 

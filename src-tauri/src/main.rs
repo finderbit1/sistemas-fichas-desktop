@@ -6,12 +6,18 @@
 mod models;
 mod commands;
 mod database;
+mod entities;
+mod database_orm;
+mod database_new;
+mod commands_seaorm;
 
 use database::Database;
+use database_new::create_database;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Encaminhar erros para try_main
-    if let Err(e) = try_main() {
+    if let Err(e) = try_main().await {
         eprintln!("❌ Erro fatal: {e:?}");
         eprintln!("🔍 Stack trace:");
         eprintln!("{:#?}", e);
@@ -19,35 +25,31 @@ fn main() {
     }
 }
 
-fn try_main() -> Result<(), Box<dyn std::error::Error>> {
+async fn try_main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Iniciando Sistema de Fichas - Versão Rust");
 
-    // Conexão com banco de dados com tratamento de erro
-    let database = match Database::new("data/clientes.db".into()) {
+    // Conexão com banco de dados SeaORM
+    let database_manager = match create_database().await {
         Ok(db) => {
-            println!("✅ Banco de dados conectado");
+            println!("✅ Banco de dados SeaORM conectado");
             db
         }
         Err(e) => {
-            eprintln!("❌ Erro ao conectar banco: {}", e);
+            eprintln!("❌ Erro ao conectar banco SeaORM: {}", e);
             return Err(e.into());
         }
     };
-    
-    // Inicializar tabelas com tratamento de erro
-    match database.init_tables() {
-        Ok(_) => println!("✅ Tabelas inicializadas"),
-        Err(e) => {
-            eprintln!("❌ Erro ao inicializar tabelas: {}", e);
-            return Err(e.into());
-        }
-    }
+
+    // Criar wrapper para compatibilidade com commands existentes
+    let database = Database::new("data/clientes.db".into())?;
+    database.init_tables()?;
 
     println!("🔧 Registrando comandos Tauri...");
 
     // Iniciar app Tauri
     let app_result = tauri::Builder::default()
         .manage(database)
+        .manage(database_manager)
         .invoke_handler(tauri::generate_handler![
             // Comandos de Clientes
             commands::cliente::create_cliente,
@@ -127,6 +129,24 @@ fn try_main() -> Result<(), Box<dyn std::error::Error>> {
             commands::relatorio::gerar_relatorio_mensal,
             commands::relatorio::obter_ranking_produtos,
             commands::relatorio::gerar_relatorio_matriz,
+
+            // Comandos SeaORM - Novos commands otimizados
+            commands_seaorm::create_cliente_seaorm,
+            commands_seaorm::get_all_clientes_seaorm,
+            commands_seaorm::get_cliente_by_id_seaorm,
+            commands_seaorm::update_cliente_seaorm,
+            commands_seaorm::delete_cliente_seaorm,
+            commands_seaorm::create_pedido_seaorm,
+            commands_seaorm::get_all_pedidos_seaorm,
+            commands_seaorm::get_proximo_numero_pedido_seaorm,
+            commands_seaorm::update_pedido_seaorm,
+            commands_seaorm::delete_pedido_seaorm,
+            commands_seaorm::create_designer_seaorm,
+            commands_seaorm::get_all_designers_seaorm,
+            commands_seaorm::create_vendedor_seaorm,
+            commands_seaorm::get_all_vendedores_seaorm,
+            commands_seaorm::database_backup_seaorm,
+            commands_seaorm::optimize_database_seaorm,
         ])
         .run(tauri::generate_context!());
 
