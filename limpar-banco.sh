@@ -25,3 +25,4 @@ echo ""
 echo "🎉 Banco de dados limpo e pronto para uso!"
 echo "💡 Dados padrão (pagamentos e envios) foram inseridos automaticamente."
 
+

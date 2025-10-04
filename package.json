@@ -6,8 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:analyze": "vite build --mode analyze",
+    "build:prod": "NODE_ENV=production vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:build:deb": "tauri build --target x86_64-unknown-linux-gnu",
+    "clean": "rm -rf dist node_modules/.vite"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
@@ -28,6 +34,8 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.4",
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "terser": "^5.31.0",
+    "rollup-plugin-visualizer": "^5.12.0"
   }
 }

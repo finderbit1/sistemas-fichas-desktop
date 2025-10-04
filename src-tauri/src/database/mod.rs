@@ -268,6 +268,24 @@ impl Database {
                 [],
             );
             println!("   ▶ Migração: colunas adicionadas à tabela 'tecidos'");
+
+            // Criar índices para otimizar performance
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_numero ON pedidos(numero)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_cliente_id ON pedidos(cliente_id)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_status ON pedidos(status)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_pedidos_data_pedido ON pedidos(data_pedido)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_clientes_nome ON clientes(nome)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_clientes_email ON clientes(email)", [])?;
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_produtos_pedido_id ON produtos(pedido_id)", [])?;
+            println!("   ▶ Índices de performance criados");
+
+            // Configurar pragmas do SQLite para otimização
+            conn.execute("PRAGMA journal_mode = WAL", [])?;
+            conn.execute("PRAGMA synchronous = NORMAL", [])?;
+            conn.execute("PRAGMA cache_size = -64000", [])?; // 64MB cache
+            conn.execute("PRAGMA temp_store = MEMORY", [])?;
+            conn.execute("PRAGMA mmap_size = 268435456", [])?; // 256MB mmap
+            println!("   ▶ Configurações de performance aplicadas");
         } // <- Aqui o lock é liberado
 
         // Dados padrão não são inseridos automaticamente

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 const AuthContext = createContext();
 
@@ -15,13 +15,13 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Função de logout
-  const logout = () => {
+  // Função de logout - memoizada
+  const logout = useCallback(() => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
 
   // Verificar se há usuário logado ao carregar a aplicação
   useEffect(() => {
@@ -46,8 +46,8 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Função de login
-  const login = async (credentials) => {
+  // Função de login - memoizada
+  const login = useCallback(async (credentials) => {
     try {
       setLoading(true);
       
@@ -77,15 +77,15 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Verificar se o usuário é admin
-  const isAdmin = () => {
+  // Verificar se o usuário é admin - memoizada
+  const isAdmin = useCallback(() => {
     return user && user.role === 'admin';
-  };
+  }, [user]);
 
-  // Verificar se o usuário tem permissão específica
-  const hasPermission = (permission) => {
+  // Verificar se o usuário tem permissão específica - memoizada
+  const hasPermission = useCallback((permission) => {
     if (!user) return false;
     
     // Admin tem todas as permissões
@@ -93,19 +93,19 @@ export const AuthProvider = ({ children }) => {
     
     // Verificar permissões específicas do usuário
     return user.permissions && user.permissions.includes(permission);
-  };
+  }, [user]);
 
-  // Verificar se o usuário tem role específico
-  const hasRole = (role) => {
+  // Verificar se o usuário tem role específico - memoizada
+  const hasRole = useCallback((role) => {
     return user?.role === role;
-  };
+  }, [user]);
 
-  // Atualizar dados do usuário
-  const updateUser = (newData) => {
+  // Atualizar dados do usuário - memoizada
+  const updateUser = useCallback((newData) => {
     const updatedUser = { ...user, ...newData };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
-  };
+  }, [user]);
 
   // Mock da API de login (substitua pela sua API real)
   const mockLoginAPI = async (email, password) => {
@@ -157,7 +157,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const value = {
+  // Memoizar o value do contexto para evitar re-renders desnecessários
+  const value = useMemo(() => ({
     user,
     isAuthenticated,
     loading,
@@ -167,7 +168,7 @@ export const AuthProvider = ({ children }) => {
     hasPermission,
     hasRole,
     updateUser
-  };
+  }), [user, isAuthenticated, loading, login, logout, isAdmin, hasPermission, hasRole, updateUser]);
 
   return (
     <AuthContext.Provider value={value}>

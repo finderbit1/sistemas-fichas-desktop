@@ -23,3 +23,5 @@ echo "Tentando executar Tauri em modo verbose..."
 
 
 
+
+

@@ -1,4 +1,4 @@
-use crate::models::pedido::{Pedido, PedidoCreate, PedidoUpdate, PedidoUpdateFromFrontend};
+use crate::models::pedido::{Pedido, PedidoCreate, PedidoUpdateFromFrontend};
 use crate::database::Database;
 use tauri::State;
 use anyhow::Result;
@@ -155,7 +155,7 @@ pub async fn update_pedido(
         "UPDATE pedidos SET cliente_id = ?1, data_pedido = ?2, data_entrega = ?3, status = ?4, valor_total = ?5, observacoes = ?6, vendedor_id = ?7, designer_id = ?8, forma_pagamento_id = ?9, forma_envio_id = ?10, desconto_id = ?11, items = ?12, updated_at = ?13 WHERE id = ?14",
         rusqlite::params![
             cliente_id,
-            data_pedido.to_rfc3339(),
+            data_pedido.unwrap().to_rfc3339(),
             data_entrega.map(|d| d.to_rfc3339()),
             status,
             valor_total,

@@ -7,12 +7,19 @@ export const SYSTEM_CONFIG = {
   RUST_DATABASE_PATH: 'data/clientes.db',
   
   // Configurações de desenvolvimento
-  DEV_MODE: true,
-  DEBUG_LOGS: true,
+  DEV_MODE: process.env.NODE_ENV === 'development',
+  DEBUG_LOGS: process.env.NODE_ENV === 'development',
   
   // Configurações de performance
   CACHE_ENABLED: true,
   CACHE_TTL: 300000, // 5 minutos
+  
+  // Otimizações de performance
+  LAZY_LOADING: true,
+  VIRTUAL_SCROLLING: true,
+  MEMOIZATION: true,
+  DEBOUNCE_DELAY: 300,
+  THROTTLE_DELAY: 100,
   
   // Configurações de backup
   AUTO_BACKUP: true,

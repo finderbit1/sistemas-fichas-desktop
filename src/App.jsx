@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense, memo, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Bell, Person, Search, BoxArrowRight } from 'react-bootstrap-icons';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -8,27 +8,40 @@ import Sidebar from './components/Sidebar';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import ThemeToggle from './components/ThemeToggle';
-import Home from './pages/PageHome';
-import CreateClient from './pages/PageCreateClient';
-import CreateOrderPage from './pages/PageCreateOrder';
-import RelatorioPedidos from './pages/PageRelatorioPedidos';
-import PageRelatorios from './pages/PageRelatorios';
-import PageRelatoriosMatriz from './pages/PageRelatoriosMatriz';
-import Admin from './pages/Admin';
 import './App.css';
 
-// Componente interno para layout autenticado
-const AuthenticatedLayout = () => {
+// Lazy loading para páginas - carregamento sob demanda
+const Home = lazy(() => import('./pages/PageHome'));
+const CreateClient = lazy(() => import('./pages/PageCreateClient'));
+const CreateOrderPage = lazy(() => import('./pages/PageCreateOrder'));
+const RelatorioPedidos = lazy(() => import('./pages/PageRelatorioPedidos'));
+const PageRelatorios = lazy(() => import('./pages/PageRelatorios'));
+const PageRelatoriosMatriz = lazy(() => import('./pages/PageRelatoriosMatriz'));
+const Admin = lazy(() => import('./pages/Admin'));
+
+// Componente de loading para lazy components
+const PageLoader = memo(() => (
+  <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+));
+PageLoader.displayName = 'PageLoader';
+
+// Componente interno para layout autenticado - memoizado
+const AuthenticatedLayout = memo(() => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const { user, logout } = useAuth();
 
-  const toggleSidebar = () => {
-    setSidebarExpanded(!sidebarExpanded);
-  };
+  // Memoizar callbacks para evitar re-renders desnecessários
+  const toggleSidebar = useCallback(() => {
+    setSidebarExpanded(prev => !prev);
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
-  };
+  }, [logout]);
 
   return (
     <div className="app-container">
@@ -66,42 +79,45 @@ const AuthenticatedLayout = () => {
           </div>
         </header>
         <div className="content-area">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/orders" element={<CreateOrderPage />} />
-            <Route path="/clientes" element={<CreateClient />} />
-            <Route path="/relatorio" element={<RelatorioPedidos />} />
-            <Route 
-              path="/relatorios" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <PageRelatorios />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/relatorios-matriz" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <PageRelatoriosMatriz />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/orders" element={<CreateOrderPage />} />
+              <Route path="/clientes" element={<CreateClient />} />
+              <Route path="/relatorio" element={<RelatorioPedidos />} />
+              <Route 
+                path="/relatorios" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <PageRelatorios />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/relatorios-matriz" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <PageRelatoriosMatriz />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </div>
       </div>
     </div>
   );
-};
+});
+AuthenticatedLayout.displayName = 'AuthenticatedLayout';
 
 function App() {
   return (

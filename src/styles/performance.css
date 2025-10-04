@@ -1,0 +1,313 @@
+/* Otimizações de Performance CSS */
+
+/* Otimizar animações com GPU acceleration */
+.optimized-table {
+  will-change: transform;
+}
+
+.optimized-table .sortable {
+  transition: background-color 0.2s ease;
+}
+
+.optimized-table .sortable:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.optimized-table .clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.optimized-table .clickable-row:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Otimizar scroll com hardware acceleration */
+.table-responsive {
+  transform: translateZ(0);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Loading states otimizados */
+.loading-overlay {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+/* Skeleton loading para melhor UX */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-text {
+  height: 1em;
+  margin: 0.5em 0;
+  border-radius: 4px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* Otimizações para componentes pesados */
+.virtualized-list {
+  overflow-y: auto;
+  height: 400px;
+}
+
+.virtualized-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateZ(0);
+}
+
+/* Lazy loading placeholder */
+.lazy-placeholder {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+/* Otimizações para formulários grandes */
+.optimized-form {
+  contain: layout style;
+}
+
+.form-section {
+  contain: layout;
+}
+
+/* Memoização visual para componentes */
+.memoized-component {
+  contain: layout style paint;
+}
+
+/* Otimizações para tabelas grandes */
+.large-table {
+  contain: strict;
+}
+
+.large-table tbody {
+  contain: layout;
+}
+
+/* Otimizações para listas virtuais */
+.virtual-list-container {
+  height: 100%;
+  overflow: auto;
+  contain: strict;
+}
+
+.virtual-list-item {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* Otimizações para gráficos e visualizações */
+.chart-container {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* Reduzir repaints */
+.no-repaint {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Otimizações para modais */
+.modal-backdrop {
+  will-change: opacity;
+}
+
+.modal-content {
+  will-change: transform;
+}
+
+/* Otimizações para dropdowns */
+.dropdown-menu {
+  contain: layout style;
+}
+
+/* Otimizações para tooltips */
+.tooltip {
+  contain: layout style paint;
+}
+
+/* Performance hints para navegadores */
+.performance-hint {
+  content-visibility: auto;
+  contain-intrinsic-size: 200px;
+}
+
+/* Otimizações para dark mode */
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+  }
+  
+  .lazy-placeholder {
+    background: #343a40;
+    color: #adb5bd;
+  }
+}
+
+/* Otimizações para dispositivos móveis */
+@media (max-width: 768px) {
+  .optimized-table {
+    font-size: 0.875rem;
+  }
+  
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .virtualized-list {
+    height: 300px;
+  }
+}
+
+/* Otimizações para impressão */
+@media print {
+  .optimized-table,
+  .loading-overlay,
+  .skeleton {
+    print-color-adjust: exact;
+  }
+  
+  .virtualized-list {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* Utilitários de performance */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
+/* Otimizações para componentes React específicos */
+.react-component {
+  contain: layout style;
+}
+
+.react-component.memoized {
+  contain: strict;
+}
+
+/* Otimizações para listas infinitas */
+.infinite-list {
+  contain: strict;
+  overflow-y: auto;
+}
+
+.infinite-list-item {
+  contain: layout style paint;
+  will-change: transform;
+}
+
+/* Otimizações para drag and drop */
+.draggable-item {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.dragging {
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Otimizações para animações complexas */
+.animated-component {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Otimizações para imagens lazy loading */
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}
+
+/* Otimizações para componentes com muitas props */
+.heavy-component {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* Otimizações para formulários complexos */
+.complex-form {
+  contain: layout;
+}
+
+.form-field {
+  contain: layout style;
+}
+
+/* Otimizações para componentes com estado complexo */
+.stateful-component {
+  contain: layout style;
+}
+
+/* Otimizações para componentes com muitos filhos */
+.many-children {
+  contain: layout style paint;
+}
+
+/* Otimizações para componentes com cálculos pesados */
+.heavy-calculations {
+  contain: strict;
+}

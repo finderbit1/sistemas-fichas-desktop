@@ -47,3 +47,4 @@ SELECT 'tipos_producao', COUNT(*) FROM tipos_producao
 UNION ALL
 SELECT 'tecidos', COUNT(*) FROM tecidos;
 
+
