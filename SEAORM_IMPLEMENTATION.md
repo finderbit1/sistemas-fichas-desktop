@@ -310,3 +310,4 @@ src-tauri/src/
 ---
 
 **🚀 Sistema SeaORM implementado com sucesso! Agora você tem uma solução robusta, escalável e type-safe para todos os seus dados!**
+

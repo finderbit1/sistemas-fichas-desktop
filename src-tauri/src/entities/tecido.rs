@@ -43,3 +43,4 @@ pub struct TecidoUpdate {
     pub valor_metro: Option<f64>,
     pub ativo: Option<bool>,
 }
+

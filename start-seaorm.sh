@@ -157,3 +157,4 @@ echo "  • Para backup: Use database_backup_seaorm command"
 
 echo ""
 log "🎉 Sistema SeaORM configurado e pronto para uso!"
+

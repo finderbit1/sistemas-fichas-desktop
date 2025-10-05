@@ -25,3 +25,4 @@ pub struct TipoProducaoCreate {
 pub struct TipoProducaoUpdate {
     pub nome: Option<String>,
 }
+

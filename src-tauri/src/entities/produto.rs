@@ -30,3 +30,4 @@ impl Related<super::pedido::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+

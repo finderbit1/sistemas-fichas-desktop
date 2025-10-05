@@ -34,3 +34,4 @@ pub struct FormaEnvioUpdate {
     pub ativo: Option<bool>,
     pub valor: Option<f64>,
 }
+

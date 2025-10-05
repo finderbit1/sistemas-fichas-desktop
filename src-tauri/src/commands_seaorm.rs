@@ -417,3 +417,4 @@ pub async fn optimize_database_seaorm(
     state.optimize_database().await.map_err(|e| e.to_string())?;
     Ok(())
 }
+

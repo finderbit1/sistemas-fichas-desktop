@@ -46,3 +46,4 @@ pub struct DesignerUpdate {
     pub especialidade: Option<String>,
     pub ativo: Option<bool>,
 }
+

@@ -274,3 +274,4 @@ sudo ufw deny 5432
 ---
 
 **Resultado:** Sistema preparado para escalar de desenvolvimento local (SQLite) até produção enterprise (PostgreSQL) com zero mudanças de código! 🚀
+

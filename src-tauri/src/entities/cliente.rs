@@ -59,3 +59,4 @@ pub struct ClienteUpdate {
     pub cpf_cnpj: Option<String>,
     pub observacoes: Option<String>,
 }
+

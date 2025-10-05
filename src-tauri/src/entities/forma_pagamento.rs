@@ -31,3 +31,4 @@ pub struct FormaPagamentoUpdate {
     pub descricao: Option<String>,
     pub ativo: Option<bool>,
 }
+

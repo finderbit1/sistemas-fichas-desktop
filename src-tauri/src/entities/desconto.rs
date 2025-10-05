@@ -37,3 +37,4 @@ pub struct DescontoUpdate {
     pub valor_minimo: Option<f64>,
     pub ativo: Option<bool>,
 }
+

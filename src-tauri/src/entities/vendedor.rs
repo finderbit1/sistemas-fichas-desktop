@@ -46,3 +46,4 @@ pub struct VendedorUpdate {
     pub ativo: Option<bool>,
     pub comissao_percentual: Option<f64>,
 }
+

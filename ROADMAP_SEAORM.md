@@ -196,3 +196,4 @@ DATABASE_TIMEOUT=30
 ---
 
 **Conclusão:** A implementação gradual do SeaORM permitirá uma transição segura e controlada, mantendo o sistema atual funcionando enquanto preparamos a infraestrutura PostgreSQL para produção! 🚀
+
