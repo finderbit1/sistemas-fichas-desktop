@@ -1,7 +1,7 @@
 use sea_orm::*;
 use std::env;
 use anyhow::Result;
-use tracing::{info, error};
+use tracing::info;
 
 pub type DatabaseConnection = sea_orm::DatabaseConnection;
 
@@ -106,7 +106,6 @@ impl DatabaseManager {
     }
 
     async fn create_sqlite_tables(&self) -> Result<()> {
-        use crate::entities::*;
         
         // Criar todas as tabelas usando SeaORM
         let create_tables = vec![

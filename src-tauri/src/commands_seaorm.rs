@@ -93,28 +93,28 @@ pub async fn update_cliente_seaorm(
         cliente.nome = Set(nome);
     }
     if let Some(email) = cliente_data.email {
-        cliente.email = Set(email);
+        cliente.email = Set(Some(email));
     }
     if let Some(telefone) = cliente_data.telefone {
-        cliente.telefone = Set(telefone);
+        cliente.telefone = Set(Some(telefone));
     }
     if let Some(endereco) = cliente_data.endereco {
-        cliente.endereco = Set(endereco);
+        cliente.endereco = Set(Some(endereco));
     }
     if let Some(cidade) = cliente_data.cidade {
-        cliente.cidade = Set(cidade);
+        cliente.cidade = Set(Some(cidade));
     }
     if let Some(estado) = cliente_data.estado {
-        cliente.estado = Set(estado);
+        cliente.estado = Set(Some(estado));
     }
     if let Some(cep) = cliente_data.cep {
-        cliente.cep = Set(cep);
+        cliente.cep = Set(Some(cep));
     }
     if let Some(cpf_cnpj) = cliente_data.cpf_cnpj {
-        cliente.cpf_cnpj = Set(cpf_cnpj);
+        cliente.cpf_cnpj = Set(Some(cpf_cnpj));
     }
     if let Some(observacoes) = cliente_data.observacoes {
-        cliente.observacoes = Set(observacoes);
+        cliente.observacoes = Set(Some(observacoes));
     }
 
     cliente.updated_at = Set(Some(chrono::Utc::now()));
@@ -259,7 +259,7 @@ pub async fn update_pedido_seaorm(
         pedido.valor_total = Set(valor_total);
     }
     if let Some(observacoes) = pedido_data.observacoes {
-        pedido.observacoes = Set(observacoes);
+        pedido.observacoes = Set(Some(observacoes));
     }
     if let Some(vendedor_id) = pedido_data.vendedor_id {
         pedido.vendedor_id = Set(Some(vendedor_id));

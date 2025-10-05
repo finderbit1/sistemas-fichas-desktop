@@ -1,7 +1,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "pedidos")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -35,6 +35,18 @@ pub enum Relation {
     Cliente,
     #[sea_orm(has_many = "super::produto::Entity")]
     Produtos,
+    #[sea_orm(
+        belongs_to = "super::designer::Entity",
+        from = "Column::DesignerId",
+        to = "super::designer::Column::Id"
+    )]
+    Designer,
+    #[sea_orm(
+        belongs_to = "super::vendedor::Entity",
+        from = "Column::VendedorId",
+        to = "super::vendedor::Column::Id"
+    )]
+    Vendedor,
 }
 
 impl Related<super::cliente::Entity> for Entity {
@@ -46,6 +58,18 @@ impl Related<super::cliente::Entity> for Entity {
 impl Related<super::produto::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Produtos.def()
+    }
+}
+
+impl Related<super::designer::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Designer.def()
+    }
+}
+
+impl Related<super::vendedor::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Vendedor.def()
     }
 }
 

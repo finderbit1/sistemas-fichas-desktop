@@ -1,9 +1,7 @@
 use sea_orm::*;
 use std::env;
 use anyhow::Result;
-use tracing::{info, error};
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use tracing::info;
 
 pub type DatabaseConnection = sea_orm::DatabaseConnection;
 

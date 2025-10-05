@@ -14,9 +14,4 @@ pub use pedido::*;
 pub use produto::*;
 pub use designer::*;
 pub use vendedor::*;
-pub use forma_pagamento::*;
-pub use forma_envio::*;
-pub use desconto::*;
-pub use tipo_producao::*;
-pub use tecido::*;
 
