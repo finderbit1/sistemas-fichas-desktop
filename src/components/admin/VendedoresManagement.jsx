@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Card, Button, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
 import { Plus, Pencil, Trash, Person } from 'react-bootstrap-icons';
 import { 
   getAllVendedores, 
@@ -7,6 +7,8 @@ import {
   updateVendedor, 
   deleteVendedor 
 } from '../../services/api';
+import AdvancedTable from '../AdvancedTable';
+import '../../styles/advanced-table.css';
 
 const VendedoresManagement = () => {
   const [vendedores, setVendedores] = useState([]);
@@ -84,6 +86,65 @@ const VendedoresManagement = () => {
     }
   };
 
+  // Configuração das colunas para a tabela avançada
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nome',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div className="d-flex align-items-center">
+          <Person size={16} className="me-2 text-muted" />
+          <span className="fw-medium">{item.name}</span>
+        </div>
+      )
+    },
+    {
+      key: 'active',
+      header: 'Status',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <Badge bg={item.active ? 'success' : 'secondary'}>
+          {item.active ? 'Ativo' : 'Inativo'}
+        </Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Ações',
+      sortable: false,
+      filterable: false,
+      render: (item) => (
+        <div className="d-flex gap-1">
+          <Button 
+            variant="outline-primary" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(item);
+            }}
+            title="Editar vendedor"
+          >
+            <Pencil size={14} />
+          </Button>
+          <Button 
+            variant="outline-danger" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(item.id);
+            }}
+            title="Excluir vendedor"
+          >
+            <Trash size={14} />
+          </Button>
+        </div>
+      )
+    }
+  ];
+
   const handleNew = () => {
     setEditingItem(null);
     setFormData({ name: '', active: true });
@@ -110,55 +171,19 @@ const VendedoresManagement = () => {
           </Button>
         </Card.Header>
         <Card.Body>
-          {vendedores.length === 0 ? (
-            <Alert variant="info" className="text-center">
-              Nenhum vendedor cadastrado.
-            </Alert>
-          ) : (
-            <Table responsive striped hover>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendedores.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <Person size={16} className="me-2 text-muted" />
-                        {item.name}
-                      </div>
-                    </td>
-                    <td>
-                      <Badge bg={item.active ? 'success' : 'secondary'}>
-                        {item.active ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </td>
-                    <td>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Pencil size={14} />
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+          <AdvancedTable
+            data={vendedores}
+            columns={columns}
+            loading={loading}
+            showPagination={true}
+            showSearch={true}
+            showFilters={true}
+            showSelection={false}
+            pageSize={10}
+            emptyMessage="Nenhum vendedor cadastrado"
+            onRowClick={(item) => handleEdit(item)}
+            className="mt-3"
+          />
         </Card.Body>
       </Card>
 

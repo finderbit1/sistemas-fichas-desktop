@@ -12,6 +12,8 @@ import {
 } from 'react-bootstrap-icons';
 import { useAuth } from '../contexts/AuthContext';
 import Tooltip from './Tooltip';
+import UserProfile from './UserProfile';
+import '../styles/user-profile.css';
 
 const Sidebar = ({ expanded, toggleSidebar }) => {
   const location = useLocation();
@@ -61,6 +63,11 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
           );
         })}
       </nav>
+      
+      {/* Área do usuário na parte inferior da sidebar */}
+      <div className="sidebar-footer">
+        <UserProfile expanded={expanded} />
+      </div>
     </div>
   );
 };

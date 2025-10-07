@@ -1,6 +1,6 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Bell, Person, Search, BoxArrowRight } from 'react-bootstrap-icons';
+import { Bell, Search } from 'react-bootstrap-icons';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ServerConfigProvider } from './contexts/ServerConfigContext';
@@ -35,15 +35,10 @@ const PageLoader = () => (
 // Componente interno para layout autenticado - memoizado
 const AuthenticatedLayout = React.memo(() => {
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const { user, logout } = useAuth();
 
   const toggleSidebar = React.useCallback(() => {
     setSidebarExpanded(prev => !prev);
   }, []);
-
-  const handleLogout = React.useCallback(() => {
-    logout();
-  }, [logout]);
 
   return (
     <div className="app-container">
@@ -53,7 +48,7 @@ const AuthenticatedLayout = React.memo(() => {
           <div>
             <h1>Dashboard</h1>
           </div>
-          <div className="user-controls">
+          <div className="header-controls">
             <button className="btn btn-outline" style={{ padding: '8px', width: '40px', height: '40px' }}>
               <Search size={16} />
             </button>
@@ -61,23 +56,6 @@ const AuthenticatedLayout = React.memo(() => {
               <Bell size={16} />
             </button>
             <ThemeToggle size="medium" />
-            <div className="user-menu">
-              <button className="btn btn-outline" style={{ padding: '8px', width: '40px', height: '40px' }}>
-                <Person size={16} />
-              </button>
-              <div className="user-info">
-                <span className="user-name">{user?.name}</span>
-                <span className="user-role">{user?.role}</span>
-              </div>
-              <button 
-                className="btn btn-outline" 
-                onClick={handleLogout}
-                style={{ padding: '8px', width: '40px', height: '40px' }}
-                title="Sair"
-              >
-                <BoxArrowRight size={16} />
-              </button>
-            </div>
           </div>
         </header>
         <div className="content-area">

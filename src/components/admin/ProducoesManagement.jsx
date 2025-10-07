@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Card, Button, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
 import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
 import { 
   getAllTiposProducao,
@@ -8,6 +8,8 @@ import {
   deleteTipoProducao
 } from '../../services/api';
 import { useServerConfig } from '../../contexts/ServerConfigContext';
+import AdvancedTable from '../AdvancedTable';
+import '../../styles/advanced-table.css';
 
 const ProducoesManagement = () => {
   const { isConnected, connectionStatus } = useServerConfig();
@@ -38,13 +40,81 @@ const ProducoesManagement = () => {
     }
   };
 
-  const filteredTipos = tipos.filter((t) => {
-    const text = filters.q.trim().toLowerCase();
-    const matchText = !text || (t.name?.toLowerCase().includes(text) || t.description?.toLowerCase().includes(text));
-    const matchActive = filters.active === 'all' || (filters.active === 'active' ? t.active : !t.active);
-    const matchFabric = filters.uses_fabric === 'all' || (filters.uses_fabric === 'yes' ? t.uses_fabric : !t.uses_fabric);
-    return matchText && matchActive && matchFabric;
-  });
+  // Configuração das colunas para a tabela avançada
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nome',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div className="fw-medium">{item.name}</div>
+      )
+    },
+    {
+      key: 'description',
+      header: 'Descrição',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div className="text-muted">{item.description || '-'}</div>
+      )
+    },
+    {
+      key: 'uses_fabric',
+      header: 'Usa Tecido',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        item.uses_fabric ? 
+          <Badge bg="success">Sim</Badge> : 
+          <Badge bg="secondary">Não</Badge>
+      )
+    },
+    {
+      key: 'active',
+      header: 'Status',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        item.active ? 
+          <Badge bg="success">Ativo</Badge> : 
+          <Badge bg="secondary">Inativo</Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Ações',
+      sortable: false,
+      filterable: false,
+      render: (item) => (
+        <div className="d-flex gap-1">
+          <Button 
+            variant="outline-primary" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(item);
+            }}
+            title="Editar tipo de produção"
+          >
+            <Pencil size={14} />
+          </Button>
+          <Button 
+            variant="outline-danger" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(item.id);
+            }}
+            title="Excluir tipo de produção"
+          >
+            <Trash size={14} />
+          </Button>
+        </div>
+      )
+    }
+  ];
 
   const handleNew = () => {
     setEditingItem(null);
@@ -137,62 +207,19 @@ const ProducoesManagement = () => {
           </Button>
         </Card.Header>
         <Card.Body>
-          <Row className="mb-3">
-            <Col md={5}>
-              <Form.Control
-                placeholder="Buscar por nome/descrição..."
-                value={filters.q}
-                onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              />
-            </Col>
-            <Col md={3}>
-              <Form.Select value={filters.active} onChange={(e) => setFilters({ ...filters, active: e.target.value })}>
-                <option value="all">Todos (ativos e inativos)</option>
-                <option value="active">Apenas ativos</option>
-                <option value="inactive">Apenas inativos</option>
-              </Form.Select>
-            </Col>
-            <Col md={4}>
-              <Form.Select value={filters.uses_fabric} onChange={(e) => setFilters({ ...filters, uses_fabric: e.target.value })}>
-                <option value="all">Com e sem tecido</option>
-                <option value="yes">Somente que usam tecido</option>
-                <option value="no">Somente que não usam tecido</option>
-              </Form.Select>
-            </Col>
-          </Row>
-          {tipos.length === 0 ? (
-            <Alert variant="info" className="text-center">Nenhum tipo cadastrado.</Alert>
-          ) : (
-            <Table responsive striped hover>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Descrição</th>
-                  <th>Usa tecido?</th>
-                  <th>Status</th>
-                  <th className="text-end">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTipos.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td>{t.description || '-'}</td>
-                    <td>{t.uses_fabric ? <Badge bg="success">Sim</Badge> : <Badge bg="secondary">Não</Badge>}</td>
-                    <td>{t.active ? <Badge bg="primary">Ativo</Badge> : <Badge bg="secondary">Inativo</Badge>}</td>
-                    <td className="text-end">
-                      <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(t)}>
-                        <Pencil size={14} />
-                      </Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(t.id)}>
-                        <Trash size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+          <AdvancedTable
+            data={tipos}
+            columns={columns}
+            loading={loading}
+            showPagination={true}
+            showSearch={true}
+            showFilters={true}
+            showSelection={false}
+            pageSize={10}
+            emptyMessage="Nenhum tipo de produção cadastrado"
+            onRowClick={(item) => handleEdit(item)}
+            className="mt-3"
+          />
         </Card.Body>
       </Card>
 

@@ -143,6 +143,8 @@ html, body {
   position: relative;
   z-index: 10;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme="dark"] .sidebar {
@@ -214,6 +216,13 @@ html, body {
   padding: var(--spacing-4) 0;
   position: relative;
   z-index: 1;
+  flex: 1;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--spacing-2) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-item {
@@ -342,43 +351,12 @@ html, body {
   letter-spacing: -0.025em;
 }
 
-.user-controls {
+.header-controls {
   display: flex;
   align-items: center;
   gap: var(--spacing-4);
 }
 
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-neutral-50);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--color-neutral-200);
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.user-name {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-neutral-800);
-  line-height: 1;
-}
-
-.user-role {
-  font-size: var(--font-size-xs);
-  color: var(--color-neutral-500);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  line-height: 1;
-}
 
 .content-area {
   padding: clamp(12px, 1.8vw, 24px);
@@ -756,7 +734,7 @@ html, body {
 }
 
 /* Corrigir ícones em elementos específicos */
-[data-theme="dark"] .user-controls svg,
+[data-theme="dark"] .header-controls svg,
 [data-theme="dark"] .main-header svg {
   color: var(--icon-primary);
 }
@@ -800,10 +778,6 @@ html, body {
 }
 
 /* Corrigir cores de fundo em modo escuro */
-[data-theme="dark"] .user-menu {
-  background-color: var(--color-neutral-200);
-  border-color: var(--color-neutral-300);
-}
 
 [data-theme="dark"] .search-input-container {
   background-color: var(--color-neutral-200);

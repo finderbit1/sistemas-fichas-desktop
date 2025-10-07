@@ -1,0 +1,308 @@
+/* Estilos para o componente UserProfile na sidebar */
+
+.user-profile-collapsed,
+.user-profile-expanded {
+  position: relative;
+  margin: var(--spacing-4) var(--spacing-3);
+}
+
+/* Avatar colapsado */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  position: relative;
+}
+
+.user-avatar:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Badge de admin */
+.admin-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: var(--color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-neutral-800);
+}
+
+.admin-badge-large {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 20px;
+  height: 20px;
+  background: var(--color-success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-neutral-800);
+}
+
+/* Informações do usuário expandida */
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-3);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--spacing-3);
+  position: relative;
+  transition: all var(--transition-normal);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-chevron {
+  color: rgba(255, 255, 255, 0.7);
+  transition: transform var(--transition-normal);
+  margin-left: var(--spacing-2);
+}
+
+.dropdown-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* Dropdown colapsado */
+.user-dropdown-collapsed {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-neutral-800);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  margin-bottom: var(--spacing-2);
+  animation: fadeInUp 0.2s ease-out;
+}
+
+/* Dropdown expandido */
+.user-dropdown-expanded {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-neutral-800);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  margin-top: var(--spacing-2);
+  animation: fadeInDown 0.2s ease-out;
+}
+
+.user-info-dropdown {
+  padding: var(--spacing-3);
+  text-align: center;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-3);
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-size: var(--font-size-sm);
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.dropdown-item.logout-item {
+  color: var(--color-error-light);
+}
+
+.dropdown-item.logout-item:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-error);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: var(--spacing-1) 0;
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .user-profile-expanded {
+    margin: var(--spacing-3) var(--spacing-2);
+  }
+  
+  .user-info {
+    padding: var(--spacing-2);
+  }
+  
+  .user-avatar-large {
+    width: 40px;
+    height: 40px;
+    margin-right: var(--spacing-2);
+  }
+  
+  .user-name {
+    font-size: var(--font-size-xs);
+  }
+  
+  .user-role {
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Modo escuro */
+[data-theme="dark"] .user-dropdown-collapsed,
+[data-theme="dark"] .user-dropdown-expanded {
+  background: var(--color-neutral-700);
+  border-color: var(--color-neutral-600);
+}
+
+[data-theme="dark"] .user-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .user-info:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .user-avatar,
+[data-theme="dark"] .user-avatar-large {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .user-avatar:hover,
+[data-theme="dark"] .user-avatar-large:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Estados especiais */
+.user-profile-collapsed:hover .user-dropdown-collapsed,
+.user-profile-expanded:hover .user-dropdown-expanded {
+  display: block;
+}
+
+/* Tooltip para avatar colapsado */
+.user-avatar[title] {
+  position: relative;
+}
+
+.user-avatar[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-neutral-800);
+  color: white;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  z-index: 1001;
+  margin-bottom: var(--spacing-1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-avatar[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-neutral-800);
+  z-index: 1001;
+  margin-bottom: -4px;
+}

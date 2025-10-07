@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Table, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Card, Button, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
 import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
 import { getAllTecidos, createTecido, updateTecido, deleteTecido } from '../../services/api';
 import { useServerConfig } from '../../contexts/ServerConfigContext';
+import AdvancedTable from '../AdvancedTable';
+import '../../styles/advanced-table.css';
 
 const TecidosManagement = () => {
   const { isConnected, connectionStatus } = useServerConfig();
@@ -13,6 +15,7 @@ const TecidosManagement = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
   const [formData, setFormData] = useState({ name: '', description: '', gsm: '', composition: '', active: true });
+  const [selectedTecidos, setSelectedTecidos] = useState([]);
 
   useEffect(() => {
     if (isConnected) loadTecidos();
@@ -31,13 +34,88 @@ const TecidosManagement = () => {
     }
   };
 
-  const filteredTecidos = tecidos.filter((t) => {
-    const text = filters.q.trim().toLowerCase();
-    const matchText = !text || (t.name?.toLowerCase().includes(text) || t.description?.toLowerCase().includes(text));
-    const matchActive = filters.active === 'all' || (filters.active === 'active' ? t.active : !t.active);
-    const matchComp = filters.composition === 'all' || ((t.composition || '').toLowerCase().includes(filters.composition.toLowerCase()));
-    return matchText && matchActive && matchComp;
-  });
+  // Configuração das colunas para a tabela avançada
+  const columns = [
+    {
+      key: 'name',
+      header: 'Nome',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div className="fw-medium">{item.name}</div>
+      )
+    },
+    {
+      key: 'description',
+      header: 'Descrição',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div className="text-muted">{item.description || '-'}</div>
+      )
+    },
+    {
+      key: 'gsm',
+      header: 'GSM',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div>{item.gsm || '-'}</div>
+      )
+    },
+    {
+      key: 'composition',
+      header: 'Composição',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <div>{item.composition || '-'}</div>
+      )
+    },
+    {
+      key: 'active',
+      header: 'Status',
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        item.active ? 
+          <Badge bg="success">Ativo</Badge> : 
+          <Badge bg="secondary">Inativo</Badge>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Ações',
+      sortable: false,
+      filterable: false,
+      render: (item) => (
+        <div className="d-flex gap-1">
+          <Button 
+            variant="outline-primary" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(item);
+            }}
+            title="Editar tecido"
+          >
+            <Pencil size={14} />
+          </Button>
+          <Button 
+            variant="outline-danger" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(item.id);
+            }}
+            title="Excluir tecido"
+          >
+            <Trash size={14} />
+          </Button>
+        </div>
+      )
+    }
+  ];
 
   const handleNew = () => {
     setEditingItem(null);
@@ -137,64 +215,19 @@ const TecidosManagement = () => {
           </Button>
         </Card.Header>
         <Card.Body>
-          <Row className="mb-3">
-            <Col md={5}>
-              <Form.Control
-                placeholder="Buscar por nome/descrição..."
-                value={filters.q}
-                onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-              />
-            </Col>
-            <Col md={3}>
-              <Form.Select value={filters.active} onChange={(e) => setFilters({ ...filters, active: e.target.value })}>
-                <option value="all">Todos (ativos e inativos)</option>
-                <option value="active">Apenas ativos</option>
-                <option value="inactive">Apenas inativos</option>
-              </Form.Select>
-            </Col>
-            <Col md={4}>
-              <Form.Control
-                placeholder="Filtrar por composição (ex.: poliéster)"
-                value={filters.composition === 'all' ? '' : filters.composition}
-                onChange={(e) => setFilters({ ...filters, composition: e.target.value || 'all' })}
-              />
-            </Col>
-          </Row>
-          {tecidos.length === 0 ? (
-            <Alert variant="info" className="text-center">Nenhum tecido cadastrado.</Alert>
-          ) : (
-            <Table responsive striped hover>
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Descrição</th>
-                  <th>GSM</th>
-                  <th>Composição</th>
-                  <th>Status</th>
-                  <th className="text-end">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTecidos.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.name}</td>
-                    <td>{t.description || '-'}</td>
-                    <td>{t.gsm || '-'}</td>
-                    <td>{t.composition || '-'}</td>
-                    <td>{t.active ? <Badge bg="primary">Ativo</Badge> : <Badge bg="secondary">Inativo</Badge>}</td>
-                    <td className="text-end">
-                      <Button variant="outline-primary" size="sm" className="me-2" onClick={() => handleEdit(t)}>
-                        <Pencil size={14} />
-                      </Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(t.id)}>
-                        <Trash size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
+          <AdvancedTable
+            data={tecidos}
+            columns={columns}
+            loading={loading}
+            showPagination={true}
+            showSearch={true}
+            showFilters={true}
+            showSelection={false}
+            pageSize={10}
+            emptyMessage="Nenhum tecido cadastrado"
+            onRowClick={(item) => handleEdit(item)}
+            className="mt-3"
+          />
         </Card.Body>
       </Card>
 
