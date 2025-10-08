@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import cacheManager from '../utils/cacheManager';
+import useAutoRefresh from './useAutoRefresh';
 
 /**
  * Hook para buscar dados da API com cache automático
@@ -12,7 +13,8 @@ import cacheManager from '../utils/cacheManager';
  * @example
  * const { data: designers, loading, error, refresh } = useCachedApi(
  *   'designers',
- *   getAllDesigners
+ *   getAllDesigners,
+ *   { autoRefresh: true, autoRefreshInterval: 15000 }
  * );
  */
 function useCachedApi(cacheKey, apiFunction, options = {}) {
@@ -27,6 +29,8 @@ function useCachedApi(cacheKey, apiFunction, options = {}) {
     onSuccess = null,         // Callback de sucesso
     onError = null,           // Callback de erro
     forceRefresh = false,     // Força buscar da API ignorando cache
+    autoRefresh = false,      // Ativa atualização automática
+    autoRefreshInterval = 15000, // Intervalo de atualização (padrão: 15s)
   } = options;
 
   /**
@@ -135,13 +139,25 @@ function useCachedApi(cacheKey, apiFunction, options = {}) {
     }
   }, [cacheKey, enabled]);
 
+  /**
+   * Auto-refresh (polling) - busca dados periodicamente
+   */
+  const { startPolling, stopPolling, isPolling } = useAutoRefresh(
+    () => fetchData(true), // Força buscar da API
+    autoRefreshInterval,
+    autoRefresh && enabled
+  );
+
   return {
     data,
     loading,
     error,
     refresh,
     invalidate,
-    isFromCache: !loading && data !== null && cacheManager.isValid(cacheKey)
+    isFromCache: !loading && data !== null && cacheManager.isValid(cacheKey),
+    startPolling,
+    stopPolling,
+    isPolling
   };
 }
 

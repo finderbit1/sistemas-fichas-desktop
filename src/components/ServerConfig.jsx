@@ -9,11 +9,14 @@ import {
   ArrowClockwise,
   Save,
   ArrowCounterclockwise,
-  Trash
+  Trash,
+  FileText
 } from 'react-bootstrap-icons';
 import { useServerConfig } from '../contexts/ServerConfigContext';
 import Tooltip from './Tooltip';
 import cacheManager from '../utils/cacheManager';
+import { reloadNetworkConfig, getCurrentConfig } from '../utils/configLoader';
+import { reloadApiConfig } from '../services/api';
 
 const ServerConfig = () => {
   const { 
@@ -67,6 +70,30 @@ const ServerConfig = () => {
     setShowCacheCleared(true);
     setTimeout(() => setShowCacheCleared(false), 3000);
     console.log(`🧹 ${count} itens de cache removidos`);
+  };
+
+  const handleReloadFromFile = async () => {
+    try {
+      const config = await reloadNetworkConfig();
+      reloadApiConfig();
+      
+      // Atualizar formulário
+      setFormData({
+        baseURL: config.baseURL,
+        timeout: config.timeout,
+        retries: config.retries
+      });
+      
+      // Atualizar context também
+      updateServerConfig(config);
+      
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+      
+      console.log(`📁 Configuração recarregada de: ${config.source}`);
+    } catch (error) {
+      console.error('Erro ao recarregar configuração:', error);
+    }
   };
 
   const getStatusIcon = () => {
@@ -235,8 +262,19 @@ const ServerConfig = () => {
 
         <Row>
           <Col md={12}>
-            <div style={{ display: 'flex', gap: 'var(--spacing-3)', justifyContent: 'space-between' }}>
-              <div>
+            <div style={{ display: 'flex', gap: 'var(--spacing-3)', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+                <Tooltip content="Recarregar configuração do arquivo rede.conf" position="top">
+                  <Button
+                    variant="outline-info"
+                    onClick={handleReloadFromFile}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <FileText size={16} />
+                    Recarregar rede.conf
+                  </Button>
+                </Tooltip>
+                
                 <Tooltip content="Limpar todos os dados em cache e forçar atualização" position="top">
                   <Button
                     variant="outline-warning"
@@ -290,7 +328,7 @@ const ServerConfig = () => {
         }}>
           Informações da Conexão
         </h6>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-3)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 'var(--spacing-3)' }}>
           <div>
             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-500)' }}>URL Atual:</span>
             <p style={{ 
@@ -300,6 +338,17 @@ const ServerConfig = () => {
               color: 'var(--color-neutral-700)'
             }}>
               {serverConfig.baseURL}
+            </p>
+          </div>
+          <div>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-500)' }}>Fonte:</span>
+            <p style={{ 
+              margin: '4px 0 0 0', 
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-neutral-700)',
+              fontWeight: 'var(--font-weight-medium)'
+            }}>
+              {getCurrentConfig()?.source || 'padrão'}
             </p>
           </div>
           <div>

@@ -35,6 +35,7 @@ import { criarPedidosFakesNaAPI } from '../utils/pedidosFaker';
 import { limparPedidosFakes } from '../utils/pedidosCleanup';
 import { salvarFiltrosHome, obterFiltrosHome, atualizarPedidoPendente, isPedidoConcluido, forcarBackupPedidosPendentes, mesclarPedidosComProtecao } from '../utils/localStorageHelper';
 import pedidosCache from '../utils/pedidosCache';
+import syncManager from '../utils/syncManager';
 import { convertApiPedidosToList, convertApiPedidoToFormData, convertFormDataToApiPedido } from '../utils/apiConverter';
 import Tooltip from '../components/Tooltip';
 import KanbanBoard from '../components/KanbanBoard';
@@ -319,10 +320,41 @@ const Home = () => {
                 setIsAutoRefreshing(false);
             }
         };
-        timerId = setInterval(refreshAtivosQuietly, 30000);
+        timerId = setInterval(refreshAtivosQuietly, 5000); // 5 segundos para sincronização ultra-rápida
         return () => { if (timerId) clearInterval(timerId); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [listScope, isAutoRefreshing]);
+
+    // 🚀 SINCRONIZAÇÃO EM TEMPO REAL - Listener para mudanças de outras abas/clientes
+    useEffect(() => {
+        // Listener para quando um pedido é criado
+        const unsubscribeCreated = syncManager.on('pedido:created', (data) => {
+            console.log('🆕 Pedido criado em outra aba/cliente - atualizando...', data);
+            if (listScope === 'ativos' || listScope === 'hoje') {
+                carregarListaPorScope(listScope);
+            }
+        });
+
+        // Listener para quando um pedido é atualizado
+        const unsubscribeUpdated = syncManager.on('pedido:updated', (data) => {
+            console.log('✏️ Pedido atualizado em outra aba/cliente - atualizando...', data);
+            carregarListaPorScope(listScope);
+        });
+
+        // Listener para quando um pedido é deletado
+        const unsubscribeDeleted = syncManager.on('pedido:deleted', (data) => {
+            console.log('🗑️ Pedido deletado em outra aba/cliente - atualizando...', data);
+            carregarListaPorScope(listScope);
+        });
+
+        // Cleanup - remover listeners ao desmontar
+        return () => {
+            unsubscribeCreated();
+            unsubscribeUpdated();
+            unsubscribeDeleted();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [listScope]);
 
     // Função para sincronizar com a API
     const sincronizarCache = async () => {
@@ -2728,7 +2760,26 @@ const Home = () => {
                 <div className="dashboard-card-header">
                     <div className="d-flex justify-content-between align-items-center">
                         <h5 className="dashboard-card-title mb-0">Últimos Pedidos</h5>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 align-items-center">
+                            {listScope === 'ativos' && (
+                                <span 
+                                    className="badge bg-success me-2" 
+                                    title="Sincronização em tempo real ativa! ⚡
+• Broadcast Channel: INSTANTÂNEO entre abas
+• Auto-refresh: a cada 5 segundos
+• Cache: 15 segundos"
+                                    style={{ fontSize: '0.75rem', cursor: 'help' }}
+                                >
+                                    <ArrowClockwise size={12} className="me-1" style={{ animation: 'spin 2s linear infinite' }} />
+                                    Sync Tempo Real ⚡
+                                </span>
+                            )}
+                            <style>{`
+                                @keyframes spin {
+                                    from { transform: rotate(0deg); }
+                                    to { transform: rotate(360deg); }
+                                }
+                            `}</style>
                             <Button 
                                 variant="outline-primary" 
                                 size="sm"

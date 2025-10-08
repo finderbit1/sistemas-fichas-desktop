@@ -1,32 +1,25 @@
 import axios from 'axios';
-
-// Função para obter a URL base da API (prioriza configuração salva)
-const getApiBaseURL = () => {
-  // Tentar buscar configuração salva no localStorage
-  const savedConfig = localStorage.getItem('serverConfig');
-  if (savedConfig) {
-    try {
-      const config = JSON.parse(savedConfig);
-      return config.baseURL;
-    } catch (error) {
-      console.warn('Erro ao ler configuração do servidor:', error);
-    }
-  }
-  
-  // Fallback: usar IP da rede (ALTERE AQUI para o IP do seu servidor)
-  return "http://192.168.15.6:8000";  // IP do servidor na rede
-};
+import syncManager from '../utils/syncManager';
+import { getCurrentConfig } from '../utils/configLoader';
 
 // Criar instância do axios com configuração dinâmica
 const createApiInstance = () => {
-  const baseURL = getApiBaseURL();
+  // Tentar obter configuração carregada do rede.conf
+  const config = getCurrentConfig();
+  
+  const baseURL = config?.baseURL || 'http://192.168.15.6:8000';
+  const timeout = config?.timeout || 10000;
+  
+  if (import.meta.env.DEV) {
+    console.log(`🔧 API configurada: ${baseURL} (fonte: ${config?.source || 'padrão'})`);
+  }
   
   return axios.create({
     baseURL: baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: 10000
+    timeout: timeout
   });
 };
 
@@ -77,10 +70,69 @@ api.interceptors.response.use(
 // ===== PEDIDOS =====
 export const getAllPedidos = () => api.get('/pedidos/');
 export const getPedidoById = (id) => api.get(`/pedidos/${id}/`);
-export const createPedido = (pedido) => api.post('/pedidos/', pedido);
-export const updatePedido = (id, pedido) => api.patch(`/pedidos/${id}/`, pedido);
+
+// Criar pedido com invalidação de cache e sincronização automática
+export const createPedido = async (pedido) => {
+  const response = await api.post('/pedidos/', pedido);
+  
+  // Invalidar cache de pedidos para forçar atualização
+  if (typeof window !== 'undefined' && window.cacheManager) {
+    window.cacheManager.invalidate('pedidos');
+    window.cacheManager.invalidate('pedidosPendentes');
+    console.log('🔄 Cache de pedidos invalidado após criação');
+  }
+  
+  // 🚀 SINCRONIZAÇÃO AUTOMÁTICA - Notificar outras abas/clientes
+  syncManager.notify('pedido:created', { 
+    pedido: response.data,
+    timestamp: Date.now() 
+  });
+  
+  return response;
+};
+
+// Atualizar pedido com invalidação de cache e sincronização automática
+export const updatePedido = async (id, pedido) => {
+  const response = await api.patch(`/pedidos/${id}/`, pedido);
+  
+  // Invalidar cache de pedidos para forçar atualização
+  if (typeof window !== 'undefined' && window.cacheManager) {
+    window.cacheManager.invalidate('pedidos');
+    window.cacheManager.invalidate('pedidosPendentes');
+    console.log('🔄 Cache de pedidos invalidado após atualização');
+  }
+  
+  // 🚀 SINCRONIZAÇÃO AUTOMÁTICA - Notificar outras abas/clientes
+  syncManager.notify('pedido:updated', { 
+    id,
+    pedido: response.data,
+    timestamp: Date.now() 
+  });
+  
+  return response;
+};
+
+// Deletar pedido com invalidação de cache e sincronização automática
+export const deletePedido = async (id) => {
+  const response = await api.delete(`/pedidos/${id}/`);
+  
+  // Invalidar cache de pedidos para forçar atualização
+  if (typeof window !== 'undefined' && window.cacheManager) {
+    window.cacheManager.invalidate('pedidos');
+    window.cacheManager.invalidate('pedidosPendentes');
+    console.log('🔄 Cache de pedidos invalidado após exclusão');
+  }
+  
+  // 🚀 SINCRONIZAÇÃO AUTOMÁTICA - Notificar outras abas/clientes
+  syncManager.notify('pedido:deleted', { 
+    id,
+    timestamp: Date.now() 
+  });
+  
+  return response;
+};
+
 export const getProximoNumeroPedido = () => api.get('/pedidos/proximo-numero/');
-export const deletePedido = (id) => api.delete(`/pedidos/${id}/`);
 export const getPedidosByStatus = (status) => api.get(`/pedidos/status/${status}/`);
 
 // ===== CLIENTES =====

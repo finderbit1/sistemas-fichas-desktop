@@ -19,7 +19,8 @@ const CACHE_TTL = {
   formasPagamento: 1000 * 60 * 60 * 2, // 2 horas (quase nunca muda)
   formasEnvio: 1000 * 60 * 60 * 2,     // 2 horas (quase nunca muda)
   descontos: 1000 * 60 * 15,      // 15 minutos (pode mudar)
-  pedidosPendentes: 1000 * 60 * 5, // 5 minutos (muda frequentemente)
+  pedidosPendentes: 1000 * 15,    // 15 segundos (atualização rápida para sincronização em rede)
+  pedidos: 1000 * 15,             // 15 segundos (atualização rápida)
   clientes: 1000 * 60 * 10,       // 10 minutos
 };
 
