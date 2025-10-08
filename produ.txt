@@ -1,0 +1,9 @@
+PAINEL = [
+  descrição, largura, altura, e area em metros quadrado,
+  vendedor,designer,
+  tipo de tecido,
+  overloque,elastico, com ilhos ou com cordinha,
+  se tiver ilhos vai ter esses campo quantidade de ilhos, espaço de cada ilhos e valor de cada um,
+  se tiver cordinha vai ter esses campo quantidade de cordinha, espaço de cada cordinha e valor de cada um,
+  imagem do painel, valor do painel, valores adicionais, e observaçõe.
+]

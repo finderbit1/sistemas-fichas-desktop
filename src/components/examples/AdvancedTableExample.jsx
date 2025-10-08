@@ -350,3 +350,4 @@ const AdvancedTableExample = () => {
 };
 
 export default AdvancedTableExample;
+

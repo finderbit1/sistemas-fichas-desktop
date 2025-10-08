@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Tabs, Tab, Container, Button, Card } from 'react-bootstrap';
 import FormPainel from './FormPainel';
+import FormPainelCompleto from './FormPainelCompleto';
 import FormTotem from './FormTotem';
 import FormLona from './FormLona';
 import FormBolsinha from '../FormBolsinha';
@@ -27,13 +28,15 @@ function TypeProduction() {
                 value={opcaoSelecionada}
             >
                 <option value="">Selecione uma opção</option>
-                <option value="painel">Painel</option>
+                <option value="painel">Painel (Simples)</option>
+                <option value="painel-completo">Painel Completo (Com Ilhós/Cordinha)</option>
                 <option value="totem">Totem</option>
                 <option value="lona">Lona</option>
                 <option value="bolsinha">Bolsinha</option>
             </Form.Select>
             <div>
                 {opcaoSelecionada === 'painel' && <FormPainel onAdicionarItem={adicionarItem} />}
+                {opcaoSelecionada === 'painel-completo' && <FormPainelCompleto onAdicionarItem={adicionarItem} />}
                 {opcaoSelecionada === 'totem' && <FormTotem />}
                 {opcaoSelecionada === 'lona' && <FormLona />}
                 {opcaoSelecionada === 'bolsinha' && <FormBolsinha />}

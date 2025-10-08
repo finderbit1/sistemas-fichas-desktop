@@ -2,10 +2,11 @@
 
 /* Container principal do formulário */
 .create-order-container {
-  max-width: 95vw;
-  width: 95vw;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   padding: clamp(12px, 1.8vw, 24px);
+  box-sizing: border-box;
 }
 
 /* Seções de formulário */
@@ -385,6 +386,12 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
+  .create-order-container {
+    padding: clamp(8px, 2vw, 16px);
+    max-width: 100%;
+    width: 100%;
+  }
+  
   .form-group {
     margin-bottom: var(--spacing-4);
   }
@@ -405,6 +412,58 @@
   /* Espaçamento vertical entre colunas quando empilhadas */
   .create-order-container .row > [class*="col-"] {
     margin-bottom: var(--spacing-3);
+  }
+  
+  /* Garantir que formulários não ultrapassem a largura da tela */
+  .form-section {
+    margin-left: 0;
+    margin-right: 0;
+    padding: var(--spacing-4);
+  }
+  
+  /* Ajustar largura dos campos em telas pequenas */
+  .form-control,
+  .form-select,
+  .input-group-text {
+    max-width: 100%;
+  }
+}
+
+/* Responsividade para telas muito pequenas */
+@media (max-width: 480px) {
+  .create-order-container {
+    padding: clamp(6px, 1.5vw, 12px);
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .form-section {
+    padding: var(--spacing-3);
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .form-control,
+  .form-select {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2) var(--spacing-3);
+  }
+  
+  .nav-tabs .nav-link {
+    padding: var(--spacing-2);
+    font-size: var(--font-size-xs);
+  }
+  
+  .tab-content {
+    padding: var(--spacing-3);
+  }
+  
+  /* Reduzir espaçamento entre elementos */
+  .form-group {
+    margin-bottom: var(--spacing-3);
+  }
+  
+  .create-order-container .row > [class*="col-"] {
+    margin-bottom: var(--spacing-2);
   }
 }
 

@@ -1,13 +1,11 @@
 import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Bell, Search } from 'react-bootstrap-icons';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ServerConfigProvider } from './contexts/ServerConfigContext';
 import Sidebar from './components/Sidebar';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
-import ThemeToggle from './components/ThemeToggle';
 import LoadingSpinner from './components/LoadingSpinner';
 import './App.css';
 
@@ -44,20 +42,6 @@ const AuthenticatedLayout = React.memo(() => {
     <div className="app-container">
       <Sidebar expanded={sidebarExpanded} toggleSidebar={toggleSidebar} />
       <div className={`main-content ${sidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
-        <header className="main-header">
-          <div>
-            <h1>Dashboard</h1>
-          </div>
-          <div className="header-controls">
-            <button className="btn btn-outline" style={{ padding: '8px', width: '40px', height: '40px' }}>
-              <Search size={16} />
-            </button>
-            <button className="btn btn-outline" style={{ padding: '8px', width: '40px', height: '40px' }}>
-              <Bell size={16} />
-            </button>
-            <ThemeToggle size="medium" />
-          </div>
-        </header>
         <div className="content-area">
           <Suspense fallback={<PageLoader />}>
             <Routes>

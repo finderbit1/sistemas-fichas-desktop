@@ -33,7 +33,7 @@ import { updatePedido, getAllPedidos, getPedidosByStatus } from '../services/api
 import { fecharDia } from '../utils/fechamento';
 import { criarPedidosFakesNaAPI } from '../utils/pedidosFaker';
 import { limparPedidosFakes } from '../utils/pedidosCleanup';
-import { salvarFiltrosHome, obterFiltrosHome } from '../utils/localStorageHelper';
+import { salvarFiltrosHome, obterFiltrosHome, atualizarPedidoPendente, isPedidoConcluido, forcarBackupPedidosPendentes, mesclarPedidosComProtecao } from '../utils/localStorageHelper';
 import pedidosCache from '../utils/pedidosCache';
 import { convertApiPedidosToList, convertApiPedidoToFormData, convertFormDataToApiPedido } from '../utils/apiConverter';
 import Tooltip from '../components/Tooltip';
@@ -42,8 +42,10 @@ import EditOrderModal from '../components/EditOrderModal';
 import CustomAlertModal from '../components/CustomAlertModal';
 import LogsModal from '../components/LogsModal';
 import useCustomAlert from '../hooks/useCustomAlert';
+import CustomCheckbox from '../components/CustomCheckbox';
 import logger from '../utils/logger';
-import '../styles/home.css';
+import CollapsibleFilters from '../components/CollapsibleFilters';
+import '../styles/collapsible-filters.css';
 
 
 const Home = () => {
@@ -69,6 +71,7 @@ const Home = () => {
     const [logsModal, setLogsModal] = useState({ show: false });
     const [cacheStats, setCacheStats] = useState(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [pendingPedidosStats, setPendingPedidosStats] = useState(null);
     const [isLoadingLista, setIsLoadingLista] = useState(false);
     const [imageModal, setImageModal] = useState({ show: false, src: '', alt: '' });
     const [viewMode, setViewMode] = useState('table'); // 'table' | 'kanban'
@@ -89,9 +92,22 @@ const Home = () => {
     const [closeDate, setCloseDate] = useState(() => new Date());
     const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
 
+    const atualizarStatsPedidosPendentes = () => {
+        const stats = pedidosCache.getPendingPedidosStats();
+        setPendingPedidosStats(stats);
+    };
+
     const carregarListaPorScope = async (scope) => {
         setIsLoadingLista(true);
         try {
+            // 🔒 PROTEÇÃO: Fazer backup dos pedidos atuais antes de carregar
+            console.log('🔒 Fazendo backup de proteção antes de carregar lista...');
+            forcarBackupPedidosPendentes(pedidos);
+            
+            // Sincronizar pedidos pendentes do localStorage primeiro
+            pedidosCache.syncPendingPedidos();
+            // Atualizar estatísticas
+            atualizarStatsPedidosPendentes();
             if (scope === 'ativos') {
                 const [pend, prod] = await Promise.all([
                     getPedidosByStatus('pendente'),
@@ -108,7 +124,11 @@ const Home = () => {
                     dataCriacao: pedido.dataCriacao || new Date().toISOString(),
                     status: pedido.status || 'Pendente'
                 }));
-                setPedidos(pedidosFormatados);
+                
+                // 🔒 PROTEÇÃO: Mesclar com pedidos pendentes do localStorage
+                const pedidosProtegidos = mesclarPedidosComProtecao(pedidosFormatados);
+                
+                setPedidos(pedidosProtegidos);
                 setErro(false);
             } else if (scope === 'hoje') {
                 const response = await getAllPedidos();
@@ -175,6 +195,27 @@ const Home = () => {
         carregarListaPorScope(listScope);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [listScope]);
+
+    // Inicializar estatísticas dos pedidos pendentes e verificar pedidos perdidos
+    useEffect(() => {
+        atualizarStatsPedidosPendentes();
+        
+        // 🔍 Verificar se há pedidos perdidos ao inicializar
+        setTimeout(() => {
+            try {
+                const pedidosPerdidos = pedidosCache.verificarPedidosPerdidos();
+                if (pedidosPerdidos.length > 0) {
+                    console.warn(`⚠️ Encontrados ${pedidosPerdidos.length} pedidos perdidos ao inicializar!`);
+                    setToast({ 
+                        show: true, 
+                        message: `⚠️ ${pedidosPerdidos.length} pedidos perdidos detectados! Use o botão 🔄 para recuperar.` 
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao verificar pedidos perdidos na inicialização:', error);
+            }
+        }, 2000); // Aguardar 2 segundos para a página carregar completamente
+    }, []);
 
     // Reaplicar período quando estiver no escopo 'todos'
     useEffect(() => {
@@ -248,6 +289,10 @@ const Home = () => {
             if (isAutoRefreshing) return;
             setIsAutoRefreshing(true);
             try {
+                // 🔒 PROTEÇÃO: Fazer backup dos pedidos atuais antes da atualização
+                console.log('🔒 Fazendo backup de proteção antes da atualização automática...');
+                forcarBackupPedidosPendentes(pedidos);
+                
                 const [pend, prod] = await Promise.all([
                     getPedidosByStatus('pendente'),
                     getPedidosByStatus('em_producao')
@@ -263,7 +308,11 @@ const Home = () => {
                     dataCriacao: pedido.dataCriacao || new Date().toISOString(),
                     status: pedido.status || 'Pendente'
                 }));
-                setPedidos(pedidosFormatados);
+                
+                // 🔒 PROTEÇÃO: Mesclar com pedidos pendentes do localStorage
+                const pedidosProtegidos = mesclarPedidosComProtecao(pedidosFormatados);
+                
+                setPedidos(pedidosProtegidos);
             } catch (_) {
                 // silencioso
             } finally {
@@ -478,8 +527,13 @@ const Home = () => {
             
             pedidoAtualizado.status = todosConcluidos ? 'Pronto' : 'Em Andamento';
 
-            // Atualizar estado local
+            // Atualizar estado local primeiro
             setPedidos(prev => prev.map(p => p.id === pedido.id ? pedidoAtualizado : p));
+
+            // Atualizar no localStorage - remove se concluído
+            atualizarPedidoPendente(pedido.id, pedidoAtualizado);
+            // Atualizar estatísticas
+            atualizarStatsPedidosPendentes();
 
             // Mostrar toast se concluído
             if (todosConcluidos) {
@@ -492,17 +546,50 @@ const Home = () => {
             // Gerar log da alteração
             gerarLog(pedidoAtualizado, setor, action);
 
-            // Atualizar na API
-            const apiPedido = convertFormDataToApiPedido(pedidoAtualizado);
+            // Tentar atualizar na API
+            try {
+                // Garantir que o pedido tenha todos os campos necessários
+                const pedidoCompleto = {
+                    ...pedidoAtualizado,
+                    items: pedidoAtualizado.items || [],
+                    numeroPedido: pedidoAtualizado.numeroPedido || pedidoAtualizado.numero || '',
+                    nomeCliente: pedidoAtualizado.nomeCliente || pedidoAtualizado.cliente || '',
+                    telefoneCliente: pedidoAtualizado.telefoneCliente || pedidoAtualizado.telefone_cliente || '',
+                    cidadeCliente: pedidoAtualizado.cidadeCliente || pedidoAtualizado.cidade_cliente || '',
+                    dataEntrada: pedidoAtualizado.dataEntrada || pedidoAtualizado.data_entrada || '',
+                    dataEntrega: pedidoAtualizado.dataEntrega || pedidoAtualizado.data_entrega || '',
+                    valorTotal: pedidoAtualizado.valorTotal || pedidoAtualizado.valor_total || '0',
+                    valorFrete: pedidoAtualizado.valorFrete || pedidoAtualizado.valor_frete || '0',
+                    formaEnvio: pedidoAtualizado.formaEnvio || pedidoAtualizado.forma_envio || '',
+                    tipoPagamento: pedidoAtualizado.tipoPagamento || pedidoAtualizado.tipo_pagamento || '',
+                    observacao: pedidoAtualizado.observacao || ''
+                };
+                
+                const apiPedido = convertFormDataToApiPedido(pedidoCompleto);
+                console.log('Enviando para API:', apiPedido);
+                
             await updatePedido(pedido.id, apiPedido);
+                console.log('Pedido atualizado na API com sucesso');
             
             // Atualizar no cache local
-            pedidosCache.updatePedido(pedido.id, pedidoAtualizado);
+                pedidosCache.updatePedido(pedido.id, pedidoCompleto);
+                
+            } catch (apiError) {
+                console.error('Erro na API:', apiError);
+                
+                // Se falhou na API, mostrar erro mas manter mudança local
+                setToast({
+                    show: true,
+                    message: `Setor ${setor} atualizado localmente. Erro na sincronização: ${apiError.message || 'Erro desconhecido'}`
+                });
+            }
 
         } catch (error) {
+            console.error('Erro geral:', error);
+            
             setToast({
                 show: true,
-                message: 'Erro ao atualizar setor. Tente novamente.'
+                message: `Erro ao atualizar setor ${setor}: ${error.message || 'Erro desconhecido'}`
             });
             
             // Reverter mudança local em caso de erro
@@ -581,6 +668,11 @@ const Home = () => {
     const handlePedidoUpdated = (pedidoAtualizado) => {
         setPedidos(prev => prev.map(p => p.id === pedidoAtualizado.id ? pedidoAtualizado : p));
         setEditModal({ show: false, pedido: null });
+        
+        // Atualizar no localStorage - remove se concluído
+        atualizarPedidoPendente(pedidoAtualizado.id, pedidoAtualizado);
+        // Atualizar estatísticas
+        atualizarStatsPedidosPendentes();
         
         // Log da atualização
         logger.log('PEDIDO_UPDATED_IN_LIST', {
@@ -2618,68 +2710,19 @@ const Home = () => {
                 </Col>
             </Row>
 
-            <Row className="mb-4">
-                <Col md={5}>
-                    <div className="search-input-container">
-                        <Search size={16} className="search-icon" />
-                        <Form.Control
-                            type="text"
-                            placeholder="Buscar por número ou cliente..."
-                            value={filtro}
-                            onChange={(e) => setFiltro(e.target.value)}
-                            className="form-control"
-                        />
-                    </div>
-                </Col>
-                <Col md={7}>
-                    <Row>
-                        <Col md={4} className="mb-2">
-                            <Form.Select 
-                                value={filtrosAvancados.status}
-                                onChange={(e)=> setFiltrosAvancados(prev=>({...prev, status: e.target.value}))}
-                                className="form-control"
-                            >
-                                <option value="all">Todos os status</option>
-                                <option value="pendente">Pendente</option>
-                                <option value="em_producao">Em Andamento</option>
-                                <option value="pronto">Pronto</option>
-                                <option value="entregue">Entregue</option>
-                                <option value="cancelado">Cancelado</option>
-                            </Form.Select>
-                        </Col>
-                        <Col md={4} className="mb-2">
-                            <Form.Select 
-                                value={filtrosAvancados.tipo}
-                                onChange={(e)=> setFiltrosAvancados(prev=>({...prev, tipo: e.target.value}))}
-                                className="form-control"
-                            >
-                                <option value="all">Todos os tipos</option>
-                                <option value="painel">Painel</option>
-                                <option value="totem">Totem</option>
-                                <option value="lona">Lona</option>
-                                <option value="bolsinha">Bolsinha</option>
-                                <option value="almofada">Almofada</option>
-                            </Form.Select>
-                        </Col>
-                        <Col md={4} className="mb-2">
-                            <div className="d-flex gap-2">
-                                <Form.Control
-                                    type="date"
-                                    value={filtrosAvancados.dataInicio}
-                                    onChange={(e)=> setFiltrosAvancados(prev=>({...prev, dataInicio: e.target.value}))}
-                                    className="form-control"
-                                />
-                                <Form.Control
-                                    type="date"
-                                    value={filtrosAvancados.dataFim}
-                                    onChange={(e)=> setFiltrosAvancados(prev=>({...prev, dataFim: e.target.value}))}
-                                    className="form-control"
-                                />
-                            </div>
-                        </Col>
-                    </Row>
-                </Col>
-            </Row>
+            {/* Filtros Organizados */}
+            <CollapsibleFilters
+                filtro={filtro}
+                setFiltro={setFiltro}
+                filtrosAvancados={filtrosAvancados}
+                setFiltrosAvancados={setFiltrosAvancados}
+                filtroApenasProntos={filtroApenasProntos}
+                setFiltroApenasProntos={setFiltroApenasProntos}
+                listScope={listScope}
+                setListScope={setListScope}
+                todosPeriod={todosPeriod}
+                setTodosPeriod={setTodosPeriod}
+            />
 
             <div className="dashboard-card" style={{ overflowX: 'hidden' }}>
                 <div className="dashboard-card-header">
@@ -2708,50 +2751,45 @@ const Home = () => {
                                     </>
                                 )}
                             </Button>
-                            <div className="btn-group" role="group" aria-label="Filtro de lista">
-                                <Button 
-                                    variant={listScope === 'ativos' ? 'info' : 'outline-info'}
-                                    size="sm"
-                                    onClick={() => setListScope('ativos')}
-                                    className="btn-outline"
-                                    title="Mostrar apenas pendentes e em produção"
-                                >
-                                    Ativos
-                                </Button>
-                                <Button 
-                                    variant={listScope === 'hoje' ? 'info' : 'outline-info'}
-                                    size="sm"
-                                    onClick={() => setListScope('hoje')}
-                                    className="btn-outline"
-                                    title="Pedidos do dia (criados hoje ou entrega hoje)"
-                                >
-                                    Hoje
-                                </Button>
-                                <Button 
-                                    variant={listScope === 'todos' ? 'info' : 'outline-info'}
-                                    size="sm"
-                                    onClick={() => setListScope('todos')}
-                                    className="btn-outline"
-                                    title="Carregar todos (sob demanda)"
-                                >
-                                    Todos
-                                </Button>
-                                {listScope === 'todos' && (
-                                    <div className="d-flex align-items-center ms-2">
-                                        <Form.Select
-                                            size="sm"
-                                            value={todosPeriod}
-                                            onChange={(e) => setTodosPeriod(e.target.value)}
-                                            style={{ width: '140px' }}
-                                            title="Período"
-                                        >
-                                            <option value="7">Últimos 7 dias</option>
-                                            <option value="30">Últimos 30 dias</option>
-                                            <option value="all">Todos</option>
-                                        </Form.Select>
-                                    </div>
-                                )}
-                            </div>
+                            {pendingPedidosStats && pendingPedidosStats.total > 0 && (
+                                <div className="d-flex align-items-center ms-2">
+                                    <span className="badge bg-info me-1" title={`${pendingPedidosStats.naoConcluidos} pedidos não concluídos salvos no localStorage`}>
+                                        📋 {pendingPedidosStats.naoConcluidos} pendentes
+                                    </span>
+                                    <Button 
+                                        variant="outline-info" 
+                                        size="sm"
+                                        onClick={async () => {
+                                            try {
+                                                const pedidosRecuperados = pedidosCache.recuperarPedidosPerdidos();
+                                                if (pedidosRecuperados.length > 0) {
+                                                    setToast({ 
+                                                        show: true, 
+                                                        message: `✅ ${pedidosRecuperados.length} pedidos perdidos recuperados!` 
+                                                    });
+                                                    // Recarregar lista para mostrar pedidos recuperados
+                                                    carregarListaPorScope(listScope);
+                                                } else {
+                                                    setToast({ 
+                                                        show: true, 
+                                                        message: `ℹ️ Nenhum pedido perdido encontrado.` 
+                                                    });
+                                                }
+                                            } catch (error) {
+                                                console.error('Erro ao recuperar pedidos:', error);
+                                                setToast({ 
+                                                    show: true, 
+                                                    message: `❌ Erro ao recuperar pedidos: ${error.message}` 
+                                                });
+                                            }
+                                        }}
+                                        className="btn-outline ms-1"
+                                        title="Recuperar pedidos perdidos"
+                                    >
+                                        🔄
+                                    </Button>
+                                </div>
+                            )}
                             <Button 
                                 variant={isSeeding ? 'warning' : 'outline-warning'} 
                                 size="sm"
@@ -2990,86 +3028,87 @@ const Home = () => {
                                     </td>
                                     <td className="setor-cell">
                                         <Tooltip content={pedido.financeiro ? "Financeiro aprovado" : "Financeiro pendente"} position="top">
-                                            <input
-                                                type="checkbox"
-                                                className="setor-checkbox"
+                                            <CustomCheckbox
                                                 checked={pedido.financeiro || false}
                                                 onChange={() => toggleSetor(pedido.id, 'financeiro')}
+                                                size="large"
                                             />
                                         </Tooltip>
                                     </td>
                                     <td className="setor-cell">
                                         <Tooltip content={pedido.conferencia ? "Conferência concluída" : pedido.financeiro ? "Conferência pendente" : "Aguarde aprovação do Financeiro"} position="top">
-                                            <input
-                                                type="checkbox"
-                                                className="setor-checkbox"
+                                            <CustomCheckbox
                                                 checked={pedido.conferencia || false}
                                                 disabled={!pedido.financeiro}
                                                 onChange={() => toggleSetor(pedido.id, 'conferencia')}
+                                                size="large"
                                             />
                                         </Tooltip>
                                     </td>
                                     <td className="setor-cell">
                                         <Tooltip content={pedido.sublimacao ? "Sublimação concluída" : pedido.financeiro ? "Sublimação pendente" : "Aguarde aprovação do Financeiro"} position="top">
-                                            <input
-                                                type="checkbox"
-                                                className="setor-checkbox"
+                                            <CustomCheckbox
                                                 checked={pedido.sublimacao || false}
                                                 disabled={!pedido.financeiro}
                                                 onChange={() => toggleSetor(pedido.id, 'sublimacao')}
+                                                size="large"
                                             />
                                         </Tooltip>
                                     </td>
                                     <td className="setor-cell">
                                         <Tooltip content={pedido.costura ? "Costura concluída" : pedido.financeiro ? "Costura pendente" : "Aguarde aprovação do Financeiro"} position="top">
-                                            <input
-                                                type="checkbox"
-                                                className="setor-checkbox"
+                                            <CustomCheckbox
                                                 checked={pedido.costura || false}
                                                 disabled={!pedido.financeiro}
                                                 onChange={() => toggleSetor(pedido.id, 'costura')}
+                                                size="large"
                                             />
                                         </Tooltip>
                                     </td>
                                     <td className="setor-cell">
                                         <Tooltip content={pedido.expedicao ? "Expedição concluída" : pedido.financeiro ? "Expedição pendente" : "Aguarde aprovação do Financeiro"} position="top">
-                                            <input
-                                                type="checkbox"
-                                                className="setor-checkbox"
+                                            <CustomCheckbox
                                                 checked={pedido.expedicao || false}
                                                 disabled={!pedido.financeiro}
                                                 onChange={() => toggleSetor(pedido.id, 'expedicao')}
+                                                size="large"
                                             />
                                         </Tooltip>
                                     </td>
                                     <td>
                                         <div className="d-flex gap-2">
                                             <Tooltip content="Visualizar detalhes do pedido" position="top">
-                                                <button
+                                                <Button
+                                                    variant="outline-secondary"
+                                                    size="sm"
                                                     onClick={() => setPreviewModal({ show: true, pedido })}
-                                                    className="action-button btn-outline"
+                                                    className="action-button"
                                                 >
                                                     <Eye size={14} />
                                                     Ver
-                                                </button>
+                                                </Button>
                                             </Tooltip>
                                             <Tooltip content="Editar pedido" position="top">
-                                                <button
+                                                <Button
+                                                    variant="outline-warning"
+                                                    size="sm"
                                                     onClick={() => handleEditPedido(pedido)}
-                                                    className="action-button btn-outline-warning"
+                                                    className="action-button"
                                                 >
                                                     <PencilSquare size={14} />
                                                     Editar
-                                                </button>
+                                                </Button>
                                             </Tooltip>
                                             <Tooltip content="Imprimir ficha do pedido" position="top">
-                                                <button
+                                                <Button
+                                                    variant="outline-success"
+                                                    size="sm"
                                                     onClick={() => imprimirPedidoIndividual(pedido)}
-                                                    className="action-button btn-outline-success"
+                                                    className="action-button"
                                                 >
                                                     <Printer size={14} />
                                                     Imprimir
-                                                </button>
+                                                </Button>
                                             </Tooltip>
                                         </div>
                                     </td>

@@ -3,28 +3,42 @@
 .user-profile-collapsed,
 .user-profile-expanded {
   position: relative;
-  margin: var(--spacing-4) var(--spacing-3);
+  margin: var(--spacing-3) var(--spacing-2);
+}
+
+.sidebar.collapsed .user-profile-collapsed {
+  margin: var(--spacing-3) var(--spacing-1);
+  display: flex;
+  justify-content: center;
 }
 
 /* Avatar colapsado */
-.user-avatar {
-  width: 40px;
-  height: 40px;
+.sidebar .user-avatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-normal);
   position: relative;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
-.user-avatar:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+.sidebar .user-avatar:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
   transform: scale(1.05);
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.sidebar .user-avatar:active {
+  transform: scale(0.95);
+  animation: pulse 0.6s ease-out;
 }
 
 /* Badge de admin */
@@ -57,34 +71,37 @@
 }
 
 /* Informações do usuário expandida */
-.user-info {
+.sidebar .user-info {
   display: flex;
   align-items: center;
-  padding: var(--spacing-3);
-  background: rgba(255, 255, 255, 0.05);
+  padding: var(--spacing-2);
+  background: rgba(255, 255, 255, 0.08) !important;
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: all var(--transition-normal);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
-.user-info:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+.sidebar .user-info:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
 }
 
-.user-avatar-large {
-  width: 48px;
-  height: 48px;
+.sidebar .user-avatar-large {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: var(--spacing-3);
+  margin-right: var(--spacing-2);
   position: relative;
   transition: all var(--transition-normal);
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .user-details {
@@ -92,25 +109,25 @@
   min-width: 0;
 }
 
-.user-name {
+.sidebar .user-name {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
-  color: white;
+  color: white !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.user-role {
+.sidebar .user-role {
   font-size: var(--font-size-xs);
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.7) !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.dropdown-chevron {
-  color: rgba(255, 255, 255, 0.7);
+.sidebar .dropdown-chevron {
+  color: rgba(255, 255, 255, 0.7) !important;
   transition: transform var(--transition-normal);
   margin-left: var(--spacing-2);
 }
@@ -120,30 +137,30 @@
 }
 
 /* Dropdown colapsado */
-.user-dropdown-collapsed {
+.sidebar .user-dropdown-collapsed {
   position: absolute;
   bottom: 100%;
   left: 0;
   right: 0;
-  background: var(--color-neutral-800);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--color-neutral-800) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
   z-index: 1000;
   margin-bottom: var(--spacing-2);
   animation: fadeInUp 0.2s ease-out;
 }
 
 /* Dropdown expandido */
-.user-dropdown-expanded {
+.sidebar .user-dropdown-expanded {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--color-neutral-800);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--color-neutral-800) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   border-radius: var(--border-radius);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
   z-index: 1000;
   margin-top: var(--spacing-2);
   animation: fadeInDown 0.2s ease-out;
@@ -154,12 +171,12 @@
   text-align: center;
 }
 
-.dropdown-item {
+.sidebar .dropdown-item {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-2) var(--spacing-3);
-  color: rgba(255, 255, 255, 0.9);
+  padding: var(--spacing-3) var(--spacing-4);
+  color: rgba(255, 255, 255, 0.85) !important;
   text-decoration: none;
   background: none;
   border: none;
@@ -168,48 +185,93 @@
   cursor: pointer;
   transition: all var(--transition-normal);
   font-size: var(--font-size-sm);
+  border-radius: var(--border-radius-sm);
+  margin: var(--spacing-1);
+  width: calc(100% - var(--spacing-2));
 }
 
-.dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+.sidebar .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: white !important;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
 }
 
-.dropdown-item.logout-item {
-  color: var(--color-error-light);
+.sidebar .dropdown-item.logout-item {
+  color: rgba(255, 107, 107, 0.9) !important;
 }
 
-.dropdown-item.logout-item:hover {
-  background: rgba(220, 38, 38, 0.1);
-  color: var(--color-error);
+.sidebar .dropdown-item.logout-item:hover {
+  background: rgba(255, 107, 107, 0.15) !important;
+  color: #ff6b6b !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
 }
 
-.dropdown-divider {
+/* Estilos específicos para ícones */
+.sidebar .dropdown-item svg {
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.sidebar .dropdown-item:hover svg {
+  transform: scale(1.1);
+}
+
+.sidebar .dropdown-item.logout-item svg {
+  color: rgba(255, 107, 107, 0.9) !important;
+}
+
+.sidebar .dropdown-item.logout-item:hover svg {
+  color: #ff6b6b !important;
+}
+
+/* Ícone de configurações */
+.sidebar .dropdown-item:not(.logout-item) svg {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.sidebar .dropdown-item:not(.logout-item):hover svg {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.sidebar .dropdown-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: var(--spacing-1) 0;
+  background: rgba(255, 255, 255, 0.15) !important;
+  margin: var(--spacing-2) var(--spacing-3);
 }
 
 /* Animações */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
 }
 
@@ -306,3 +368,4 @@
   z-index: 1001;
   margin-bottom: -4px;
 }
+

@@ -10,6 +10,16 @@
 
 import { getAllPedidos } from '../services/api';
 import { convertApiPedidosToList } from './apiConverter';
+import { 
+  salvarPedidoPendente, 
+  atualizarPedidoPendente, 
+  removerPedidoPendente,
+  isPedidoConcluido,
+  sincronizarPedidosPendentes,
+  mesclarPedidosComProtecao,
+  forcarBackupPedidosPendentes,
+  verificarPedidosPerdidos
+} from './localStorageHelper';
 
 const CACHE_KEY = 'pedidos_cache';
 const CACHE_LIMIT = 100;
@@ -108,14 +118,17 @@ class PedidosCache {
       console.log('Carregando pedidos da API...');
       const response = await getAllPedidos();
       console.log('Resposta da API:', response);
-      const pedidos = convertApiPedidosToList(response.data);
-      console.log('Pedidos convertidos:', pedidos);
+      const pedidosDaAPI = convertApiPedidosToList(response.data);
+      console.log('Pedidos convertidos:', pedidosDaAPI);
       
-      // Atualiza cache
+      // 🔒 PROTEÇÃO: Mesclar com pedidos pendentes do localStorage
+      const pedidosProtegidos = mesclarPedidosComProtecao(pedidosDaAPI);
+      
+      // Atualiza cache com pedidos protegidos
       this.cache = {
-        pedidos: pedidos.slice(-CACHE_LIMIT), // Mantém apenas os últimos 100
+        pedidos: pedidosProtegidos.slice(-CACHE_LIMIT), // Mantém apenas os últimos 100
         lastSync: Date.now(),
-        totalCount: pedidos.length
+        totalCount: pedidosProtegidos.length
       };
       
       this.lastSync = this.cache.lastSync;
@@ -159,6 +172,10 @@ class PedidosCache {
     };
     
     this.saveCache();
+    
+    // Salva no localStorage se não estiver concluído
+    salvarPedidoPendente(pedido);
+    
     console.log('Pedido adicionado ao cache:', pedido.numeroPedido);
   }
 
@@ -176,6 +193,13 @@ class PedidosCache {
     };
     
     this.saveCache();
+    
+    // Atualiza no localStorage - remove se concluído
+    const pedidoAtualizado = pedidos.find(p => p.id === pedidoId);
+    if (pedidoAtualizado) {
+      atualizarPedidoPendente(pedidoId, pedidoAtualizado);
+    }
+    
     console.log('Pedido atualizado no cache:', pedidoId);
   }
 
@@ -192,6 +216,10 @@ class PedidosCache {
     };
     
     this.saveCache();
+    
+    // Remove do localStorage também
+    removerPedidoPendente(pedidoId);
+    
     console.log('Pedido removido do cache:', pedidoId);
   }
 
@@ -229,6 +257,121 @@ class PedidosCache {
   async forceSync() {
     console.log('Forçando sincronização com a API...');
     return this.loadFromAPI();
+  }
+
+  /**
+   * Sincroniza pedidos pendentes do localStorage
+   * Remove pedidos que já foram concluídos
+   */
+  syncPendingPedidos() {
+    console.log('Sincronizando pedidos pendentes...');
+    return sincronizarPedidosPendentes();
+  }
+
+  /**
+   * Obtém estatísticas dos pedidos pendentes
+   */
+  getPendingPedidosStats() {
+    try {
+      const pedidosPendentes = JSON.parse(localStorage.getItem('pedidos_pendentes') || '[]');
+      const pedidosConcluidos = pedidosPendentes.filter(p => isPedidoConcluido(p));
+      const pedidosNaoConcluidos = pedidosPendentes.filter(p => !isPedidoConcluido(p));
+      
+      return {
+        total: pedidosPendentes.length,
+        concluidos: pedidosConcluidos.length,
+        naoConcluidos: pedidosNaoConcluidos.length,
+        precisaSincronizacao: pedidosConcluidos.length > 0
+      };
+    } catch (error) {
+      console.error('Erro ao obter estatísticas dos pedidos pendentes:', error);
+      return {
+        total: 0,
+        concluidos: 0,
+        naoConcluidos: 0,
+        precisaSincronizacao: false
+      };
+    }
+  }
+
+  /**
+   * 🔒 Força backup de todos os pedidos não concluídos
+   * Usado antes de operações que podem causar perda de dados
+   */
+  forcarBackupProtecao() {
+    console.log('🔒 Forçando backup de proteção...');
+    const pedidosAtuais = this.cache.pedidos || [];
+    return forcarBackupPedidosPendentes(pedidosAtuais);
+  }
+
+  /**
+   * 🔍 Verifica se há pedidos perdidos que precisam ser recuperados
+   */
+  verificarPedidosPerdidos() {
+    console.log('🔍 Verificando pedidos perdidos...');
+    const pedidosAtuais = this.cache.pedidos || [];
+    return verificarPedidosPerdidos(pedidosAtuais);
+  }
+
+  /**
+   * 🛡️ Recupera pedidos perdidos e os adiciona ao cache
+   */
+  recuperarPedidosPerdidos() {
+    try {
+      const pedidosPerdidos = this.verificarPedidosPerdidos();
+      
+      if (pedidosPerdidos.length > 0) {
+        console.log(`🔄 Recuperando ${pedidosPerdidos.length} pedidos perdidos...`);
+        
+        // Adicionar pedidos perdidos ao cache
+        const cacheAtual = this.cache.pedidos || [];
+        const cacheAtualizado = [...cacheAtual];
+        
+        pedidosPerdidos.forEach(pedidoPerdido => {
+          const jaExiste = cacheAtualizado.some(p => p.id === pedidoPerdido.id);
+          if (!jaExiste) {
+            cacheAtualizado.push(pedidoPerdido);
+            console.log(`✅ Pedido ${pedidoPerdido.numeroPedido || pedidoPerdido.id} recuperado`);
+          }
+        });
+        
+        // Atualizar cache
+        this.cache = {
+          ...this.cache,
+          pedidos: cacheAtualizado.slice(-CACHE_LIMIT),
+          totalCount: cacheAtualizado.length
+        };
+        
+        this.saveCache();
+        
+        console.log(`🎉 Recuperação concluída: ${pedidosPerdidos.length} pedidos adicionados ao cache`);
+        
+        return pedidosPerdidos;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('❌ Erro ao recuperar pedidos perdidos:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 🔒 Carrega pedidos com proteção total contra perda de dados
+   */
+  async getPedidosComProtecao(forceRefresh = false) {
+    console.log('🔒 Carregando pedidos com proteção total...');
+    
+    // Primeiro, fazer backup dos pedidos atuais
+    this.forcarBackupProtecao();
+    
+    // Carregar pedidos normalmente
+    const pedidos = await this.getPedidos(forceRefresh);
+    
+    // Verificar e recuperar pedidos perdidos
+    this.recuperarPedidosPerdidos();
+    
+    return pedidos;
   }
 }
 

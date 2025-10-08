@@ -1,0 +1,304 @@
+/* CustomCheckbox Component Styles */
+
+.custom-checkbox-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Label Styles */
+.custom-checkbox-with-label {
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.custom-checkbox-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-neutral-700);
+  line-height: 1.4;
+  transition: color var(--transition-normal);
+}
+
+.custom-checkbox-label-left {
+  order: -1;
+}
+
+.custom-checkbox-label-right {
+  order: 1;
+}
+
+.custom-checkbox-label-top {
+  order: -1;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.custom-checkbox-label-bottom {
+  order: 1;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Wrapper adjustments for different label positions */
+.custom-checkbox-with-label.custom-checkbox-label-top,
+.custom-checkbox-with-label.custom-checkbox-label-bottom {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.custom-checkbox-wrapper:hover .custom-checkbox-display {
+  border-color: var(--color-primary);
+  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.3);
+  transform: scale(1.05);
+}
+
+.custom-checkbox-wrapper:active .custom-checkbox-display {
+  transform: scale(0.98);
+}
+
+.custom-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+}
+
+.custom-checkbox-display {
+  position: relative;
+  background-color: white;
+  border: 3px solid var(--color-neutral-400);
+  border-radius: 10px;
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.custom-checkbox-input:checked + .custom-checkbox-display {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.custom-checkbox-input:focus + .custom-checkbox-display {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.3);
+  border-color: var(--color-success);
+}
+
+.custom-checkbox-input:disabled + .custom-checkbox-display {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-neutral-200);
+  border-color: var(--color-neutral-300);
+}
+
+.custom-checkbox-checkmark {
+  color: white;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* Tamanhos */
+.custom-checkbox-large .custom-checkbox-display {
+  width: 36px;
+  height: 36px;
+}
+
+.custom-checkbox-large .custom-checkbox-checkmark {
+  width: 24px;
+  height: 24px;
+}
+
+.custom-checkbox-medium .custom-checkbox-display {
+  width: 32px;
+  height: 32px;
+}
+
+.custom-checkbox-medium .custom-checkbox-checkmark {
+  width: 20px;
+  height: 20px;
+}
+
+.custom-checkbox-small .custom-checkbox-display {
+  width: 28px;
+  height: 28px;
+}
+
+.custom-checkbox-small .custom-checkbox-checkmark {
+  width: 16px;
+  height: 16px;
+}
+
+/* Tamanhos de label */
+.custom-checkbox-large .custom-checkbox-label {
+  font-size: 16px;
+}
+
+.custom-checkbox-medium .custom-checkbox-label {
+  font-size: 14px;
+}
+
+.custom-checkbox-small .custom-checkbox-label {
+  font-size: 12px;
+}
+
+/* Estados da label */
+.custom-checkbox-wrapper:hover .custom-checkbox-label {
+  color: var(--color-primary);
+}
+
+.custom-checkbox-input:disabled ~ .custom-checkbox-label {
+  color: var(--color-neutral-400);
+  cursor: not-allowed;
+}
+
+/* Modo escuro */
+[data-theme="dark"] .custom-checkbox-display {
+  background-color: var(--color-neutral-200);
+  border-color: var(--color-neutral-400);
+}
+
+[data-theme="dark"] .custom-checkbox-display:hover {
+  background-color: var(--color-neutral-300);
+  border-color: var(--color-neutral-500);
+}
+
+[data-theme="dark"] .custom-checkbox-input:checked + .custom-checkbox-display {
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
+  border-color: var(--color-success);
+}
+
+[data-theme="dark"] .custom-checkbox-input:disabled + .custom-checkbox-display {
+  background-color: var(--color-neutral-300);
+  border-color: var(--color-neutral-500);
+}
+
+[data-theme="dark"] .custom-checkbox-label {
+  color: var(--color-neutral-300);
+}
+
+[data-theme="dark"] .custom-checkbox-wrapper:hover .custom-checkbox-label {
+  color: var(--color-primary-light);
+}
+
+[data-theme="dark"] .custom-checkbox-input:disabled ~ .custom-checkbox-label {
+  color: var(--color-neutral-500);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .custom-checkbox-large .custom-checkbox-display {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .custom-checkbox-large .custom-checkbox-checkmark {
+    width: 20px;
+    height: 20px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-display {
+    width: 28px;
+    height: 28px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-checkmark {
+    width: 18px;
+    height: 18px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-display {
+    width: 24px;
+    height: 24px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-checkmark {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Labels responsivas */
+  .custom-checkbox-large .custom-checkbox-label {
+    font-size: 15px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-label {
+    font-size: 13px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-label {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-checkbox-large .custom-checkbox-display {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .custom-checkbox-large .custom-checkbox-checkmark {
+    width: 18px;
+    height: 18px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-display {
+    width: 26px;
+    height: 26px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-checkmark {
+    width: 16px;
+    height: 16px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-display {
+    width: 22px;
+    height: 22px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-checkmark {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* Labels para telas pequenas */
+  .custom-checkbox-large .custom-checkbox-label {
+    font-size: 14px;
+  }
+
+  .custom-checkbox-medium .custom-checkbox-label {
+    font-size: 12px;
+  }
+
+  .custom-checkbox-small .custom-checkbox-label {
+    font-size: 10px;
+  }
+
+  /* Ajustar espaçamento em telas pequenas */
+  .custom-checkbox-with-label {
+    gap: 6px;
+  }
+
+  .custom-checkbox-with-label.custom-checkbox-label-top,
+  .custom-checkbox-with-label.custom-checkbox-label-bottom {
+    gap: 3px;
+  }
+}

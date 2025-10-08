@@ -19,6 +19,7 @@ import {
 import CustomAlertModal from './CustomAlertModal';
 import useCustomAlert from '../hooks/useCustomAlert';
 import FormPainel from './prouctions/FormPainel';
+import FormPainelCompleto from './prouctions/FormPainelCompleto';
 import FormTotem from './prouctions/FormTotem';
 import FormLona from './prouctions/FormLona';
 import FormAlmofada from './prouctions/FormAlmofada';
@@ -70,7 +71,8 @@ const TypeProduction = memo(({ onItemsChange }) => {
           className="form-control"
         >
           <option value="">Selecione uma opção</option>
-          <option value="painel">Painel</option>
+          <option value="painel">Painel (Simples)</option>
+          <option value="painel-completo">Painel Completo (Com Ilhós/Cordinha)</option>
           <option value="totem">Totem</option>
           <option value="lona">Lona</option>
           <option value="bolsinha">Bolsinha</option>
@@ -80,6 +82,7 @@ const TypeProduction = memo(({ onItemsChange }) => {
       {opcaoSelecionada && (
         <div>
           {opcaoSelecionada === 'painel' && <FormPainel {...formProps} />}
+          {opcaoSelecionada === 'painel-completo' && <FormPainelCompleto {...formProps} />}
           {opcaoSelecionada === 'totem' && <FormTotem {...formProps} />}
           {opcaoSelecionada === 'lona' && <FormLona {...formProps} />}
           {opcaoSelecionada === 'bolsinha' && <FormBolsinha {...formProps} />}
