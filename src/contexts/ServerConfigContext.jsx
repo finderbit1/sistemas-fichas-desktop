@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { reloadApiConfig } from '../services/api';
 
 const ServerConfigContext = createContext();
 
@@ -32,6 +33,15 @@ export const ServerConfigProvider = ({ children }) => {
     const updatedConfig = { ...serverConfig, ...newConfig };
     setServerConfig(updatedConfig);
     localStorage.setItem('serverConfig', JSON.stringify(updatedConfig));
+    
+    // Recarregar configuração da API
+    reloadApiConfig();
+    
+    // Limpar cache para forçar buscar dados atualizados do novo servidor
+    if (window.cacheManager) {
+      window.cacheManager.clearAll();
+      console.log('🧹 Cache limpo após mudança de configuração do servidor');
+    }
     
     // Testar conexão após atualizar
     testConnection(updatedConfig.baseURL);

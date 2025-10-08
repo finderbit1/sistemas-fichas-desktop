@@ -1,16 +1,69 @@
 import axios from 'axios';
 
-// const API_LOCAL = "http://192.168.15.24:8080";  // IP do servidor na rede
-// const API_LOCAL = "http://localhost:8000";  // IP do servidor na rede
-const API_LOCAL = "http://127.0.0.1:8000";  // IP do servidor na rede
+// Função para obter a URL base da API (prioriza configuração salva)
+const getApiBaseURL = () => {
+  // Tentar buscar configuração salva no localStorage
+  const savedConfig = localStorage.getItem('serverConfig');
+  if (savedConfig) {
+    try {
+      const config = JSON.parse(savedConfig);
+      return config.baseURL;
+    } catch (error) {
+      console.warn('Erro ao ler configuração do servidor:', error);
+    }
+  }
+  
+  // Fallback: usar IP da rede (ALTERE AQUI para o IP do seu servidor)
+  return "http://192.168.15.6:8000";  // IP do servidor na rede
+};
 
-const api = axios.create({
-  baseURL: API_LOCAL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000
-});
+// Criar instância do axios com configuração dinâmica
+const createApiInstance = () => {
+  const baseURL = getApiBaseURL();
+  
+  return axios.create({
+    baseURL: baseURL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: 10000
+  });
+};
+
+let api = createApiInstance();
+
+// Função para recarregar a configuração da API (útil quando muda o servidor)
+export const reloadApiConfig = () => {
+  api = createApiInstance();
+  console.log('🔄 Configuração da API recarregada:', api.defaults.baseURL);
+  
+  // Reconfigurar interceptors
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.error('Erro na API:', error);
+      return Promise.reject(error);
+    }
+  );
+  
+  return api;
+};
+
+// Listener para detectar mudanças na configuração do servidor
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'serverConfig') {
+      console.log('🔄 Configuração do servidor alterada, recarregando...');
+      reloadApiConfig();
+      
+      // Limpar cache para forçar buscar dados atualizados
+      if (window.cacheManager) {
+        window.cacheManager.clearAll();
+        console.log('🧹 Cache limpo após mudança de servidor');
+      }
+    }
+  });
+}
 
 // Interceptor para tratamento de erros
 api.interceptors.response.use(

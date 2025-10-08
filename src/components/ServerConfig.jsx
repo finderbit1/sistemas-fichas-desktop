@@ -8,10 +8,12 @@ import {
   ExclamationTriangle,
   ArrowClockwise,
   Save,
-  ArrowCounterclockwise
+  ArrowCounterclockwise,
+  Trash
 } from 'react-bootstrap-icons';
 import { useServerConfig } from '../contexts/ServerConfigContext';
 import Tooltip from './Tooltip';
+import cacheManager from '../utils/cacheManager';
 
 const ServerConfig = () => {
   const { 
@@ -26,6 +28,8 @@ const ServerConfig = () => {
   const [formData, setFormData] = useState(serverConfig);
   const [isTesting, setIsTesting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showCacheCleared, setShowCacheCleared] = useState(false);
+  const [cacheStats, setCacheStats] = useState(() => cacheManager.getStats());
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,6 +59,14 @@ const ServerConfig = () => {
     };
     setFormData(defaultConfig);
     resetToDefault();
+  };
+
+  const handleClearCache = () => {
+    const count = cacheManager.clearAll();
+    setCacheStats(cacheManager.getStats());
+    setShowCacheCleared(true);
+    setTimeout(() => setShowCacheCleared(false), 3000);
+    console.log(`🧹 ${count} itens de cache removidos`);
   };
 
   const getStatusIcon = () => {
@@ -119,6 +131,13 @@ const ServerConfig = () => {
         <Alert variant="success" className="mb-4">
           <CheckCircle size={16} style={{ marginRight: '8px' }} />
           Configuração salva com sucesso!
+        </Alert>
+      )}
+
+      {showCacheCleared && (
+        <Alert variant="info" className="mb-4">
+          <Trash size={16} style={{ marginRight: '8px' }} />
+          Cache limpo com sucesso! Os dados serão recarregados da API.
         </Alert>
       )}
 
@@ -216,26 +235,41 @@ const ServerConfig = () => {
 
         <Row>
           <Col md={12}>
-            <div style={{ display: 'flex', gap: 'var(--spacing-3)', justifyContent: 'flex-end' }}>
-              <Tooltip content="Restaurar configurações padrão" position="top">
+            <div style={{ display: 'flex', gap: 'var(--spacing-3)', justifyContent: 'space-between' }}>
+              <div>
+                <Tooltip content="Limpar todos os dados em cache e forçar atualização" position="top">
+                  <Button
+                    variant="outline-warning"
+                    onClick={handleClearCache}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <Trash size={16} />
+                    Limpar Cache
+                  </Button>
+                </Tooltip>
+              </div>
+              
+              <div style={{ display: 'flex', gap: 'var(--spacing-3)' }}>
+                <Tooltip content="Restaurar configurações padrão" position="top">
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleReset}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <ArrowCounterclockwise size={16} />
+                    Restaurar Padrão
+                  </Button>
+                </Tooltip>
+                
                 <Button
-                  variant="outline-secondary"
-                  onClick={handleReset}
+                  variant="primary"
+                  onClick={handleSave}
                   style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
-                  <ArrowCounterclockwise size={16} />
-                  Restaurar Padrão
+                  <Save size={16} />
+                  Salvar Configuração
                 </Button>
-              </Tooltip>
-              
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-              >
-                <Save size={16} />
-                Salvar Configuração
-              </Button>
+              </div>
             </div>
           </Col>
         </Row>
@@ -256,7 +290,7 @@ const ServerConfig = () => {
         }}>
           Informações da Conexão
         </h6>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-3)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-3)' }}>
           <div>
             <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-500)' }}>URL Atual:</span>
             <p style={{ 
@@ -277,6 +311,17 @@ const ServerConfig = () => {
               fontWeight: 'var(--font-weight-medium)'
             }}>
               {getStatusText()}
+            </p>
+          </div>
+          <div>
+            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-500)' }}>Cache:</span>
+            <p style={{ 
+              margin: '4px 0 0 0', 
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-neutral-700)',
+              fontWeight: 'var(--font-weight-medium)'
+            }}>
+              {cacheStats.total} itens ({cacheStats.tamanho.kb} KB)
             </p>
           </div>
         </div>

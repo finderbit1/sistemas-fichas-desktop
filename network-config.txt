@@ -1,0 +1,26 @@
+# CONFIGURAÇÃO DE REDE - SISTEMA DE FICHAS
+# Gerado em: qua 08 out 2025 15:09:28 -03
+
+## Informações do Servidor
+IP do Servidor: 192.168.15.6
+Porta da API: 8000
+URL da API: http://192.168.15.6:8000
+
+## URLs Importantes
+Health Check: http://192.168.15.6:8000/health
+Documentação: http://192.168.15.6:8000/docs
+
+## Configuração para o Frontend (localStorage)
+localStorage.setItem('serverConfig', JSON.stringify({
+  baseURL: 'http://192.168.15.6:8000',
+  timeout: 10000,
+  retries: 3
+}));
+location.reload();
+
+## Teste de Conexão
+curl http://192.168.15.6:8000/health
+
+## Firewall (se necessário)
+sudo ufw allow 8000
+
