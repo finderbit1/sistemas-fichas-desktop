@@ -34,6 +34,7 @@ from descontos.router import router as descontos_router
 from relatorios.router import router as relatorios_router
 from producoes.router import router as producoes_router
 from tecidos.router import router as tecidos_router
+from materiais.router import router as materiais_router
 
 # Importar routers opcionais com tratamento de erro robusto
 designers_router = None
@@ -109,6 +110,7 @@ try:
     app.include_router(relatorios_router, prefix=settings.API_V1_STR)
     app.include_router(producoes_router, prefix=settings.API_V1_STR)
     app.include_router(tecidos_router, prefix=settings.API_V1_STR)
+    app.include_router(materiais_router, prefix=settings.API_V1_STR)
     logger.info("✅ Routers principais incluídos com sucesso")
 except Exception as e:
     logger.error(f"❌ Erro ao incluir routers principais: {e}")

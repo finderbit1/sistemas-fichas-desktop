@@ -7,6 +7,7 @@ import InputValorReal from '../InputValorMoeda';
 import ValidationModal from '../ValidationModal';
 import { useVendedoresDesigners } from '../../hooks/useVendedoresDesigners';
 import { getAllTecidos } from '../../services/api';
+import cacheManager from '../../utils/cacheManager';
 import CustomCheckbox from '../CustomCheckbox';
 import useCustomAlert from '../../hooks/useCustomAlert';
 import CustomAlertModal from '../CustomAlertModal';
@@ -57,14 +58,70 @@ function FormPainelCompleto({ onAdicionarItem }) {
         return v.toFixed(2).replace('.', ',');
     };
 
+    // Formatar valor como moeda enquanto digita
+    const formatarMoedaInput = (valor) => {
+        // Remove tudo que não é número
+        const apenasNumeros = valor.replace(/\D/g, '');
+        
+        if (!apenasNumeros) return '';
+        
+        // Converte para número e divide por 100 (centavos)
+        const numero = parseFloat(apenasNumeros) / 100;
+        
+        // Formata com separadores
+        return numero.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    };
+
+    // Handler especial para campos monetários
+    const handleMoneyChange = (e) => {
+        const { name, value } = e.target;
+        const valorFormatado = formatarMoedaInput(value);
+        
+        setFormData(prev => ({
+            ...prev,
+            [name]: valorFormatado
+        }));
+        
+        // Validar campo
+        validateField(name, valorFormatado);
+    };
+
     useEffect(() => {
+        // Tentar buscar do cache primeiro
+        const cachedTecidos = cacheManager.get('tecidos');
+        
+        if (cachedTecidos) {
+            // Cache HIT
+            const ativos = cachedTecidos.filter((t) => t.active);
+            setTecidos(ativos);
+            setTecidosLoading(false);
+            
+            if (import.meta.env.DEV) {
+                console.log('⚡ Tecidos carregados do CACHE');
+            }
+            return;
+        }
+
+        // Cache MISS - buscar da API
+        if (import.meta.env.DEV) {
+            console.log('🌐 Buscando Tecidos da API...');
+        }
+        
         getAllTecidos()
             .then((res) => {
-                const ativos = (res.data || []).filter((t) => t.active);
+                const tecidosData = res.data || [];
+                const ativos = tecidosData.filter((t) => t.active);
+                
+                // Salvar no cache
+                cacheManager.set('tecidos', tecidosData);
+                
                 setTecidos(ativos);
             })
             .catch((e) => {
-                console.error('Erro ao carregar tecidos:', e);
+                console.error('❌ Erro ao carregar tecidos:', e);
                 setTecidosError('Não foi possível carregar a lista de tecidos');
             })
             .finally(() => setTecidosLoading(false));
@@ -98,6 +155,9 @@ function FormPainelCompleto({ onAdicionarItem }) {
             ilhos: false,
             cordinha: false,
         },
+        // Emenda
+        emenda: 'sem-emenda',
+        emendaQtd: '',
         // Campos para Ilhós
         ilhosQtd: '',
         ilhosEspaco: '',
@@ -153,6 +213,8 @@ function FormPainelCompleto({ onAdicionarItem }) {
                 ilhos: false,
                 cordinha: false,
             },
+            emenda: 'sem-emenda',
+            emendaQtd: '',
             ilhosQtd: '',
             ilhosEspaco: '',
             ilhosValorUnitario: '',
@@ -205,6 +267,12 @@ function FormPainelCompleto({ onAdicionarItem }) {
                 break;
             case 'cordinhaValorUnitario':
                 if (formData.opcoes.cordinha && !value) error = 'Obrigatório quando cordinha marcada';
+                break;
+            case 'emendaQtd':
+                if (formData.emenda !== 'sem-emenda' && !value) error = 'Obrigatório quando há emenda';
+                else if (value && (isNaN(parseInt(value)) || parseInt(value) <= 0)) {
+                    error = 'Quantidade deve ser maior que zero';
+                }
                 break;
             default:
                 break;
@@ -315,6 +383,15 @@ function FormPainelCompleto({ onAdicionarItem }) {
             }
             if (formData.cordinhaValorUnitario && (isNaN(parseFloat(formData.cordinhaValorUnitario.replace(',', '.'))) || parseFloat(formData.cordinhaValorUnitario.replace(',', '.')) <= 0)) {
                 erros.push("Valor Unitário da Cordinha deve ser um número maior que zero");
+            }
+        }
+        
+        // Validação específica para emenda
+        if (formData.emenda !== 'sem-emenda') {
+            if (!formData.emendaQtd?.trim()) erros.push("Quantidade de Emendas");
+            
+            if (formData.emendaQtd && (isNaN(parseInt(formData.emendaQtd)) || parseInt(formData.emendaQtd) <= 0)) {
+                erros.push("Quantidade de Emendas deve ser um número maior que zero");
             }
         }
         
@@ -557,6 +634,72 @@ function FormPainelCompleto({ onAdicionarItem }) {
                                         onChange={handleChange}
                                     />
                                 </div>
+
+                                {/* Tipo de Emenda */}
+                                <div className="form-group mt-3">
+                                    <label className="form-label">
+                                        Tipo de Emenda
+                                        <OverlayTrigger placement="right" overlay={renderTooltip('Selecione o tipo de emenda do painel')}>
+                                            <span className="ms-2 text-muted" style={{ cursor: 'help' }}>
+                                                <InfoCircle size={14} />
+                                            </span>
+                                        </OverlayTrigger>
+                                    </label>
+                                    <Form.Select 
+                                        name="emenda" 
+                                        value={formData.emenda} 
+                                        onChange={handleChange} 
+                                        required 
+                                        className={`form-control ${formData.emenda ? 'is-valid' : ''}`}
+                                    >
+                                        <option value="sem-emenda">Sem emenda</option>
+                                        <option value="vertical">Vertical</option>
+                                        <option value="horizontal">Horizontal</option>
+                                    </Form.Select>
+                                </div>
+
+                                {/* Campos de Emenda - Aparece quando há emenda */}
+                                {formData.emenda !== 'sem-emenda' && (
+                                    <div className="mt-3 p-3" style={{ background: 'var(--color-warning-light, #fff3cd)', borderRadius: 'var(--border-radius)', border: '1px solid var(--color-warning, #ffc107)' }}>
+                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 className="mb-0" style={{ color: 'var(--color-warning-dark, #856404)', fontSize: 'var(--font-size-sm)' }}>
+                                                Configuração da Emenda {formData.emenda === 'vertical' ? 'Vertical' : 'Horizontal'}
+                                            </h6>
+                                        </div>
+                                        <Row>
+                                            <Col md={12}>
+                                                <div className="form-group mb-0">
+                                                    <label className="form-label" style={{ fontSize: '0.9rem' }}>
+                                                        Quantidade de Emendas
+                                                        <OverlayTrigger placement="right" overlay={renderTooltip('Informe quantas emendas terá o painel')}>
+                                                            <span className="ms-2 text-muted" style={{ cursor: 'help' }}>
+                                                                <InfoCircle size={12} />
+                                                            </span>
+                                                        </OverlayTrigger>
+                                                    </label>
+                                                    <Form.Control
+                                                        type="number"
+                                                        name="emendaQtd"
+                                                        min="1"
+                                                        max="20"
+                                                        value={formData.emendaQtd}
+                                                        onChange={handleChange}
+                                                        onBlur={handleBlur}
+                                                        placeholder="Ex: 2"
+                                                        required={formData.emenda !== 'sem-emenda'}
+                                                        className={`form-control ${fieldErrors.emendaQtd ? 'is-invalid' : formData.emendaQtd ? 'is-valid' : ''}`}
+                                                    />
+                                                    {fieldErrors.emendaQtd && (
+                                                        <div className="invalid-feedback d-block" style={{ fontSize: '0.85rem' }}>
+                                                            <XCircle size={12} className="me-1" />
+                                                            {fieldErrors.emendaQtd}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </Col>
+                                        </Row>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Opções de Fixação */}
@@ -633,7 +776,7 @@ function FormPainelCompleto({ onAdicionarItem }) {
                                                             name="ilhosValorUnitario"
                                                             placeholder="0,50"
                                                             value={formData.ilhosValorUnitario}
-                                                            onChange={handleChange}
+                                                            onChange={handleMoneyChange}
                                                             onBlur={handleBlur}
                                                             required={formData.opcoes.ilhos}
                                                             className={`form-control ${fieldErrors.ilhosValorUnitario ? 'is-invalid' : formData.ilhosValorUnitario ? 'is-valid' : ''}`}
@@ -713,7 +856,7 @@ function FormPainelCompleto({ onAdicionarItem }) {
                                                             name="cordinhaValorUnitario"
                                                             placeholder="1,50"
                                                             value={formData.cordinhaValorUnitario}
-                                                            onChange={handleChange}
+                                                            onChange={handleMoneyChange}
                                                             onBlur={handleBlur}
                                                             required={formData.opcoes.cordinha}
                                                             className={`form-control ${fieldErrors.cordinhaValorUnitario ? 'is-invalid' : formData.cordinhaValorUnitario ? 'is-valid' : ''}`}
@@ -757,7 +900,7 @@ function FormPainelCompleto({ onAdicionarItem }) {
                                             type="text"
                                             name="valorPainel"
                                             value={formData.valorPainel}
-                                            onChange={handleChange}
+                                            onChange={handleMoneyChange}
                                             onBlur={handleBlur}
                                             placeholder="Ex: 150,00"
                                             required
@@ -782,7 +925,7 @@ function FormPainelCompleto({ onAdicionarItem }) {
                                             type="text"
                                             name="valorAdicionais"
                                             value={formData.valorAdicionais}
-                                            onChange={handleChange}
+                                            onChange={handleMoneyChange}
                                             placeholder="Ex: 10,00"
                                             className="form-control"
                                         />
@@ -809,39 +952,53 @@ function FormPainelCompleto({ onAdicionarItem }) {
                             </Col>
                         </Row>
 
-                        {/* Resumo de Valores */}
-                        {(valorTotalIlhos > 0 || valorTotalCordinha > 0 || parseBR(formData.valorAdicionais) > 0) && (
+                        {/* Resumo de Valores - Sempre Visível */}
+                        {formData.valorPainel && (
                             <Row className="mb-3">
                                 <Col md={12}>
-                                    <div className="p-2" style={{ background: 'var(--color-neutral-100)', borderRadius: '8px', fontSize: '0.9rem' }}>
-                                        <strong>Composição do Valor Total:</strong>
-                                        <div className="mt-2">
-                                            <div className="d-flex justify-content-between">
-                                                <span>Valor do Painel:</span>
-                                                <span>R$ {formatBR(parseBR(formData.valorPainel))}</span>
+                                    <div className="p-3" style={{ 
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                                        borderRadius: '12px', 
+                                        color: 'white',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}>
+                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                            <strong style={{ fontSize: '1.1rem' }}>💰 Composição do Valor Total</strong>
+                                            {(valorTotalIlhos > 0 || valorTotalCordinha > 0) && (
+                                                <Badge bg="light" text="dark" style={{ fontSize: '0.75rem' }}>
+                                                    Com Extras
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="mt-2" style={{ fontSize: '0.95rem' }}>
+                                            <div className="d-flex justify-content-between py-1">
+                                                <span>Valor Base do Painel:</span>
+                                                <strong>R$ {formatBR(parseBR(formData.valorPainel))}</strong>
                                             </div>
                                             {valorTotalIlhos > 0 && (
-                                                <div className="d-flex justify-content-between text-primary">
-                                                    <span>+ Ilhós ({formData.ilhosQtd} × R$ {formData.ilhosValorUnitario}):</span>
-                                                    <span>R$ {formatBR(valorTotalIlhos)}</span>
+                                                <div className="d-flex justify-content-between py-1" style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', margin: '4px 0' }}>
+                                                    <span>+ Ilhós ({formData.ilhosQtd} un. × R$ {formData.ilhosValorUnitario}):</span>
+                                                    <strong style={{ color: '#90caf9' }}>R$ {formatBR(valorTotalIlhos)}</strong>
                                                 </div>
                                             )}
                                             {valorTotalCordinha > 0 && (
-                                                <div className="d-flex justify-content-between text-success">
-                                                    <span>+ Cordinha ({formData.cordinhaQtd} × R$ {formData.cordinhaValorUnitario}):</span>
-                                                    <span>R$ {formatBR(valorTotalCordinha)}</span>
+                                                <div className="d-flex justify-content-between py-1" style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '4px', margin: '4px 0' }}>
+                                                    <span>+ Cordinha ({formData.cordinhaQtd} un. × R$ {formData.cordinhaValorUnitario}):</span>
+                                                    <strong style={{ color: '#a5d6a7' }}>R$ {formatBR(valorTotalCordinha)}</strong>
                                                 </div>
                                             )}
                                             {parseBR(formData.valorAdicionais) > 0 && (
-                                                <div className="d-flex justify-content-between">
-                                                    <span>+ Adicionais:</span>
-                                                    <span>R$ {formatBR(parseBR(formData.valorAdicionais))}</span>
+                                                <div className="d-flex justify-content-between py-1">
+                                                    <span>+ Valores Adicionais:</span>
+                                                    <strong>R$ {formatBR(parseBR(formData.valorAdicionais))}</strong>
                                                 </div>
                                             )}
-                                            <hr className="my-2" />
-                                            <div className="d-flex justify-content-between" style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-                                                <span>Total:</span>
-                                                <span style={{ color: 'var(--color-success)' }}>R$ {formatBR(valorTotalGeral)}</span>
+                                            <hr style={{ borderColor: 'rgba(255,255,255,0.3)', margin: '12px 0' }} />
+                                            <div className="d-flex justify-content-between align-items-center" style={{ fontSize: '1.3rem', fontWeight: 'bold', padding: '8px', background: 'rgba(255,255,255,0.15)', borderRadius: '8px' }}>
+                                                <span>VALOR TOTAL:</span>
+                                                <span style={{ color: '#ffd740', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                                                    R$ {formatBR(valorTotalGeral)}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

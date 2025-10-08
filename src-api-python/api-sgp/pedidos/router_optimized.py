@@ -347,3 +347,4 @@ def atualizar_status_em_lote(
     except Exception as e:
         logger.error(f"❌ Erro na atualização em lote: {e}")
         raise HTTPException(status_code=500, detail=f"Erro na atualização em lote: {str(e)}")
+

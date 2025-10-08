@@ -3,8 +3,13 @@ import { Form, Tabs, Tab, Container, Button, Card } from 'react-bootstrap';
 import FormPainel from './FormPainel';
 import FormPainelCompleto from './FormPainelCompleto';
 import FormTotem from './FormTotem';
+import FormTotemCompleto from './FormTotemCompleto';
 import FormLona from './FormLona';
+import FormLonaCompleto from './FormLonaCompleto';
+import FormAlmofada from './FormAlmofada';
+import FormAlmofadaCompleto from './FormAlmofadaCompleto';
 import FormBolsinha from '../FormBolsinha';
+import FormBolsinhaCompleto from './FormBolsinhaCompleto';
 
 function TypeProduction() {
     const [opcaoSelecionada, setOpcaoSelecionada] = useState('');
@@ -28,18 +33,18 @@ function TypeProduction() {
                 value={opcaoSelecionada}
             >
                 <option value="">Selecione uma opção</option>
-                <option value="painel">Painel (Simples)</option>
-                <option value="painel-completo">Painel Completo (Com Ilhós/Cordinha)</option>
+                <option value="painel">Painel</option>
                 <option value="totem">Totem</option>
                 <option value="lona">Lona</option>
+                <option value="almofada">Almofada</option>
                 <option value="bolsinha">Bolsinha</option>
             </Form.Select>
             <div>
-                {opcaoSelecionada === 'painel' && <FormPainel onAdicionarItem={adicionarItem} />}
-                {opcaoSelecionada === 'painel-completo' && <FormPainelCompleto onAdicionarItem={adicionarItem} />}
-                {opcaoSelecionada === 'totem' && <FormTotem />}
-                {opcaoSelecionada === 'lona' && <FormLona />}
-                {opcaoSelecionada === 'bolsinha' && <FormBolsinha />}
+                {opcaoSelecionada === 'painel' && <FormPainelCompleto onAdicionarItem={adicionarItem} />}
+                {opcaoSelecionada === 'totem' && <FormTotemCompleto onAdicionarItem={adicionarItem} />}
+                {opcaoSelecionada === 'lona' && <FormLonaCompleto onAdicionarItem={adicionarItem} />}
+                {opcaoSelecionada === 'almofada' && <FormAlmofadaCompleto onAdicionarItem={adicionarItem} />}
+                {opcaoSelecionada === 'bolsinha' && <FormBolsinhaCompleto onAdicionarItem={adicionarItem} />}
             </div>
         </>
     );

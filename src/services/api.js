@@ -127,6 +127,14 @@ export const createTecido = (data) => api.post('/tecidos', data);
 export const updateTecido = (id, data) => api.patch(`/tecidos/${id}`, data);
 export const deleteTecido = (id) => api.delete(`/tecidos/${id}`);
 
+// ===== MATERIAIS =====
+export const getAllMateriais = () => api.get('/materiais');
+export const getMateriaisPorTipo = (tipo) => api.get(`/materiais/tipo/${tipo}`);
+export const getMaterialById = (id) => api.get(`/materiais/${id}`);
+export const createMaterial = (data) => api.post('/materiais', data);
+export const updateMaterial = (id, data) => api.patch(`/materiais/${id}`, data);
+export const deleteMaterial = (id) => api.delete(`/materiais/${id}`);
+
 // Relatórios por Cliente, Vendedor e Designer
 export const gerarRelatorioCliente = (nomeCliente) => {
   return api.post('/relatorios/cliente', null, {
@@ -169,6 +177,11 @@ export const gerarRelatorioSintetico = (payload) => {
 
 export const gerarRelatorioMatrizPDF = (payload) => {
   return api.post('/relatorios/matriz/pdf', payload, { responseType: 'blob' });
+};
+
+// ===== RELATÓRIOS DE ENVIOS =====
+export const gerarRelatorioEnvios = (filtros) => {
+  return api.post('/relatorios/envios', filtros);
 };
 
 // ===== FUNÇÕES DE COMPATIBILIDADE (mantidas para não quebrar código existente) =====

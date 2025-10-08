@@ -16,6 +16,10 @@ from .schema import (
     SinteticoRequest,
     SinteticoResponse,
     SinteticoLinha,
+    RelatorioEnviosRequest,
+    RelatorioEnviosResponse,
+    EnvioEstatistica,
+    EnvioDetalhado,
 )
 from pedidos.schema import Pedido, Status
 from datetime import datetime, date, timedelta
@@ -992,3 +996,260 @@ def obter_lista_designers(session: Session = Depends(get_session)):
         return {"designers": sorted(list(designers_unicos))}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao obter lista de designers: {str(e)}")
+
+# ===== RELATÓRIO DE ENVIOS =====
+
+@router.post("/envios", response_model=RelatorioEnviosResponse)
+def gerar_relatorio_envios(req: RelatorioEnviosRequest, session: Session = Depends(get_session)):
+    """
+    Gera relatório completo de envios com estatísticas e análises
+    - Agregações otimizadas no SQL
+    - Filtros múltiplos
+    - Análise geográfica
+    - KPIs e tendências
+    """
+    if not verificar_admin():
+        raise HTTPException(status_code=403, detail="Acesso negado. Apenas administradores podem acessar relatórios.")
+    
+    try:
+        # Buscar pedidos base
+        query = select(Pedido).where(Pedido.status != Status.CANCELADO)
+        
+        # Aplicar filtros de data
+        if req.data_inicio:
+            query = query.where(func.date(Pedido.data_criacao) >= req.data_inicio)
+        if req.data_fim:
+            query = query.where(func.date(Pedido.data_criacao) <= req.data_fim)
+        
+        pedidos = session.exec(query).all()
+        
+        # Aplicar filtros adicionais (Python) - idealmente seria no SQL
+        pedidos_filtrados = []
+        for pedido in pedidos:
+            # Filtro de valor
+            if req.valor_min and float(pedido.valor_total) < req.valor_min:
+                continue
+            if req.valor_max and float(pedido.valor_total) > req.valor_max:
+                continue
+            
+            # Filtro de forma de envio
+            if req.formas_envio and pedido.forma_envio not in req.formas_envio:
+                continue
+            
+            # Filtros de localização (assumindo campos no pedido)
+            cidade = getattr(pedido, 'cidade_cliente', None) or getattr(pedido, 'cidade', '')
+            estado = getattr(pedido, 'estado_cliente', None) or getattr(pedido, 'estado', '')
+            
+            if req.cidades and cidade not in req.cidades:
+                continue
+            if req.estados and estado not in req.estados:
+                continue
+            
+            # Filtros de vendedor/designer (verificar items)
+            if req.vendedor or req.designer:
+                if pedido.items:
+                    items = json.loads(pedido.items) if isinstance(pedido.items, str) else pedido.items
+                    tem_vendedor = any(item.get('vendedor') == req.vendedor for item in items) if req.vendedor else True
+                    tem_designer = any(item.get('designer') == req.designer for item in items) if req.designer else True
+                    if not (tem_vendedor and tem_designer):
+                        continue
+            
+            # Filtro de status (múltiplos)
+            if req.status and pedido.status.value not in req.status:
+                continue
+            
+            pedidos_filtrados.append(pedido)
+        
+        # ===== CALCULAR KPIs GERAIS =====
+        total_pedidos = len(pedidos_filtrados)
+        valor_total = sum(float(p.valor_total) for p in pedidos_filtrados)
+        
+        total_itens = 0
+        for p in pedidos_filtrados:
+            if p.items:
+                items = json.loads(p.items) if isinstance(p.items, str) else p.items
+                total_itens += len(items)
+        
+        ticket_medio = valor_total / total_pedidos if total_pedidos > 0 else 0
+        
+        # ===== ESTATÍSTICAS POR FORMA DE ENVIO =====
+        envios_map = defaultdict(lambda: {
+            'quantidade_pedidos': 0,
+            'quantidade_itens': 0,
+            'valor_total': 0.0,
+            'cidades_map': defaultdict(int)
+        })
+        
+        for pedido in pedidos_filtrados:
+            forma = pedido.forma_envio or "Não especificado"
+            envios_map[forma]['quantidade_pedidos'] += 1
+            envios_map[forma]['valor_total'] += float(pedido.valor_total)
+            
+            # Contar itens
+            if pedido.items:
+                items = json.loads(pedido.items) if isinstance(pedido.items, str) else pedido.items
+                envios_map[forma]['quantidade_itens'] += len(items)
+            
+            # Mapear cidades
+            cidade = getattr(pedido, 'cidade_cliente', None) or getattr(pedido, 'cidade', 'Não informado')
+            envios_map[forma]['cidades_map'][cidade] += 1
+        
+        # Converter para lista de estatísticas
+        estatisticas_envios = []
+        for forma, dados in envios_map.items():
+            qtd_pedidos = dados['quantidade_pedidos']
+            valor = dados['valor_total']
+            ticket = valor / qtd_pedidos if qtd_pedidos > 0 else 0
+            
+            cidades_lista = [
+                {"cidade": cidade, "quantidade": qtd}
+                for cidade, qtd in sorted(dados['cidades_map'].items(), key=lambda x: x[1], reverse=True)[:5]
+            ]
+            
+            estatisticas_envios.append(EnvioEstatistica(
+                forma_envio=forma,
+                quantidade_pedidos=qtd_pedidos,
+                quantidade_itens=dados['quantidade_itens'],
+                valor_total=valor,
+                ticket_medio=ticket,
+                percentual_pedidos=(qtd_pedidos / total_pedidos * 100) if total_pedidos > 0 else 0,
+                percentual_valor=(valor / valor_total * 100) if valor_total > 0 else 0,
+                cidades=cidades_lista
+            ))
+        
+        # Ordenar por quantidade de pedidos
+        estatisticas_envios.sort(key=lambda x: x.quantidade_pedidos, reverse=True)
+        
+        # ===== DISTRIBUIÇÃO GEOGRÁFICA =====
+        cidades_map = defaultdict(lambda: {'quantidade': 0, 'valor': 0.0})
+        estados_map = defaultdict(lambda: {'quantidade': 0, 'valor': 0.0})
+        
+        for pedido in pedidos_filtrados:
+            cidade = getattr(pedido, 'cidade_cliente', None) or getattr(pedido, 'cidade', 'Não informado')
+            estado = getattr(pedido, 'estado_cliente', None) or getattr(pedido, 'estado', 'Não informado')
+            
+            cidades_map[cidade]['quantidade'] += 1
+            cidades_map[cidade]['valor'] += float(pedido.valor_total)
+            
+            estados_map[estado]['quantidade'] += 1
+            estados_map[estado]['valor'] += float(pedido.valor_total)
+        
+        distribuicao_cidades = [
+            {"cidade": cidade, **dados}
+            for cidade, dados in sorted(cidades_map.items(), key=lambda x: x[1]['quantidade'], reverse=True)
+        ]
+        
+        distribuicao_estados = [
+            {"estado": estado, **dados}
+            for estado, dados in sorted(estados_map.items(), key=lambda x: x[1]['quantidade'], reverse=True)
+        ]
+        
+        # ===== RANKINGS =====
+        top_cidades = distribuicao_cidades[:10]
+        
+        # Top clientes por envio
+        clientes_map = defaultdict(lambda: {'pedidos': 0, 'valor': 0.0, 'formas_envio': set()})
+        for pedido in pedidos_filtrados:
+            cliente = pedido.cliente or "Não informado"
+            clientes_map[cliente]['pedidos'] += 1
+            clientes_map[cliente]['valor'] += float(pedido.valor_total)
+            clientes_map[cliente]['formas_envio'].add(pedido.forma_envio or "Não especificado")
+        
+        top_clientes = [
+            {
+                "cliente": cliente,
+                "pedidos": dados['pedidos'],
+                "valor": dados['valor'],
+                "formas_envio": list(dados['formas_envio'])
+            }
+            for cliente, dados in sorted(clientes_map.items(), key=lambda x: x[1]['pedidos'], reverse=True)[:10]
+        ]
+        
+        # ===== TENDÊNCIA TEMPORAL (se houver período) =====
+        tendencia_temporal = None
+        if req.data_inicio and req.data_fim:
+            dias_map = defaultdict(lambda: {'pedidos': 0, 'valor': 0.0})
+            for pedido in pedidos_filtrados:
+                dia = pedido.data_criacao.date().isoformat()
+                dias_map[dia]['pedidos'] += 1
+                dias_map[dia]['valor'] += float(pedido.valor_total)
+            
+            tendencia_temporal = [
+                {"data": dia, **dados}
+                for dia, dados in sorted(dias_map.items())
+            ]
+        
+        # ===== COMPARATIVO PERÍODO ANTERIOR =====
+        comparativo_periodo_anterior = None
+        if req.data_inicio and req.data_fim:
+            delta = req.data_fim - req.data_inicio
+            periodo_anterior_inicio = req.data_inicio - delta - timedelta(days=1)
+            periodo_anterior_fim = req.data_inicio - timedelta(days=1)
+            
+            pedidos_anterior = session.exec(
+                select(Pedido).where(
+                    func.date(Pedido.data_criacao) >= periodo_anterior_inicio,
+                    func.date(Pedido.data_criacao) <= periodo_anterior_fim,
+                    Pedido.status != Status.CANCELADO
+                )
+            ).all()
+            
+            total_anterior = len(pedidos_anterior)
+            valor_anterior = sum(float(p.valor_total) for p in pedidos_anterior)
+            
+            comparativo_periodo_anterior = {
+                "periodo_anterior": {
+                    "inicio": periodo_anterior_inicio.isoformat(),
+                    "fim": periodo_anterior_fim.isoformat(),
+                    "total_pedidos": total_anterior,
+                    "valor_total": valor_anterior
+                },
+                "variacao_pedidos": ((total_pedidos - total_anterior) / total_anterior * 100) if total_anterior > 0 else 0,
+                "variacao_valor": ((valor_total - valor_anterior) / valor_anterior * 100) if valor_anterior > 0 else 0
+            }
+        
+        # ===== DETALHES (limitado a 100 para performance) =====
+        detalhes = []
+        for pedido in pedidos_filtrados[:100]:
+            tipos_itens = []
+            qtd_itens = 0
+            if pedido.items:
+                items = json.loads(pedido.items) if isinstance(pedido.items, str) else pedido.items
+                qtd_itens = len(items)
+                tipos_itens = list(set(item.get('tipo_producao') or item.get('nome') or 'Item' for item in items))
+            
+            detalhes.append(EnvioDetalhado(
+                pedido_id=pedido.id,
+                cliente=pedido.cliente or "Não informado",
+                forma_envio=pedido.forma_envio or "Não especificado",
+                cidade=getattr(pedido, 'cidade_cliente', None) or getattr(pedido, 'cidade', 'Não informado'),
+                estado=getattr(pedido, 'estado_cliente', None) or getattr(pedido, 'estado', 'Não informado'),
+                tipos_itens=tipos_itens,
+                quantidade_itens=qtd_itens,
+                valor_total=float(pedido.valor_total),
+                data_entrega=pedido.data_entrega if hasattr(pedido, 'data_entrega') else None,
+                status=pedido.status.value
+            ))
+        
+        # ===== MONTAR RESPOSTA =====
+        return RelatorioEnviosResponse(
+            total_pedidos=total_pedidos,
+            total_itens=total_itens,
+            valor_total=valor_total,
+            ticket_medio=ticket_medio,
+            periodo={
+                "inicio": req.data_inicio.isoformat() if req.data_inicio else None,
+                "fim": req.data_fim.isoformat() if req.data_fim else None
+            },
+            estatisticas_envios=estatisticas_envios,
+            distribuicao_cidades=distribuicao_cidades,
+            distribuicao_estados=distribuicao_estados,
+            top_cidades=top_cidades,
+            top_clientes=top_clientes,
+            tendencia_temporal=tendencia_temporal,
+            comparativo_periodo_anterior=comparativo_periodo_anterior,
+            detalhes=detalhes
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar relatório de envios: {str(e)}")

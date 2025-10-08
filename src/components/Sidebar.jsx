@@ -8,7 +8,8 @@ import {
   BarChartFill,
   GearFill,
   ChevronDoubleLeft,
-  ChevronDoubleRight
+  ChevronDoubleRight,
+  TruckFront
 } from 'react-bootstrap-icons';
 import { useAuth } from '../contexts/AuthContext';
 import Tooltip from './Tooltip';
@@ -26,6 +27,7 @@ const Sidebar = ({ expanded, toggleSidebar }) => {
     { path: '/relatorio', icon: FileTextFill, label: 'Relatórios' },
     { path: '/relatorios', icon: BarChartFill, label: 'Relatórios Admin', adminOnly: true },
     { path: '/relatorios-matriz', icon: BarChartFill, label: 'Matriz X×Y', adminOnly: true },
+    { path: '/relatorios-envios', icon: TruckFront, label: 'Relatório Envios', adminOnly: true },
     { path: '/admin', icon: GearFill, label: 'Admin', adminOnly: true }
   ].filter(item => !item.adminOnly || isAdmin());
 

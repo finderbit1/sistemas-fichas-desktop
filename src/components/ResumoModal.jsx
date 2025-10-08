@@ -14,10 +14,6 @@ import {
 } from 'react-bootstrap-icons';
 
 function ResumoModal({ show, onHide, formData = {} }) {
-  // Debug: verificar dados recebidos
-  console.log('ResumoModal - formData recebido:', formData);
-  console.log('ResumoModal - items:', formData.items);
-  
   // Função segura para converter valores
   const converterValor = (valor) => {
     try {
@@ -149,9 +145,7 @@ function ResumoModal({ show, onHide, formData = {} }) {
           <Card.Body>
             {formData.items && formData.items.length > 0 ? (
               <div className="row">
-                {formData.items.map((item, index) => {
-                  console.log(`ResumoModal - Item ${index}:`, item);
-                  return (
+                {formData.items.map((item, index) => (
                   <div key={index} className="col-md-6 mb-3">
                     <Card className="h-100 border">
                       <Card.Header className="bg-primary text-white py-2">
@@ -436,8 +430,7 @@ function ResumoModal({ show, onHide, formData = {} }) {
                       </Card.Body>
                     </Card>
                   </div>
-                  );
-                })}
+                ))}
               </div>
             ) : (
               <div className="text-center text-muted py-4">

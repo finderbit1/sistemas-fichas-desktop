@@ -160,3 +160,4 @@ class OptimizedQueries:
 
 # Importar modelo Pedido
 from pedidos.schema import Pedido
+

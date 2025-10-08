@@ -7,3 +7,13 @@ PAINEL = [
   se tiver cordinha vai ter esses campo quantidade de cordinha, espaço de cada cordinha e valor de cada um,
   imagem do painel, valor do painel, valores adicionais, e observaçõe.
 ]
+
+TOTEM = [ 
+  descricao, largura, altura  e altura em metros quadrado,
+  vendedor,designer
+  tipo de material (mdf 6mm, mdf 3mm, poliondas, pvc),
+  acabamento (com pé, sem pé, sem acabamento),
+
+
+
+]

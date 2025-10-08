@@ -12,6 +12,7 @@ import CreateOrderPage from './pages/PageCreateOrder';
 import RelatorioPedidos from './pages/PageRelatorioPedidos';
 import PageRelatorios from './pages/PageRelatorios';
 import PageRelatoriosMatriz from './pages/PageRelatoriosMatriz';
+import PageRelatorioEnviosModerno from './pages/PageRelatorioEnviosModerno';
 import Admin from './pages/Admin';
 import './App.css';
 
@@ -46,6 +47,14 @@ const AuthenticatedLayout = () => {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <PageRelatoriosMatriz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/relatorios-envios" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <PageRelatorioEnviosModerno />
                 </ProtectedRoute>
               } 
             />

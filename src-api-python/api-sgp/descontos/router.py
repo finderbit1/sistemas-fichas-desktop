@@ -1,11 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
+from base import get_session
 from .schema import Desconto, DescontoCreate, DescontoUpdate
-
-def get_session():
-    from database.database import engine
-    with Session(engine) as session:
-        yield session
 
 router = APIRouter(prefix="/descontos", tags=["descontos"])
 

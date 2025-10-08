@@ -223,3 +223,4 @@ def get_endpoint_optimization(endpoint: str) -> Dict[str, Any]:
         "enable_bulk_operations": False,
         "enable_query_optimization": True
     })
+

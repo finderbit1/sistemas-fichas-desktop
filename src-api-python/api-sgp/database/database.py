@@ -22,6 +22,7 @@ try:
     from descontos.schema import Desconto
     from producoes.schema import ProducaoTipo
     from tecidos.schema import Tecido
+    from materiais.schema import Material
     logger.info("✅ Todos os modelos importados com sucesso")
 except ImportError as e:
     logger.error(f"❌ Erro ao importar modelos: {e}")

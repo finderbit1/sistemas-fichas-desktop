@@ -123,3 +123,65 @@ class SinteticoResponse(SQLModel):
     linhas: List[SinteticoLinha]
     totais: Dict[str, Any]
     meta: Dict[str, Any]
+
+# ===== Relatórios de Envios =====
+
+class RelatorioEnviosRequest(SQLModel):
+    data_inicio: Optional[date] = None
+    data_fim: Optional[date] = None
+    formas_envio: Optional[List[str]] = None  # Filtrar por formas específicas
+    cidades: Optional[List[str]] = None
+    estados: Optional[List[str]] = None
+    status: Optional[List[str]] = None
+    vendedor: Optional[str] = None
+    designer: Optional[str] = None
+    valor_min: Optional[float] = None
+    valor_max: Optional[float] = None
+
+class EnvioEstatistica(SQLModel):
+    forma_envio: str
+    quantidade_pedidos: int
+    quantidade_itens: int
+    valor_total: float
+    ticket_medio: float
+    percentual_pedidos: float
+    percentual_valor: float
+    cidades: List[Dict[str, Any]]  # [{"cidade": "SP", "quantidade": 10}]
+
+class EnvioDetalhado(SQLModel):
+    pedido_id: int
+    cliente: str
+    forma_envio: str
+    cidade: str
+    estado: str
+    tipos_itens: List[str]
+    quantidade_itens: int
+    valor_total: float
+    data_entrega: Optional[date] = None
+    status: str
+
+class RelatorioEnviosResponse(SQLModel):
+    # KPIs Gerais
+    total_pedidos: int
+    total_itens: int
+    valor_total: float
+    ticket_medio: float
+    periodo: Dict[str, Any]  # {"inicio": "2024-01-01", "fim": "2024-01-31"}
+    
+    # Estatísticas por Forma de Envio
+    estatisticas_envios: List[EnvioEstatistica]
+    
+    # Distribuição Geográfica
+    distribuicao_cidades: List[Dict[str, Any]]  # [{"cidade": "SP", "quantidade": 50, "valor": 10000}]
+    distribuicao_estados: List[Dict[str, Any]]
+    
+    # Rankings
+    top_cidades: List[Dict[str, Any]]  # Top 10 cidades
+    top_clientes: List[Dict[str, Any]]  # Top clientes por envio
+    
+    # Tendências (se houver dados históricos)
+    tendencia_temporal: Optional[List[Dict[str, Any]]] = None  # Por dia/semana
+    comparativo_periodo_anterior: Optional[Dict[str, Any]] = None
+    
+    # Detalhamento (opcional, pode ser paginado)
+    detalhes: Optional[List[EnvioDetalhado]] = None

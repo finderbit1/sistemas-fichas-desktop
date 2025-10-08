@@ -19,6 +19,16 @@ class Status(str, Enum):
     PRONTO = "pronto"
     ENTREGUE = "entregue"
     CANCELADO = "cancelado"
+    
+    @classmethod
+    def _missing_(cls, value):
+        # Aceitar valores em maiúsculo ou minúsculo
+        if isinstance(value, str):
+            value_lower = value.lower()
+            for member in cls:
+                if member.value.lower() == value_lower:
+                    return member
+        return None
 
 class Acabamento(SQLModel):
     overloque: bool = False

@@ -21,9 +21,13 @@ import useCustomAlert from '../hooks/useCustomAlert';
 import FormPainel from './prouctions/FormPainel';
 import FormPainelCompleto from './prouctions/FormPainelCompleto';
 import FormTotem from './prouctions/FormTotem';
+import FormTotemCompleto from './prouctions/FormTotemCompleto';
 import FormLona from './prouctions/FormLona';
+import FormLonaCompleto from './prouctions/FormLonaCompleto';
 import FormAlmofada from './prouctions/FormAlmofada';
+import FormAlmofadaCompleto from './prouctions/FormAlmofadaCompleto';
 import FormBolsinha from './FormBolsinha';
+import FormBolsinhaCompleto from './prouctions/FormBolsinhaCompleto';
 import ResumoModal from './ResumoModal';
 import SaveConfirmModal from './SaveConfirmModal';
 import ErrorBoundary from './ErrorBoundary';
@@ -71,22 +75,20 @@ const TypeProduction = memo(({ onItemsChange }) => {
           className="form-control"
         >
           <option value="">Selecione uma opção</option>
-          <option value="painel">Painel (Simples)</option>
-          <option value="painel-completo">Painel Completo (Com Ilhós/Cordinha)</option>
+          <option value="painel">Painel</option>
           <option value="totem">Totem</option>
           <option value="lona">Lona</option>
-          <option value="bolsinha">Bolsinha</option>
           <option value="almofada">Almofada</option>
+          <option value="bolsinha">Bolsinha</option>
         </Form.Select>
       </div>
       {opcaoSelecionada && (
         <div>
-          {opcaoSelecionada === 'painel' && <FormPainel {...formProps} />}
-          {opcaoSelecionada === 'painel-completo' && <FormPainelCompleto {...formProps} />}
-          {opcaoSelecionada === 'totem' && <FormTotem {...formProps} />}
-          {opcaoSelecionada === 'lona' && <FormLona {...formProps} />}
-          {opcaoSelecionada === 'bolsinha' && <FormBolsinha {...formProps} />}
-          {opcaoSelecionada === 'almofada' && <FormAlmofada {...formProps} />}
+          {opcaoSelecionada === 'painel' && <FormPainelCompleto {...formProps} />}
+          {opcaoSelecionada === 'totem' && <FormTotemCompleto {...formProps} />}
+          {opcaoSelecionada === 'lona' && <FormLonaCompleto {...formProps} />}
+          {opcaoSelecionada === 'almofada' && <FormAlmofadaCompleto {...formProps} />}
+          {opcaoSelecionada === 'bolsinha' && <FormBolsinhaCompleto {...formProps} />}
         </div>
       )}
     </div>
