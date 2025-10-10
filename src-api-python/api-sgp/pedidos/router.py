@@ -7,8 +7,17 @@ from typing import List
 import json
 import logging
 from functools import lru_cache
+import asyncio
 
 logger = logging.getLogger(__name__)
+
+# Importar o gerenciador de WebSocket
+try:
+    from websocket_manager import ws_manager
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+    logger.warning("⚠️ WebSocket manager não disponível")
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
@@ -78,6 +87,28 @@ def json_string_to_items(items_json: str) -> List[ItemPedido]:
         logger.error(f"❌ Erro inesperado ao converter JSON para items: {e}")
         return []
 
+async def notify_pedido_update(pedido_id: int, action: str, pedido_data: dict = None):
+    """
+    Envia notificação WebSocket sobre atualização de pedido.
+    
+    Args:
+        pedido_id: ID do pedido
+        action: Ação realizada ("create", "update", "delete")
+        pedido_data: Dados do pedido (opcional)
+    """
+    if not WEBSOCKET_AVAILABLE:
+        return
+    
+    try:
+        await ws_manager.broadcast_pedido_update(
+            pedido_id=pedido_id,
+            action=action,
+            data=pedido_data
+        )
+        logger.info(f"📡 Notificação enviada: {action} pedido {pedido_id}")
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar notificação WebSocket: {e}")
+
 @router.post("/", response_model=PedidoResponse)
 def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
     """
@@ -115,8 +146,17 @@ def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
         if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
             pedido_dict['prioridade'] = 'NORMAL'
         
+        response = PedidoResponse(**pedido_dict)
+        
+        # Notificar clientes via WebSocket
+        asyncio.create_task(notify_pedido_update(
+            pedido_id=db_pedido.id,
+            action="create",
+            pedido_data=pedido_dict
+        ))
+        
         logger.info(f"✅ Pedido criado: {db_pedido.numero}")
-        return PedidoResponse(**pedido_dict)
+        return response
         
     except HTTPException:
         raise
@@ -260,7 +300,17 @@ def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Sessi
         if not pedido_dict.get('prioridade') or pedido_dict['prioridade'] == '':
             pedido_dict['prioridade'] = 'NORMAL'
         
-        return PedidoResponse(**pedido_dict)
+        response = PedidoResponse(**pedido_dict)
+        
+        # Notificar clientes via WebSocket
+        asyncio.create_task(notify_pedido_update(
+            pedido_id=db_pedido.id,
+            action="update",
+            pedido_data=pedido_dict
+        ))
+        
+        logger.info(f"✅ Pedido atualizado: {db_pedido.numero}")
+        return response
         
     except HTTPException:
         raise
@@ -280,6 +330,14 @@ def deletar_pedido(pedido_id: int, session: Session = Depends(get_session)):
         
         session.delete(db_pedido)
         session.commit()
+        
+        # Notificar clientes via WebSocket
+        asyncio.create_task(notify_pedido_update(
+            pedido_id=pedido_id,
+            action="delete"
+        ))
+        
+        logger.info(f"🗑️ Pedido deletado: {pedido_id}")
         return {"message": "Pedido deletado com sucesso"}
         
     except HTTPException:

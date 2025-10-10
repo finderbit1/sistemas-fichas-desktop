@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -7,6 +7,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import logging
 import sys
+import json
+from datetime import datetime
 
 # Configurar logging
 logging.basicConfig(
@@ -23,6 +25,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 from base import create_db_and_tables
 from config import settings
+from websocket_manager import ws_manager
 
 # Importar routers principais (sempre disponíveis)
 from pedidos.router import router as pedidos_router
@@ -168,7 +171,63 @@ async def health_check(request: Request):
             "database": "disconnected",
             "error": str(e)
         }
+
+@app.websocket("/ws/pedidos")
+async def websocket_pedidos(websocket: WebSocket):
+    """
+    WebSocket endpoint para sincronização em tempo real de pedidos.
     
+    Clientes conectados recebem notificações automáticas quando:
+    - Um pedido é criado
+    - Um pedido é atualizado
+    - Um pedido é deletado
+    - Um status de produção é alterado
+    """
+    await ws_manager.connect(websocket, resource_type="pedidos")
     
+    try:
+        while True:
+            # Receber mensagens do cliente
+            data = await websocket.receive_text()
+            
+            try:
+                message = json.loads(data)
+                
+                # Processar ping/pong para manter conexão viva
+                if message.get("type") == "ping":
+                    await ws_manager.send_personal_message({
+                        "type": "pong",
+                        "timestamp": datetime.utcnow().isoformat()
+                    }, websocket)
+                
+                # Permitir cliente solicitar lista de pedidos
+                elif message.get("type") == "get_pedidos":
+                    # Cliente pode solicitar refresh
+                    await ws_manager.send_personal_message({
+                        "type": "refresh_required",
+                        "message": "Por favor, recarregue os dados"
+                    }, websocket)
+                
+                # Log de mensagens recebidas
+                else:
+                    logger.info(f"📨 Mensagem recebida: {message.get('type', 'unknown')}")
+                    
+            except json.JSONDecodeError:
+                logger.warning(f"⚠️ Mensagem inválida recebida: {data}")
+                
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+        logger.info("🔌 Cliente desconectado")
+    except Exception as e:
+        logger.error(f"❌ Erro no WebSocket: {e}")
+        ws_manager.disconnect(websocket)
+
+@app.get("/ws/stats")
+@limiter.limit("100/minute")
+async def websocket_stats(request: Request):
+    """
+    Retorna estatísticas das conexões WebSocket ativas.
+    """
+    return ws_manager.get_stats()
 
 
