@@ -500,3 +500,4 @@ POSTGRES_HOST=192.168.15.6  # IP do servidor
 **Status**: ✅ Implementado e Documentado
 
 
+

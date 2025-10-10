@@ -534,3 +534,4 @@ if __name__ == "__main__":
     # Executar diagnóstico direto
     test_diagnose_cliente_creation()
 
+

@@ -29,3 +29,4 @@ def pytest_sessionfinish(session, exitstatus):
     print("✅ TESTES CONCLUÍDOS")
     print("=" * 60)
 
+

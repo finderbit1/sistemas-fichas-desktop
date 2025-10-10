@@ -184,3 +184,4 @@ echo -e "${GREEN}🎉 PostgreSQL está pronto para uso!${NC}"
 echo ""
 
 
+

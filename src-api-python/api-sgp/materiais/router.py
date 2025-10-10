@@ -119,3 +119,4 @@ def delete_material(material_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail="Erro interno ao deletar material")
 
 
+
