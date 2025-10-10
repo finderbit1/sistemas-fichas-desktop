@@ -23,3 +23,4 @@ class MaterialUpdate(SQLModel):
     tipo_producao: Optional[str] = None
     active: Optional[bool] = None
 
+

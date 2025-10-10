@@ -118,3 +118,4 @@ def delete_material(material_id: int, session: Session = Depends(get_session)):
         logger.error(f"❌ Erro ao deletar material: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao deletar material")
 
+

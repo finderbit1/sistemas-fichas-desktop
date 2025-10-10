@@ -515,3 +515,4 @@ Sistema de cache **completamente implementado** e **funcional**!
 **Redução de Requisições:** ~90%  
 **Melhoria de Performance:** ~99% (após cache populado)
 
+

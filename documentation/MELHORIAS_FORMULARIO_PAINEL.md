@@ -471,3 +471,4 @@ Passe o mouse sobre o ícone `ℹ️` para ver dicas.
 **Status:** ✅ Melhorias Implementadas e Testadas
 
 
+

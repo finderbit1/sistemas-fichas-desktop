@@ -73,3 +73,4 @@ if __name__ == "__main__":
     print("🚀 Populando materiais iniciais...\n")
     popular_materiais()
 
+

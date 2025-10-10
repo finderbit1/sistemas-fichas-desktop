@@ -4,6 +4,7 @@ from sqlmodel.pool import StaticPool
 from sqlalchemy import text, event
 from sqlalchemy.engine import Engine
 from config import settings
+from config_loader import load_database_config, get_database_url
 import logging
 from contextlib import contextmanager
 from typing import Generator
@@ -28,11 +29,19 @@ except ImportError as e:
     logger.error(f"❌ Erro ao importar modelos: {e}")
 
 def create_database_engine():
-    """Cria o engine do banco de dados baseado na configuração"""
-    database_url = settings.DATABASE_URL
+    """Cria o engine do banco de dados baseado na configuração do arquivo banco.conf"""
     
     try:
-        if settings.DATABASE_TYPE == "sqlite":
+        # Carregar configuração do arquivo banco.conf
+        db_config = load_database_config()
+        database_url = get_database_url()
+        database_type = db_config['type']
+        pool_config = db_config['pool']
+        
+        logger.info(f"🔧 Configurando banco: {database_type}")
+        logger.info(f"📁 Fonte: {db_config['source']}")
+        
+        if database_type == "sqlite":
             engine = create_engine(
                 database_url,
                 connect_args={
@@ -64,18 +73,40 @@ def create_database_engine():
                 database_url,
                 pool_pre_ping=True,
                 pool_recycle=300,
-                pool_size=20,  # Aumentar pool
-                max_overflow=50,  # Mais conexões overflow
-                pool_timeout=30,  # Timeout para obter conexão
+                pool_size=pool_config['max_size'],  # Configurável via banco.conf
+                max_overflow=pool_config['max_size'] * 2,  # 2x o pool_size
+                pool_timeout=pool_config['timeout'],
                 echo=False
             )
         
-        logger.info(f"✅ Engine de banco criado: {settings.DATABASE_TYPE}")
+        logger.info(f"✅ Engine de banco criado: {database_type}")
+        if database_type == "postgresql":
+            pg = db_config['postgres']
+            logger.info(f"📊 PostgreSQL: {pg['user']}@{pg['host']}:{pg['port']}/{pg['database']}")
+            logger.info(f"🏊 Pool: min={pool_config['min_size']}, max={pool_config['max_size']}")
+        
         return engine
         
     except Exception as e:
         logger.error(f"❌ Erro ao criar engine de banco: {e}")
-        raise
+        # Fallback para configuração antiga (settings)
+        logger.warning("⚠️ Usando configuração fallback (settings.py)")
+        database_url = settings.DATABASE_URL
+        
+        if settings.DATABASE_TYPE == "sqlite":
+            return create_engine(
+                database_url,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool,
+                pool_pre_ping=True
+            )
+        else:
+            return create_engine(
+                database_url,
+                pool_pre_ping=True,
+                pool_size=20,
+                max_overflow=50
+            )
 
 # Criar o engine
 engine = create_database_engine()

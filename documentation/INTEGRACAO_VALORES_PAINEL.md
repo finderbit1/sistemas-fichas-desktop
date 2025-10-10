@@ -278,3 +278,4 @@ const valorTotalGeral = useMemo(() => {
 **Data:** 08/10/2025  
 **Status:** ✅ Totalmente Integrado e Funcional
 
+
