@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
-import { Plus, Pencil, Trash, Person } from 'react-bootstrap-icons';
-import { 
-  getAllVendedores, 
-  createVendedor, 
-  updateVendedor, 
-  deleteVendedor 
+import { Card, Button, Modal, Table, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
+import { Plus, Pencil, Trash, Person, CreditCard } from 'react-bootstrap-icons';
+
+import {
+  getAllVendedores,
+  createVendedor,
+  updateVendedor,
+  deleteVendedor
 } from '../../services/api';
 import AdvancedTable from '../AdvancedTable';
 import '../../styles/advanced-table.css';
@@ -15,9 +16,9 @@ const VendedoresManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    active: true 
+  const [formData, setFormData] = useState({
+    name: '',
+    active: true
   });
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
 
@@ -66,9 +67,9 @@ const VendedoresManagement = () => {
 
   const handleEdit = (item) => {
     setEditingItem(item);
-    setFormData({ 
-      name: item.name, 
-      active: item.active 
+    setFormData({
+      name: item.name,
+      active: item.active
     });
     setShowModal(true);
   };
@@ -118,9 +119,9 @@ const VendedoresManagement = () => {
       filterable: false,
       render: (item) => (
         <div className="d-flex gap-1">
-          <Button 
-            variant="outline-primary" 
-            size="sm" 
+          <Button
+            variant="outline-primary"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               handleEdit(item);
@@ -129,9 +130,9 @@ const VendedoresManagement = () => {
           >
             <Pencil size={14} />
           </Button>
-          <Button 
-            variant="outline-danger" 
-            size="sm" 
+          <Button
+            variant="outline-danger"
+            size="sm"
             onClick={(e) => {
               e.stopPropagation();
               handleDelete(item.id);
@@ -171,7 +172,50 @@ const VendedoresManagement = () => {
           </Button>
         </Card.Header>
         <Card.Body>
-          <AdvancedTable
+          <Table responsive striped hover>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Valor</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendedores.map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div className="d-flex align-items-center">
+                      {/* <CreditCard size={16} className="me-2 text-muted" /> */}
+                      {item.name}
+                    </div>
+                  </td>
+                  <td>
+                    <Badge bg={item.active ? 'success' : 'secondary'}>
+                      {item.active ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => handleEdit(item)}
+                    >
+                      <Pencil size={14} />
+                    </Button>
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      <Trash size={14} />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+          {/* <AdvancedTable
             data={vendedores}
             columns={columns}
             loading={loading}
@@ -183,7 +227,7 @@ const VendedoresManagement = () => {
             emptyMessage="Nenhum vendedor cadastrado"
             onRowClick={(item) => handleEdit(item)}
             className="mt-3"
-          />
+          /> */}
         </Card.Body>
       </Card>
 
