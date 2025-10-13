@@ -1,21 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Modal, Form, Row, Col, Toast, Spinner, Alert, Badge } from 'react-bootstrap';
+import {
+  Card,
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Toast,
+  Spinner,
+  Alert,
+  Badge,
+  Table,
+} from 'react-bootstrap';
 import { Plus, Pencil, Trash } from 'react-bootstrap-icons';
 import { getAllTecidos, createTecido, updateTecido, deleteTecido } from '../../services/api';
 import { useServerConfig } from '../../contexts/ServerConfigContext';
-import AdvancedTable from '../AdvancedTable';
-import '../../styles/advanced-table.css';
 
 const TecidosManagement = () => {
   const { isConnected, connectionStatus } = useServerConfig();
   const [tecidos, setTecidos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ q: '', active: 'all', composition: 'all' });
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
-  const [formData, setFormData] = useState({ name: '', description: '', gsm: '', composition: '', active: true });
-  const [selectedTecidos, setSelectedTecidos] = useState([]);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    gsm: '',
+    composition: '',
+    active: true,
+  });
 
   useEffect(() => {
     if (isConnected) loadTecidos();
@@ -34,89 +48,6 @@ const TecidosManagement = () => {
     }
   };
 
-  // Configuração das colunas para a tabela avançada
-  const columns = [
-    {
-      key: 'name',
-      header: 'Nome',
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        <div className="fw-medium">{item.name}</div>
-      )
-    },
-    {
-      key: 'description',
-      header: 'Descrição',
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        <div className="text-muted">{item.description || '-'}</div>
-      )
-    },
-    {
-      key: 'gsm',
-      header: 'GSM',
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        <div>{item.gsm || '-'}</div>
-      )
-    },
-    {
-      key: 'composition',
-      header: 'Composição',
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        <div>{item.composition || '-'}</div>
-      )
-    },
-    {
-      key: 'active',
-      header: 'Status',
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        item.active ? 
-          <Badge bg="success">Ativo</Badge> : 
-          <Badge bg="secondary">Inativo</Badge>
-      )
-    },
-    {
-      key: 'actions',
-      header: 'Ações',
-      sortable: false,
-      filterable: false,
-      render: (item) => (
-        <div className="d-flex gap-1">
-          <Button 
-            variant="outline-primary" 
-            size="sm" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(item);
-            }}
-            title="Editar tecido"
-          >
-            <Pencil size={14} />
-          </Button>
-          <Button 
-            variant="outline-danger" 
-            size="sm" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(item.id);
-            }}
-            title="Excluir tecido"
-          >
-            <Trash size={14} />
-          </Button>
-        </div>
-      )
-    }
-  ];
-
   const handleNew = () => {
     setEditingItem(null);
     setFormData({ name: '', description: '', gsm: '', composition: '', active: true });
@@ -130,7 +61,7 @@ const TecidosManagement = () => {
       description: item.description || '',
       gsm: item.gsm || '',
       composition: item.composition || '',
-      active: item.active !== false
+      active: item.active !== false,
     });
     setShowModal(true);
   };
@@ -155,8 +86,9 @@ const TecidosManagement = () => {
         description: formData.description || null,
         gsm: formData.gsm ? parseInt(formData.gsm, 10) : null,
         composition: formData.composition || null,
-        active: !!formData.active
+        active: !!formData.active,
       };
+
       if (editingItem) {
         await updateTecido(editingItem.id, payload);
         setToast({ show: true, message: 'Tecido atualizado com sucesso!', variant: 'success' });
@@ -164,6 +96,7 @@ const TecidosManagement = () => {
         await createTecido(payload);
         setToast({ show: true, message: 'Tecido criado com sucesso!', variant: 'success' });
       }
+
       setShowModal(false);
       setEditingItem(null);
       setFormData({ name: '', description: '', gsm: '', composition: '', active: true });
@@ -175,6 +108,7 @@ const TecidosManagement = () => {
     }
   };
 
+  // === Estados de conexão ===
   if (connectionStatus === 'checking') {
     return (
       <div className="text-center p-4">
@@ -189,7 +123,9 @@ const TecidosManagement = () => {
       <div className="text-center p-4">
         <Alert variant="danger">
           <strong>Erro de Conexão</strong>
-          <p className="mt-2">Não foi possível conectar com a API. Verifique se o servidor está rodando.</p>
+          <p className="mt-2">
+            Não foi possível conectar com a API. Verifique se o servidor está rodando.
+          </p>
         </Alert>
       </div>
     );
@@ -204,6 +140,7 @@ const TecidosManagement = () => {
     );
   }
 
+  // === Render principal ===
   return (
     <>
       <Card>
@@ -215,22 +152,67 @@ const TecidosManagement = () => {
           </Button>
         </Card.Header>
         <Card.Body>
-          <AdvancedTable
-            data={tecidos}
-            columns={columns}
-            loading={loading}
-            showPagination={true}
-            showSearch={true}
-            showFilters={true}
-            showSelection={false}
-            pageSize={10}
-            emptyMessage="Nenhum tecido cadastrado"
-            onRowClick={(item) => handleEdit(item)}
-            className="mt-3"
-          />
+          <Table responsive striped hover bordered>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>GSM</th>
+                <th>Composição</th>
+                <th>Status</th>
+                <th style={{ width: '130px' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tecidos.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center text-muted">
+                    Nenhum tecido cadastrado.
+                  </td>
+                </tr>
+              ) : (
+                tecidos.map((tecido) => (
+                  <tr key={tecido.id}>
+                    <td>{tecido.name}</td>
+                    <td>{tecido.description || '-'}</td>
+                    <td>{tecido.gsm || '-'}</td>
+                    <td>{tecido.composition || '-'}</td>
+                    <td>
+                      {tecido.active ? (
+                        <Badge bg="success">Ativo</Badge>
+                      ) : (
+                        <Badge bg="secondary">Inativo</Badge>
+                      )}
+                    </td>
+                    <td>
+                      <div className="d-flex gap-2 justify-content-center">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleEdit(tecido)}
+                          title="Editar tecido"
+                        >
+                          <Pencil size={14} />
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDelete(tecido.id)}
+                          title="Excluir tecido"
+                        >
+                          <Trash size={14} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
         </Card.Body>
       </Card>
 
+      {/* === Modal de criação/edição === */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="md">
         <Modal.Header closeButton>
           <Modal.Title>{editingItem ? 'Editar Tecido' : 'Novo Tecido'}</Modal.Title>
@@ -250,6 +232,7 @@ const TecidosManagement = () => {
                   />
                 </Form.Group>
               </Col>
+
               <Col md={12}>
                 <Form.Group className="mb-3">
                   <Form.Label>Descrição (opcional)</Form.Label>
@@ -262,6 +245,7 @@ const TecidosManagement = () => {
                   />
                 </Form.Group>
               </Col>
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>GSM (gramatura)</Form.Label>
@@ -274,6 +258,7 @@ const TecidosManagement = () => {
                   />
                 </Form.Group>
               </Col>
+
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Composição</Form.Label>
@@ -285,6 +270,7 @@ const TecidosManagement = () => {
                   />
                 </Form.Group>
               </Col>
+
               <Col md={12}>
                 <Form.Check
                   type="switch"
@@ -297,12 +283,17 @@ const TecidosManagement = () => {
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
-            <Button variant="primary" type="submit">{editingItem ? 'Atualizar' : 'Criar'}</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="primary" type="submit">
+              {editingItem ? 'Atualizar' : 'Criar'}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
 
+      {/* === Toast de feedback === */}
       <Toast
         show={toast.show}
         onClose={() => setToast({ ...toast, show: false })}
@@ -320,5 +311,3 @@ const TecidosManagement = () => {
 };
 
 export default TecidosManagement;
-
-

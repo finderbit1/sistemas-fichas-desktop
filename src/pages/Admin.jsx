@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Tabs, Tab } from 'react-bootstrap';
-import { 
-  Gear, 
-  People, 
-  CreditCard, 
-  Truck, 
+import {
+  Gear,
+  People,
+  CreditCard,
+  Truck,
   Percent,
   BarChart,
   Palette
@@ -12,7 +12,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import FormasEnvioManagement from '../components/admin/FormasEnvioManagement';
 import FormasPagamentoManagement from '../components/admin/FormasPagamentoManagement';
-import FormasResumo from '../components/admin/FormasResumo';
 import DesignersManagement from '../components/admin/DesignersManagement';
 import VendedoresManagement from '../components/admin/VendedoresManagement';
 import DescontosManagement from '../components/admin/DescontosManagement';
@@ -37,13 +36,6 @@ const AdminPage = () => {
       icon: <Truck size={24} />,
       component: FormasEnvioManagement
     },
-    // {
-    //   id: 'formas-resumo',
-    //   title: 'Resumo das Formas',
-    //   description: 'Visão geral das formas de envio e pagamento',
-    //   icon: <BarChart size={24} />,
-    //   component: FormasResumo
-    // },
     {
       id: 'designers',
       title: 'Designers',
@@ -66,13 +58,13 @@ const AdminPage = () => {
       component: DescontosManagement
     }
     ,
-    {
-      id: 'producoes',
-      title: 'Produções',
-      description: 'Gerenciar tipos de produção (com/sem tecido)',
-      icon: <Gear size={24} />,
-      component: ProducoesManagement
-    },
+    // {
+    //   id: 'producoes',
+    //   title: 'Produções',
+    //   description: 'Gerenciar tipos de produção (com/sem tecido)',
+    //   icon: <Gear size={24} />,
+    //   component: ProducoesManagement
+    // },
     {
       id: 'tecidos',
       title: 'Tecidos',
@@ -90,18 +82,18 @@ const AdminPage = () => {
             <Gear className="dashboard-card-icon" />
             Gestão do Sistema
           </h4>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             gap: 'var(--spacing-3)',
             fontSize: 'var(--font-size-sm)',
             color: 'var(--color-neutral-600)'
           }}>
             <span>Bem-vindo, <strong>{user?.name}</strong></span>
-            <span style={{ 
-              padding: '4px 8px', 
-              background: 'var(--color-primary)', 
-              color: 'white', 
+            <span style={{
+              padding: '4px 8px',
+              background: 'var(--color-primary)',
+              color: 'white',
               borderRadius: 'var(--border-radius-sm)',
               fontSize: 'var(--font-size-xs)',
               textTransform: 'uppercase',
