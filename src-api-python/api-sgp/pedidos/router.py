@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session, select, func
 from base import get_session
 from .schema import Pedido, PedidoCreate, PedidoUpdate, PedidoResponse, ItemPedido, Acabamento
@@ -271,14 +271,38 @@ def obter_pedido(pedido_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail=f"Erro ao obter pedido: {str(e)}")
 
 @router.patch("/{pedido_id}", response_model=PedidoResponse)
-async def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Session = Depends(get_session)):
+async def atualizar_pedido(
+    pedido_id: int, 
+    pedido_update: PedidoUpdate,
+    request: Request,
+    session: Session = Depends(get_session)
+):
     """
     Atualiza um pedido existente. Aceita atualizações parciais.
+    Sistema de lock previne atualizações simultâneas.
     """
+    # Identificar cliente pelo IP
+    client_id = request.client.host if request.client else "unknown"
+    
     try:
         db_pedido = session.get(Pedido, pedido_id)
         if not db_pedido:
             raise HTTPException(status_code=404, detail="Pedido não encontrado")
+        
+        # Tentar travar pedido antes de atualizar
+        if LOCK_AVAILABLE:
+            if not lock_manager.try_lock(pedido_id, client_id):
+                # Pedido está travado por outro cliente
+                lock_info = lock_manager.get_lock_info(pedido_id)
+                raise HTTPException(
+                    status_code=423,  # Locked
+                    detail={
+                        "message": "Pedido está sendo editado por outro usuário",
+                        "locked_by": lock_info['locked_by'],
+                        "time_left": lock_info['time_left_seconds'],
+                        "pedido_id": pedido_id
+                    }
+                )
         
         # Preparar dados para atualização
         update_data = pedido_update.model_dump(exclude_unset=True)
@@ -310,14 +334,24 @@ async def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session:
         
         response = PedidoResponse(**pedido_dict)
         
-        # Notificar clientes via WebSocket
+        # Notificar clientes via WebSocket sobre atualização
         asyncio.create_task(notify_pedido_update(
             pedido_id=db_pedido.id,
             action="update",
             pedido_data=pedido_dict
         ))
         
-        logger.info(f"✅ Pedido atualizado: {db_pedido.numero}")
+        # Notificar sobre o lock
+        if LOCK_AVAILABLE and WEBSOCKET_AVAILABLE:
+            asyncio.create_task(ws_manager.broadcast({
+                "type": "pedido_locked",
+                "pedido_id": pedido_id,
+                "locked_by": client_id,
+                "action": "updated",
+                "time_left": 30
+            }, resource_type="pedidos"))
+        
+        logger.info(f"✅ Pedido {db_pedido.numero} atualizado por {client_id}")
         return response
         
     except HTTPException:
@@ -353,6 +387,118 @@ async def deletar_pedido(pedido_id: int, session: Session = Depends(get_session)
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=f"Erro ao deletar pedido: {str(e)}")
+
+
+# ============================================================================
+# ENDPOINTS DE LOCK (TRAVA) DE PEDIDOS
+# ============================================================================
+
+@router.get("/{pedido_id}/lock")
+async def verificar_lock_pedido(pedido_id: int):
+    """
+    Verifica se um pedido está travado.
+    
+    Retorna informações do lock se estiver travado, ou {"locked": False} se não.
+    """
+    if not LOCK_AVAILABLE:
+        return {"locked": False, "message": "Sistema de lock não disponível"}
+    
+    if lock_manager.is_locked(pedido_id):
+        lock_info = lock_manager.get_lock_info(pedido_id)
+        return {
+            "locked": True,
+            **lock_info
+        }
+    
+    return {"locked": False}
+
+
+@router.delete("/{pedido_id}/lock")
+async def remover_lock_pedido(pedido_id: int, request: Request):
+    """
+    Remove lock de um pedido manualmente.
+    
+    Apenas o cliente que travou pode destravar, exceto se for admin.
+    """
+    if not LOCK_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="Sistema de lock não disponível"
+        )
+    
+    client_id = request.client.host if request.client else "unknown"
+    
+    if lock_manager.unlock(pedido_id, client_id):
+        # Notificar via WebSocket
+        if WEBSOCKET_AVAILABLE:
+            asyncio.create_task(ws_manager.broadcast({
+                "type": "pedido_unlocked",
+                "pedido_id": pedido_id,
+                "unlocked_by": client_id
+            }, resource_type="pedidos"))
+        
+        logger.info(f"🔓 Lock removido do pedido {pedido_id} por {client_id}")
+        return {"success": True, "message": "Lock removido com sucesso"}
+    
+    # Verificar se existe lock
+    if lock_manager.is_locked(pedido_id):
+        lock_info = lock_manager.get_lock_info(pedido_id)
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Você não tem permissão para remover este lock",
+                "locked_by": lock_info['locked_by'],
+                "your_id": client_id
+            }
+        )
+    
+    return {"success": False, "message": "Pedido não está travado"}
+
+
+@router.post("/{pedido_id}/lock/force")
+async def forcar_remover_lock(pedido_id: int):
+    """
+    Remove lock de um pedido forçadamente (admin only).
+    
+    Use com cautela! Isso pode causar conflitos se alguém está editando.
+    """
+    if not LOCK_AVAILABLE:
+        raise HTTPException(
+            status_code=501,
+            detail="Sistema de lock não disponível"
+        )
+    
+    if lock_manager.force_unlock(pedido_id):
+        # Notificar via WebSocket
+        if WEBSOCKET_AVAILABLE:
+            asyncio.create_task(ws_manager.broadcast({
+                "type": "pedido_unlocked",
+                "pedido_id": pedido_id,
+                "unlocked_by": "admin",
+                "forced": True
+            }, resource_type="pedidos"))
+        
+        logger.warning(f"⚠️ Lock do pedido {pedido_id} removido FORÇADAMENTE")
+        return {"success": True, "message": "Lock removido forçadamente"}
+    
+    return {"success": False, "message": "Pedido não estava travado"}
+
+
+@router.get("/locks/all")
+async def listar_todos_locks():
+    """
+    Lista todos os locks ativos no sistema.
+    
+    Útil para monitoramento e debug.
+    """
+    if not LOCK_AVAILABLE:
+        return {"locks": [], "message": "Sistema de lock não disponível"}
+    
+    locks = lock_manager.get_all_locks()
+    return {
+        "locks": locks,
+        "total": len(locks)
+    }
 
 @router.get("/status/{status}", response_model=List[PedidoResponse])
 def listar_pedidos_por_status(status: str, session: Session = Depends(get_session)):

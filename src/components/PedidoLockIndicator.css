@@ -1,0 +1,125 @@
+/* Componente de Indicador de Lock de Pedido */
+
+.pedido-lock-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+  animation: pulse-lock 2s ease-in-out infinite;
+  margin: 12px 0;
+}
+
+.lock-icon {
+  font-size: 24px;
+  animation: shake-lock 0.5s ease-in-out infinite;
+}
+
+.lock-content {
+  flex: 1;
+}
+
+.lock-message {
+  font-size: 14px;
+  color: #856404;
+  margin-bottom: 4px;
+}
+
+.lock-message strong {
+  font-weight: 600;
+}
+
+.lock-details {
+  font-size: 12px;
+  color: #856404;
+  opacity: 0.9;
+}
+
+.lock-user {
+  font-weight: 500;
+}
+
+.lock-timer {
+  color: #d39e00;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.lock-force-remove {
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.lock-force-remove:hover {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+.lock-force-remove:active {
+  transform: scale(0.95);
+}
+
+/* Animações */
+@keyframes pulse-lock {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+  }
+  50% {
+    box-shadow: 0 2px 16px rgba(255, 193, 7, 0.4);
+  }
+}
+
+@keyframes shake-lock {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Versão compacta */
+.pedido-lock-indicator.compact {
+  padding: 8px 12px;
+  gap: 8px;
+}
+
+.pedido-lock-indicator.compact .lock-icon {
+  font-size: 18px;
+}
+
+.pedido-lock-indicator.compact .lock-message {
+  font-size: 12px;
+}
+
+.pedido-lock-indicator.compact .lock-details {
+  font-size: 11px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .pedido-lock-indicator {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lock-force-remove {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
