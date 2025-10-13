@@ -224,3 +224,4 @@ const PedidosSyncExample = () => {
 
 export default PedidosSyncExample;
 
+
