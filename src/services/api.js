@@ -4,15 +4,13 @@ import { getCurrentConfig } from '../utils/configLoader';
 
 // Criar instância do axios com configuração dinâmica
 const createApiInstance = () => {
-  // Tentar obter configuração carregada do rede.conf
+  // Obter configuração atual (pode vir do arquivo config/api-config.json ou localStorage)
   const config = getCurrentConfig();
   
-  const baseURL = config?.baseURL || 'http://192.168.15.6:8000';
+  const baseURL = config?.apiURL || 'http://localhost:8000';
   const timeout = config?.timeout || 10000;
   
-  if (import.meta.env.DEV) {
-    console.log(`🔧 API configurada: ${baseURL} (fonte: ${config?.source || 'padrão'})`);
-  }
+  console.log(`🔧 API configurada: ${baseURL}`);
   
   return axios.create({
     baseURL: baseURL,
@@ -45,7 +43,7 @@ export const reloadApiConfig = () => {
 // Listener para detectar mudanças na configuração do servidor
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (event) => {
-    if (event.key === 'serverConfig') {
+    if (event.key === 'api_config' || event.key === 'serverConfig') {
       console.log('🔄 Configuração do servidor alterada, recarregando...');
       reloadApiConfig();
       
