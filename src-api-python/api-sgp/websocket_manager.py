@@ -187,3 +187,4 @@ class ConnectionManager:
 # Instância global do gerenciador
 ws_manager = ConnectionManager()
 
+
