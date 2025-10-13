@@ -67,11 +67,11 @@ api.interceptors.response.use(
 
 // ===== PEDIDOS =====
 export const getAllPedidos = () => api.get('/pedidos');
-export const getPedidoById = (id) => api.get(`/pedidos/${id}/`);
+export const getPedidoById = (id) => api.get(`/pedidos/${id}`);
 
 // Criar pedido com invalidação de cache e sincronização automática
 export const createPedido = async (pedido) => {
-  const response = await api.post('/pedidos/', pedido);
+  const response = await api.post('/pedidos', pedido);
   
   // Invalidar cache de pedidos para forçar atualização
   if (typeof window !== 'undefined' && window.cacheManager) {
@@ -91,7 +91,7 @@ export const createPedido = async (pedido) => {
 
 // Atualizar pedido com invalidação de cache e sincronização automática
 export const updatePedido = async (id, pedido) => {
-  const response = await api.patch(`/pedidos/${id}/`, pedido);
+  const response = await api.patch(`/pedidos/${id}`, pedido);
   
   // Invalidar cache de pedidos para forçar atualização
   if (typeof window !== 'undefined' && window.cacheManager) {
@@ -112,7 +112,7 @@ export const updatePedido = async (id, pedido) => {
 
 // Deletar pedido com invalidação de cache e sincronização automática
 export const deletePedido = async (id) => {
-  const response = await api.delete(`/pedidos/${id}/`);
+  const response = await api.delete(`/pedidos/${id}`);
   
   // Invalidar cache de pedidos para forçar atualização
   if (typeof window !== 'undefined' && window.cacheManager) {
