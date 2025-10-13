@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { loadApiConfig } from './utils/configLoader';
 import { reloadApiConfig } from './services/api';
+import './utils/cacheControl'; // Importa controles de cache
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // apenas se usar componentes JS como modals, tooltips etc.
 
