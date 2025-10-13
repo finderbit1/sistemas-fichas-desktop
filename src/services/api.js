@@ -66,7 +66,7 @@ api.interceptors.response.use(
 );
 
 // ===== PEDIDOS =====
-export const getAllPedidos = () => api.get('/pedidos/');
+export const getAllPedidos = () => api.get('/pedidos');
 export const getPedidoById = (id) => api.get(`/pedidos/${id}/`);
 
 // Criar pedido com invalidação de cache e sincronização automática
@@ -130,8 +130,8 @@ export const deletePedido = async (id) => {
   return response;
 };
 
-export const getProximoNumeroPedido = () => api.get('/pedidos/proximo-numero/');
-export const getPedidosByStatus = (status) => api.get(`/pedidos/status/${status}/`);
+export const getProximoNumeroPedido = () => api.get('/pedidos/proximo-numero');
+export const getPedidosByStatus = (status) => api.get(`/pedidos/status/${status}`);
 
 // ===== CLIENTES =====
 export const getAllClientes = () => api.get('/clientes');
