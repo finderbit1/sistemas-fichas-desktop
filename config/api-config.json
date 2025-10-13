@@ -1,0 +1,16 @@
+{
+  "apiURL": "http://localhost:8000",
+  "wsURL": "ws://localhost:8000",
+  "timeout": 10000,
+  "retries": 3,
+  "description": "Configuração da API Central - Sistema de Fichas",
+  "version": "1.0.0",
+  "updated": "2025-10-13T00:00:00Z",
+  "comments": {
+    "apiURL": "URL base da API (ex: http://192.168.1.100:8000 ou http://api.empresa.local:8000)",
+    "wsURL": "URL do WebSocket (ex: ws://192.168.1.100:8000 ou ws://api.empresa.local:8000)",
+    "timeout": "Tempo máximo de espera por requisição (ms)",
+    "retries": "Número de tentativas em caso de falha"
+  }
+}
+

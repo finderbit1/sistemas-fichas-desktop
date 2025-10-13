@@ -1,0 +1,10 @@
+{
+  "apiURL": "http://192.168.1.100:8000",
+  "wsURL": "ws://192.168.1.100:8000",
+  "timeout": 10000,
+  "retries": 3,
+  "description": "EXEMPLO: Configuração com IP fixo do servidor",
+  "version": "1.0.0",
+  "updated": "2025-10-13T00:00:00Z"
+}
+
