@@ -14,8 +14,8 @@
 const STORAGE_KEY = 'api_config';
 const CONFIG_FILENAME = 'api-config.json';
 const DEFAULT_CONFIG = {
-  apiURL: 'http://localhost:8000',
-  wsURL: 'ws://localhost:8000',
+  apiURL: 'http://192.168.15.3:8000',
+  wsURL: 'ws://192.168.15.3:8000',
   timeout: 10000,
   retries: 3
 };
