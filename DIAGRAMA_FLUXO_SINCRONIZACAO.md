@@ -344,3 +344,4 @@
 - Guia rápido: `GUIA_RAPIDO_SINCRONIZACAO.md`
 - Testes: `TESTE_SINCRONIZACAO.md`
 
+

@@ -276,3 +276,4 @@ Para dúvidas ou suporte:
 - Veja: `GUIA_RAPIDO_SINCRONIZACAO.md`
 - Teste: `src/components/PedidosSyncExample.jsx`
 
+

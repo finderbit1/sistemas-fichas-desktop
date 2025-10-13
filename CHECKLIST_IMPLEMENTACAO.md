@@ -393,3 +393,4 @@ O sistema está pronto para uso em produção.
 *Checklist atualizado em: 10/10/2025*
 *Versão: 1.0.0*
 
+

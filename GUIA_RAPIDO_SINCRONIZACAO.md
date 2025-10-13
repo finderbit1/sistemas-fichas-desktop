@@ -164,3 +164,4 @@ Agora você tem sincronização em tempo real funcionando!
 
 Para mais detalhes, veja: `documentation/SISTEMA_SINCRONIZACAO_TEMPO_REAL.md`
 
+
