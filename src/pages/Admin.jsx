@@ -37,13 +37,13 @@ const AdminPage = () => {
       icon: <Truck size={24} />,
       component: FormasEnvioManagement
     },
-    {
-      id: 'formas-resumo',
-      title: 'Resumo das Formas',
-      description: 'Visão geral das formas de envio e pagamento',
-      icon: <BarChart size={24} />,
-      component: FormasResumo
-    },
+    // {
+    //   id: 'formas-resumo',
+    //   title: 'Resumo das Formas',
+    //   description: 'Visão geral das formas de envio e pagamento',
+    //   icon: <BarChart size={24} />,
+    //   component: FormasResumo
+    // },
     {
       id: 'designers',
       title: 'Designers',
