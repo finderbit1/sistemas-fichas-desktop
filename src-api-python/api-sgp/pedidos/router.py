@@ -19,6 +19,14 @@ except ImportError:
     WEBSOCKET_AVAILABLE = False
     logger.warning("⚠️ WebSocket manager não disponível")
 
+# Importar o gerenciador de locks
+try:
+    from .lock_manager import lock_manager
+    LOCK_AVAILABLE = True
+except ImportError:
+    LOCK_AVAILABLE = False
+    logger.warning("⚠️ Lock manager não disponível")
+
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
 @lru_cache(maxsize=128)
