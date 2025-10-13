@@ -169,17 +169,23 @@ export function mesclarPedidosComProtecao(pedidosDaAPI = []) {
     
     console.log(`🔒 Proteção ativa: ${pedidosNaoConcluidos.length} pedidos pendentes protegidos`);
     
-    // Criar mapa dos pedidos da API para busca rápida
-    const apiMap = new Map();
+    // Criar mapa dos pedidos da API para busca rápida (por ID e por numeroPedido)
+    const apiMapById = new Map();
+    const apiMapByNumero = new Map();
     pedidosDaAPI.forEach(pedido => {
-      apiMap.set(pedido.id, pedido);
+      apiMapById.set(pedido.id, pedido);
+      if (pedido.numeroPedido) {
+        apiMapByNumero.set(String(pedido.numeroPedido), pedido);
+      }
     });
     
     // Mesclar pedidos pendentes que não estão na API ou estão diferentes
     const pedidosProtegidos = [...pedidosDaAPI];
     
     pedidosNaoConcluidos.forEach(pedidoPendente => {
-      const pedidoNaAPI = apiMap.get(pedidoPendente.id);
+      // Buscar por ID ou por número do pedido
+      const pedidoNaAPI = apiMapById.get(pedidoPendente.id) || 
+                          apiMapByNumero.get(String(pedidoPendente.numeroPedido));
       
       if (!pedidoNaAPI) {
         // Pedido não existe na API, adicionar aos protegidos
@@ -187,20 +193,25 @@ export function mesclarPedidosComProtecao(pedidosDaAPI = []) {
         pedidosProtegidos.push(pedidoPendente);
       } else if (!isPedidoConcluido(pedidoNaAPI) && !isPedidoConcluido(pedidoPendente)) {
         // Ambos não estão concluídos, manter o mais recente
-        const pedidoMaisRecente = new Date(pedidoPendente.ultimaAtualizacao || pedidoPendente.dataCriacao) > 
-                                 new Date(pedidoNaAPI.ultimaAtualizacao || pedidoNaAPI.dataCriacao) 
-                                 ? pedidoPendente : pedidoNaAPI;
+        const dataAPI = new Date(pedidoNaAPI.ultimaAtualizacao || pedidoNaAPI.dataCriacao);
+        const dataPendente = new Date(pedidoPendente.ultimaAtualizacao || pedidoPendente.dataCriacao);
+        
+        const pedidoMaisRecente = dataPendente > dataAPI ? pedidoPendente : pedidoNaAPI;
         
         // Substituir na lista se for diferente
-        const indice = pedidosProtegidos.findIndex(p => p.id === pedidoPendente.id);
-        if (indice !== -1) {
+        const indice = pedidosProtegidos.findIndex(p => p.id === pedidoNaAPI.id);
+        if (indice !== -1 && pedidoMaisRecente !== pedidoNaAPI) {
           pedidosProtegidos[indice] = pedidoMaisRecente;
           console.log(`🔄 Pedido ${pedidoPendente.numeroPedido || pedidoPendente.id} mesclado com dados mais recentes`);
         }
+      } else if (pedidoNaAPI && isPedidoConcluido(pedidoNaAPI)) {
+        // Pedido foi concluído na API, remover do localStorage pendente
+        console.log(`✅ Pedido ${pedidoPendente.numeroPedido || pedidoPendente.id} concluído na API, removendo da proteção`);
+        removerPedidoPendente(pedidoPendente.id);
       }
     });
     
-    console.log(`✅ Mesclagem concluída: ${pedidosProtegidos.length} pedidos (${pedidosDaAPI.length} da API + ${pedidosNaoConcluidos.length} protegidos)`);
+    console.log(`✅ Mesclagem concluída: ${pedidosProtegidos.length} pedidos (${pedidosDaAPI.length} da API + ${pedidosNaoConcluidos.length - (pedidosDaAPI.length - pedidosProtegidos.length)} protegidos)`);
     
     return pedidosProtegidos;
     

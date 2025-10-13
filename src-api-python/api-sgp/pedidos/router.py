@@ -110,7 +110,7 @@ async def notify_pedido_update(pedido_id: int, action: str, pedido_data: dict = 
         logger.error(f"❌ Erro ao enviar notificação WebSocket: {e}")
 
 @router.post("/", response_model=PedidoResponse)
-def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
+async def criar_pedido(pedido: PedidoCreate, session: Session = Depends(get_session)):
     """
     Cria um novo pedido com todos os dados fornecidos.
     Aceita o JSON completo com items, dados do cliente, valores, etc.
@@ -263,7 +263,7 @@ def obter_pedido(pedido_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=500, detail=f"Erro ao obter pedido: {str(e)}")
 
 @router.patch("/{pedido_id}", response_model=PedidoResponse)
-def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Session = Depends(get_session)):
+async def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Session = Depends(get_session)):
     """
     Atualiza um pedido existente. Aceita atualizações parciais.
     """
@@ -319,7 +319,7 @@ def atualizar_pedido(pedido_id: int, pedido_update: PedidoUpdate, session: Sessi
         raise HTTPException(status_code=400, detail=f"Erro ao atualizar pedido: {str(e)}")
 
 @router.delete("/{pedido_id}")
-def deletar_pedido(pedido_id: int, session: Session = Depends(get_session)):
+async def deletar_pedido(pedido_id: int, session: Session = Depends(get_session)):
     """
     Deleta um pedido existente.
     """
