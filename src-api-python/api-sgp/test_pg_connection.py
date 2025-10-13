@@ -67,3 +67,4 @@ if __name__ == "__main__":
         print("✅ Usando SQLite (sem problemas de rede)")
 
 
+
